@@ -15,7 +15,6 @@ An automated, Python-based ROM hacking and localization toolchain for *THE iDOLM
 *   **Dynamic Character Library**: Integrates `OpenCC` to reuse the original JIS character slots.
 *   **Secure Injection Mechanism**: Strict byte-level length verification and in-place memory injection prevent program segment data overflow crashes.
 
-Translated with DeepL.com (free version)
 ### Usage
 1. Install Python 3.10+ and run `pip install -r requirements.txt`.
 2. Place your legally dumped ROM named `THE iDOLM@STER Dearly Stars.nds` in `game_data/0_Original/`.
@@ -32,6 +31,7 @@ This project stands on the shoulders of giants. Special thanks to:
 This project is for educational and technical research purposes only. The repository **DOES NOT** contain any copyrighted game ROMs, assets, or proprietary code from the original game. Users must legally obtain their own copy of the game. The authors are not responsible for any copyright infringement caused by the end users.
 
 ---
+Translated with DeepL.com (free version)
 
 <a id="中文"></a>
 ## 中文
