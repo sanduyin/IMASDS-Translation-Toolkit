@@ -1,0 +1,11 @@
+# 忽略所有游戏原版ROM、解包数据和生成的补丁ROM
+game_data/
+
+# 忽略 Python 的运行缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 忽略系统自动生成的缩略图缓存等
+.DS_Store
+Thumbs.db
