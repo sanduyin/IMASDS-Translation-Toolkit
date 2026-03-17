@@ -13,8 +13,30 @@ from config import (
 )
 from src.utils.binary_io import read_uint32, nlzss_compress
 
+# ============================================================
+# CRC16 算法核心（专用于 NDS Header 校验，解决 DSi 白屏死机）
+# ============================================================
+def crc16_nds(data: bytes) -> int:
+    """
+    计算 NDS Header CRC16。
+    覆盖范围：Header[0x000 : 0x15B]，共 348 字节。
+    多项式：0x8005，初值：0xFFFF，无反转。
+    """
+    crc = 0xFFFF
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            if crc & 1:
+                crc = (crc >> 1) ^ 0xA001
+            else:
+                crc >>= 1
+    return crc & 0xFFFF
+
+# ============================================================
+# 第一部分：重打包 BIN/IDX 数据包
+# ============================================================
 def repack_data_archives():
-    """将汉化修改后的文件重新以 LZ10 压缩，并更新 BIN/IDX"""
+    """将汉化修改后的文本或图像文件重新以 LZ10 压缩，并更新 BIN/IDX"""
     print("📦 开始重构建核心数据包 (BIN/IDX)...")
     
     orig_data_dir = ORIGINAL_DIR / "Data"
@@ -50,19 +72,21 @@ def repack_data_archives():
             old_name_table_offset = read_uint32(f_bin)
 
             mod_count = 0
-            patched_dir = PATCHED_DIR / f"{sub_dir}_CHS_PATCHED"
             
             for i in range(file_count):
                 f_idx.seek(idx_data_start + i * 12)
                 curr_off, old_size_raw, name_ptr = read_uint32(f_idx), read_uint32(f_idx), read_uint32(f_idx)
                 
-                # 寻找匹配的汉化文件
+                # 智能寻找修改过的文件（同时兼容文本 _CHS_PATCHED 和图像 _IMG_PATCHED）
                 target_file = None
-                if patched_dir.exists():
-                    for f in os.listdir(patched_dir):
-                        if f.startswith(f"{i:04d}_"):
-                            target_file = patched_dir / f
-                            break
+                for suffix in ["_CHS_PATCHED", "_IMG_PATCHED"]:
+                    patched_dir = PATCHED_DIR / f"{sub_dir}{suffix}"
+                    if patched_dir.exists():
+                        for f in os.listdir(patched_dir):
+                            if f.startswith(f"{i:04d}_"):
+                                target_file = patched_dir / f
+                                break
+                    if target_file: break
                 
                 if target_file and target_file.exists():
                     with open(target_file, 'rb') as tf: new_data = tf.read()
@@ -90,36 +114,33 @@ def repack_data_archives():
             
         print(f"     ✅ 写入完毕，压缩替换了 {mod_count} 个汉化文件。")
 
+# ============================================================
+# 第二部分：构建环境组装与 ARM9 免压缩破解
+# ============================================================
 def prepare_build_environment(temp_dir):
     """将所有零散的文件组装到一个临时目录，准备喂给 ndstool"""
     print("\n💻 正在配置程序文件与内存映射表 (智能禁用覆盖压缩)...")
     
-    temp_data = temp_dir / "data"
-    temp_overlay = temp_dir / "overlay"
+    temp_data, temp_overlay = temp_dir / "data", temp_dir / "overlay"
     temp_dir.mkdir(exist_ok=True); temp_data.mkdir(); temp_overlay.mkdir()
     
-    # 1. 组装 Data 目录
     shutil.copytree(ORIGINAL_DIR / "Data", temp_data, dirs_exist_ok=True)
     for item in os.listdir(REPACK_STAGING):
         shutil.copy2(REPACK_STAGING / item, temp_data / item)
         
-    # 2. 组装并配置 ARM9 / Overlays
     src_arm9_dir = EXTRACT_DIR / "ARM9"
     patched_prg_dir = PATCHED_DIR / "PRG_CHS_PATCHED"
     
-    # 优先使用汉化版 ARM9，如果没有就用解压版的
     if (patched_prg_dir / "arm9.bin").exists(): shutil.copy2(patched_prg_dir / "arm9.bin", temp_dir / "arm9.bin")
     else: shutil.copy2(src_arm9_dir / "arm9.bin", temp_dir / "arm9.bin")
         
-    # 优先使用汉化版 Overlay，如果没有就用解压版的
-    if (src_arm9_dir).exists():
+    if src_arm9_dir.exists():
         for f in os.listdir(src_arm9_dir):
             if f.startswith('overlay'): shutil.copy2(src_arm9_dir / f, temp_overlay / f)
     if patched_prg_dir.exists():
         for f in os.listdir(patched_prg_dir):
             if f.startswith('overlay'): shutil.copy2(patched_prg_dir / f, temp_overlay / f)
             
-    # 3. 核心修复：修改 y9.bin 禁用压缩并更新容量
     shutil.copy2(EXTRACT_DIR / "y9.bin", temp_dir / "y9.bin")
     with open(temp_dir / "y9.bin", 'rb+') as f:
         y9_data = bytearray(f.read())
@@ -128,21 +149,21 @@ def prepare_build_environment(temp_dir):
             import re
             m = re.search(r'(\d+)', ovl_name)
             if m:
-                ovl_id = int(m.group(1))
-                offset = ovl_id * 32
+                ovl_id, offset = int(m.group(1)), int(m.group(1)) * 32
                 if offset + 32 <= len(y9_data):
                     file_size = os.path.getsize(temp_overlay / ovl_name)
-                    # 修正 RAM Size 和 物理 Size，并将压缩 Flag 置 0
                     struct.pack_into('<I', y9_data, offset + 8, file_size)
                     struct.pack_into('<I', y9_data, offset + 28, file_size)
         f.seek(0); f.write(y9_data)
         
-    # 4. 复制其他必要文件
     for f in['arm7.bin', 'y7.bin', 'header.bin', 'banner.bin']:
         shutil.copy2(EXTRACT_DIR / f, temp_dir / f)
 
+# ============================================================
+# 第三部分：ROM 构建、TWL 数据精准嫁接与 Header CRC 重算
+# ============================================================
 def build_nds_and_restore_twl(temp_dir):
-    """执行构建并触发 DSi (TWL) 增强数据完美对齐嫁接"""
+    """执行构建，并进行精确的外科手术式 DSi (TWL) 数据缝合及校验和修复"""
     print("\n🛠️ 正在调用 ndstool 构建基础 ROM...")
     
     cmd =[
@@ -160,46 +181,68 @@ def build_nds_and_restore_twl(temp_dir):
         print(f"❌ ndstool 执行失败: {e}")
         return
 
-    print("\n✨ 执行 DSi (TWL) 增强数据无损边界对齐修复协议...")
+    print(f"\n✨ 正在执行 DSi (TWL) 扩展数据嫁接与 Header 完整性修复...")
     
     with open(ORIGINAL_ROM, 'rb') as f_orig:
-        orig_header = f_orig.read(0x200)
-        orig_ntr_size = struct.unpack('<I', orig_header[0x80:0x84])[0]
+        orig_header = bytearray(f_orig.read(0x200))
+        orig_ntr_size = struct.unpack_from('<I', orig_header, 0x80)[0]
         
         f_orig.seek(0, 2)
         orig_total_size = f_orig.tell()
         
-        if orig_total_size <= orig_ntr_size:
-            print("  -> 该 ROM 无 DSi 扩展数据，无需修复。")
-            return
-            
-        f_orig.seek(orig_ntr_size)
-        twl_data = f_orig.read(orig_total_size - orig_ntr_size)
+        has_twl = orig_total_size > orig_ntr_size
+        if has_twl:
+            f_orig.seek(orig_ntr_size)
+            twl_data = f_orig.read(orig_total_size - orig_ntr_size)
+        else:
+            twl_data = b''
 
+    if not has_twl:
+        print("  -> 该 ROM 无 DSi 扩展数据，无需嫁接。")
+    
     with open(OUTPUT_ROM, 'rb+') as f_out:
         f_out.seek(0, 2)
         new_ntr_size = f_out.tell()
 
-        if new_ntr_size <= orig_ntr_size:
-            padding_size = orig_ntr_size - new_ntr_size
-            print(f"  -> 新 ROM 容量小于原版，正在进行 0xFF 填充对齐 (补齐 {padding_size} 字节)...")
-            f_out.write(b'\xFF' * padding_size)
-            
-            print(f"  -> 正在尾部无损嫁接 {len(twl_data)} 字节的 DSi 扩展数据...")
-            f_out.write(twl_data)
-            
-            # 恢复 Header 的关键安全信息
-            f_out.seek(0x80)
-            f_out.write(struct.pack('<I', orig_ntr_size)) 
-            f_out.seek(0x180)
-            f_out.write(orig_header[0x180:0x200]) 
-            
-        else:
-            print(f"  ⚠️ 严重警告：新 ROM 基础体积 ({new_ntr_size}) 溢出了原版 NTR 边界 ({orig_ntr_size})！DSi 数据将被迫偏移，可能导致实机黑屏！")
-            f_out.write(twl_data)
+        if has_twl:
+            if new_ntr_size > orig_ntr_size:
+                print(f"  ⚠️  严重警告：新 ROM 体积 ({new_ntr_size} 字节) 超出原版 NTR 边界 ({orig_ntr_size} 字节)！")
+                print(f"      DSi 数据将被迫偏移，可能导致实机 DSi 模式黑屏！")
+                f_out.write(twl_data)
+            else:
+                padding_size = orig_ntr_size - new_ntr_size
+                if padding_size > 0:
+                    print(f"  -> 0xFF 填充对齐：补齐 {padding_size} 字节至原版 NTR 边界...")
+                    f_out.write(b'\xFF' * padding_size)
+                print(f"  -> 嫁接 DSi 扩展数据：{len(twl_data)} 字节...")
+                f_out.write(twl_data)
 
-    print(f"  ✅ DSi 数据恢复成功！最终 ROM 体积已锁定。")
+        # =======================================================
+        # 核心修正区：遵循 Header 修改的时序逻辑
+        # =======================================================
+        # 步骤 1：恢复 NTR 容量大小声明 (0x80)
+        f_out.seek(0x80)
+        f_out.write(struct.pack('<I', orig_ntr_size if has_twl else new_ntr_size))
 
+        # 步骤 2：仅恢复真正的 TWL 专属扩展区 (0x1C0 ~ 0x1FF)
+        if has_twl:
+            f_out.seek(0x1C0)
+            f_out.write(orig_header[0x1C0:0x200])
+
+        # 步骤 3：在所有修改完成后，重新计算 0x000~0x15B 的校验和
+        f_out.seek(0)
+        header_for_crc = f_out.read(0x15C)
+        new_crc = crc16_nds(header_for_crc)
+        
+        # 将最新的 CRC16 写入 0x15C
+        f_out.seek(0x15C)
+        f_out.write(struct.pack('<H', new_crc))
+
+    print(f"  ✅ DSi 数据嫁接完成！Header CRC16 已重新校验并更新：0x{new_crc:04X}")
+
+# ============================================================
+# 主流程入口
+# ============================================================
 def main():
     print("=" * 50)
     print(" THE iDOLM@STER Dearly Stars - 终极构建流水线")
@@ -211,19 +254,13 @@ def main():
     temp_dir = BUILD_DIR / "_temp_ndstool"
     if temp_dir.exists(): shutil.rmtree(temp_dir)
     
-    # 1. 重新压缩 BIN 并打包
     repack_data_archives()
-    
-    # 2. 组装临时工作区
     prepare_build_environment(temp_dir)
-    
-    # 3. 生成 ROM 并修复 DSi 数据
     build_nds_and_restore_twl(temp_dir)
     
-    # 4. 清理临时垃圾
     if temp_dir.exists(): shutil.rmtree(temp_dir)
     
-    print("\n🎉 全剧终！汉化 ROM 已生成至：")
+    print("\n🎉 全剧终！终极汉化 ROM 已生成至：")
     print(f"   {OUTPUT_ROM}")
 
 if __name__ == "__main__":
