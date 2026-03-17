@@ -22,12 +22,12 @@ for d in[DATA_DIR, ORIGINAL_DIR, EXTRACT_DIR, PATCHED_DIR, BUILD_DIR, REPACK_STA
 
 # ================= ROM 与工具配置 =================
 NDSTOOL_EXE = ORIGINAL_DIR / "ndstool.exe"
-# 依据你的要求修改了 ROM 名称
+# 依据你的要求修改 ROM 名称
 ROM_NAME = "THE iDOLM@STER Dearly Stars.nds"
 ORIGINAL_ROM = ORIGINAL_DIR / ROM_NAME
 OUTPUT_ROM = BUILD_DIR / f"{Path(ROM_NAME).stem}_CHS.nds"
 
-# ================= 封包结构字典 (取代了原来的 XML 文件) =================
+# ================= 封包结构字典 =================
 FILE_PACKS =[
     {"ezt": "F_AGL.IDX", "ezp": "F_AGL.BIN", "output": "AGL"},
     {"ezt": "F_AGLCHR.IDX", "ezp": "F_AGLCHR.BIN", "output": "AGLCHR"},
@@ -42,7 +42,7 @@ FILE_PACKS =[
 ]
 
 # ================= 工作区 Excel 配置 =================
-# 你可以随时在这里修改 Excel 的名字
+# 可以随时在这里修改 Excel 的名字
 EXCEL_SCN = WORKSPACE_DIR / "SCN_Translation.xlsx"
 EXCEL_TBL = WORKSPACE_DIR / "TBL_Translation.xlsx"
 EXCEL_ARM9 = WORKSPACE_DIR / "ARM9_Overlays_Translation.xlsx"
@@ -53,12 +53,11 @@ MAPPING_FILE = WORKSPACE_DIR / "font_mapping.json"
 FONT_12PX = WORKSPACE_DIR / "ZLabsRoundPix_12px_M_CN.ttf"
 FONT_10PX = WORKSPACE_DIR / "fusion-pixel-10px-monospaced-zh_hans.otf"
 
-# 根据你的反馈，指向真实解包出来的文件名
+# 指向真实解包出来的文件名
 ORIGINAL_LC10 = EXTRACT_DIR / "TBL" / "0000_LC10.NFTR"
 ORIGINAL_LC12 = EXTRACT_DIR / "TBL" / "0001_LC12.NFTR"
 
 # 注入后的新字库，直接输出到 Patched 文件夹，为最终封包做好准备！
-# 注意：确保这里也叫原名，因为封包脚本认这个名字
 PATCHED_LC10 = PATCHED_DIR / "TBL_CHS_PATCHED" / "0000_LC10.NFTR"
 PATCHED_LC12 = PATCHED_DIR / "TBL_CHS_PATCHED" / "0001_LC12.NFTR"
 
