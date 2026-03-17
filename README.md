@@ -11,7 +11,7 @@ An automated, Python-based ROM hacking and localization toolchain for *THE iDOLM
 
 ### Features
 *   **Automatic unpacking and decompression**: `ndstool` and `ndspy` are used to decompress ARM9 and Overlay files using BLZ (Backward LZ10) reverse compression.
-*   **Intelligent pointer extraction**: Performs cross-file SHIFT-JIS pointer searches on low-level code segments, with a built-in intelligent garbled character filtering algorithm.
+*   **Pointer extraction**: Performs cross-file SHIFT-JIS pointer searches on low-level code segments.
 *   **Dynamic Character Library**: Integrates `OpenCC` to reuse the original JIS character slots.
 *   **Secure Injection Mechanism**: Strict byte-level length verification and in-place memory injection prevent program segment data overflow crashes.
 
@@ -40,7 +40,7 @@ Translated with DeepL.com (free version)
 
 ### 核心特性
 *   **自动解包与解压**：由`ndstool` 与 `ndspy`解除 ARM9 及 Overlay 文件的 BLZ (Backward LZ10) 逆向压缩。
-*   **智能指针提取**：针对底层程序代码段进行跨文件 SHIFT-JIS 指针搜索，内置智能乱码过滤算法。
+*   **指针提取**：针对底层程序代码段进行跨文件 SHIFT-JIS 指针搜索。
 *   **动态字库**：集成 `OpenCC`复用原版 JIS 汉字槽位。
 *   **安全注入机制**：严格的字节级长度校验与原地内存注入，杜绝程序段数据溢出崩溃。
 
