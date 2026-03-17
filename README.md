@@ -30,8 +30,6 @@ This project stands on the shoulders of giants. Special thanks to:
 ### Disclaimer
 This project is for educational and technical research purposes only. The repository **DOES NOT** contain any copyrighted game ROMs, assets, or proprietary code from the original game. Users must legally obtain their own copy of the game. The authors are not responsible for any copyright infringement caused by the end users.
 
----
-Translated with DeepL.com (free version)
 
 <a id="中文"></a>
 ## 中文
