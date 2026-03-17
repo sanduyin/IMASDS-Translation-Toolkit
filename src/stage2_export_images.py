@@ -136,11 +136,15 @@ def convert_gld_to_bmp(filepath, output_dir):
         write_bmp_8bpp(save_path, width, height, raw_pixels, bmp_palette)
 
 
-# ★为每个文件夹单独配置处理策略
+# ★ 文件夹处理策略配置
 FOLDER_STRATEGIES = {
+    # TEX：宽度固定 256px，直接导出，无需穷举
     "TEX": {"mode": "fixed", "width": 256},
-    "TBL": {"mode": "fixed", "width": 256},
+    # TBL：优先尝试 256px，若像素总量无法整除则自动降级为穷举
+    "TBL": {"mode": "fixed", "width": 256, "fallback": True},
+    # BG：宽度未知，保留穷举模式
     "BG":  {"mode": "bruteforce"},
+    "AGL":  {"mode": "bruteforce"},
 }
 
 def batch_process_images(folder_strategies):
@@ -160,14 +164,44 @@ def batch_process_images(folder_strategies):
             print(f"⏭️  {folder_name} 下未找到 GLD 文件，跳过。")
             continue
 
-        mode = strategy.get("mode", "bruteforce")
+        mode        = strategy.get("mode", "bruteforce")
+        fixed_width = strategy.get("width", 256)
+        fallback    = strategy.get("fallback", False)  # ← 是否允许降级穷举
 
         if mode == "fixed":
-            fixed_width = strategy.get("width", 256)
-            print(f"🎨 正在处理 {folder_name} 下的 {len(files)} 个 GLD 文件（固定宽度 {fixed_width}px）...")
+            print(f"🎨 正在处理 {folder_name} 下的 {len(files)} 个 GLD 文件（优先宽度 {fixed_width}px）...")
+            bruteforce_list = []  # 收集需要降级穷举的文件
+
             for f in files:
-                convert_gld_fixed_width(input_dir / f, output_dir, fixed_width)
-            print(f"   ✅ {folder_name} 图片导出至: {output_dir}")
+                filepath   = input_dir / f
+                result     = parse_gld_common(filepath)
+                if result is None:
+                    continue
+                pixel_size, raw_pixels, bmp_palette = result
+
+                if pixel_size % fixed_width == 0:
+                    # ✅ 能整除，直接用固定宽度导出
+                    height    = pixel_size // fixed_width
+                    base_name = os.path.splitext(f)[0]
+                    save_path = output_dir / f"{base_name}_{fixed_width}.bmp"
+                    write_bmp_8bpp(save_path, fixed_width, height, raw_pixels, bmp_palette)
+                elif fallback:
+                    # ⚠️ 不能整除，记录下来等会儿穷举
+                    bruteforce_list.append(f)
+                else:
+                    print(f"   ⚠️  {f}: 像素总量 {pixel_size} 无法被宽度 {fixed_width} 整除，跳过。")
+
+            print(f"   ✅ {folder_name} 固定宽度部分导出至: {output_dir}")
+
+            # 对降级文件执行穷举
+            if bruteforce_list:
+                print(f"   🔄 {folder_name} 有 {len(bruteforce_list)} 个文件无法用 {fixed_width}px，降级为穷举模式...")
+                for f in bruteforce_list:
+                    convert_gld_to_bmp(input_dir / f, output_dir)
+                print(f"   ✅ {folder_name} 穷举部分导出至: {output_dir}")
+                print(f"   💡 提示：以下文件有多个版本，请手动保留显示正常的那个：")
+                for f in bruteforce_list:
+                    print(f"      · {f}")
 
         else:  # bruteforce
             print(f"🎨 正在处理 {folder_name} 下的 {len(files)} 个 GLD 文件（穷举宽度模式）...")
