@@ -104,7 +104,6 @@ def repack_data_archives():
 
 def build_nds_and_restore_twl():
     print("\n🛠️  正在使用 ndspy 纯 Python 引擎在内存中构建 ROM...")
-    
     rom = ndspy.rom.NintendoDSRom.fromFile(str(ORIGINAL_ROM))
     
     # 1. 注入重构后的数据包
@@ -114,20 +113,36 @@ def build_nds_and_restore_twl():
         if (REPACK_STAGING / ezt).exists(): rom.setFileByName(ezt, (REPACK_STAGING / ezt).read_bytes())
         if (REPACK_STAGING / ezp).exists(): rom.setFileByName(ezp, (REPACK_STAGING / ezp).read_bytes())
         
-    # 2. 注入修改后的程序段 (ARM9/Overlay)
+    # 2. 注入修改后的程序段 (ARM9)
     patched_prg_dir = PATCHED_DIR / "PRG_CHS_PATCHED"
     if (patched_prg_dir / "arm9.bin").exists():
         rom.arm9 = (patched_prg_dir / "arm9.bin").read_bytes()
         
-    for ovl_id, ovl in rom.arm9Overlays.items():
-        patched_ovl = patched_prg_dir / f"overlay_{ovl_id:04d}.bin"
-        if patched_ovl.exists():
-            ovl.data = patched_ovl.read_bytes()
-            # 【终极黑科技】直接修改 ndspy 对象属性，底层自动修改 y9.bin 取消压缩标记！
-            ovl.compressed = False
-            print(f"  -> 已注入并解除内存压缩: overlay_{ovl_id:04d}.bin")
+    # 3. 【核心修复】以底层原生方式操作 Overlay 文件树与内存映射表 (y9.bin)
+    y9_data = bytearray(rom.arm9OverlayTable)
+    if patched_prg_dir.exists():
+        for f in os.listdir(patched_prg_dir):
+            if f.startswith('overlay_') and f.endswith('.bin'):
+                try: ovl_id = int(f.replace('overlay_', '').replace('.bin', ''))
+                except ValueError: continue
+                
+                new_data = (patched_prg_dir / f).read_bytes()
+                
+                # 注入到底层文件系统
+                rom.setFileByName(f"overlay/{f}", new_data)
+                
+                # 解除压缩标记并更新大小
+                offset = ovl_id * 32
+                if offset + 32 <= len(y9_data):
+                    file_size = len(new_data)
+                    struct.pack_into('<I', y9_data, offset + 8, file_size)  # RAM Size
+                    struct.pack_into('<I', y9_data, offset + 28, file_size) # Size & Flag (0=未压缩)
+                    print(f"  -> 已注入并解除内存压缩: {f}")
+                    
+    # 写回修改后的映射表
+    rom.arm9OverlayTable = bytes(y9_data)
             
-    # 3. 在内存中生成基础 ROM 二进制流
+    # 4. 在内存中生成基础 ROM 二进制流
     temp_rom_data = rom.save()
     print("  -> 基础 ROM 内存构建成功！")
     
@@ -160,7 +175,6 @@ def build_nds_and_restore_twl():
             print(f"  -> 嫁接 DSi 扩展数据：{len(twl_data)} 字节...")
         final_rom.extend(twl_data)
         
-    # 遵循神级 CRC 修复时序
     struct.pack_into('<I', final_rom, 0x80, orig_ntr_size if has_twl else new_ntr_size)
     if has_twl: final_rom[0x1C0:0x200] = orig_header[0x1C0:0x200]
     

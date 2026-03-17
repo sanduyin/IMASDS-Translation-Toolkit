@@ -9,3 +9,5 @@ __pycache__/
 # 忽略系统自动生成的缩略图缓存等
 .DS_Store
 Thumbs.db
+*.otf
+*.xlsx

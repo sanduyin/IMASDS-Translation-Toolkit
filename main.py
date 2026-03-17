@@ -25,7 +25,7 @@ def print_menu():
     print("  [3] 导出图像 (Export Images) - 导出 GLD 与 BG(NCGR) 为 BMP")
     print("  [4] 构建字库 (Build Font)    - 根据 Excel 动态生成字库")
     print("  [5] 注入文本 (Inject Text)   - 将翻译写回 SCN/TBL/ARM9")
-    print("[6] 回写图像 (Import Images) - 将修改的 BMP 写回 GLD/BG")
+    print("  [6] 回写图像 (Import Images) - 将修改的 BMP 写回 GLD/BG")
     print("  [7] 打包生成 (Build ROM)     - 生成最终汉化版 .nds")
     print("  [8] 一键自动化 (Auto Build)  - 执行 4 -> 5 -> 6 -> 7")
     print("  [0] 退出控制台")

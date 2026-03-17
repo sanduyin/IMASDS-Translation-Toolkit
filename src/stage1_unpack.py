@@ -17,6 +17,17 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import ORIGINAL_DIR, EXTRACT_DIR, FILE_PACKS, ORIGINAL_ROM
 from src.utils.binary_io import read_uint32
 
+def _dump_folder(folder_obj, current_path, rom, base_dir):
+    """递归爬树提取器：遍历 ndspy 的 FNT(文件目录表) 树"""
+    for filename in folder_obj.files:
+        rel_path = current_path + filename
+        out_path = base_dir / rel_path
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_bytes(rom.getFileByName(rel_path))
+        
+    for sub_name, sub_folder in folder_obj.folders:
+        _dump_folder(sub_folder, current_path + sub_name + "/", rom, base_dir)
+
 def unpack_nds_rom():
     if not ORIGINAL_ROM.exists():
         print(f"❌ 找不到原版游戏 ROM: {ORIGINAL_ROM.name}")
@@ -31,40 +42,41 @@ def unpack_nds_rom():
         
     print(f"\n💿 正在使用 ndspy 纯 Python 引擎解析 ROM: {ORIGINAL_ROM.name} ...")
     
-    # 1. 瞬间将整个 ROM 加载到 Python 内存中
     rom = ndspy.rom.NintendoDSRom.fromFile(str(ORIGINAL_ROM))
     
-    # 2. 导出内部的 Data 文件系统
+    print("  -> 正在遍历导出文件系统 (FNT)...")
     base_data_dir.mkdir(parents=True, exist_ok=True)
-    for filename in rom.filenames:
-        out_path = base_data_dir / filename
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_bytes(rom.getFileByName(filename))
-        
-    # 3. 导出 Header 和映射表 (供 Stage 2 的 ARM9 提取使用)
-    EXTRACT_DIR.mkdir(parents=True, exist_ok=True)
-    (EXTRACT_DIR / "header.bin").write_bytes(rom.header)
-    (EXTRACT_DIR / "y9.bin").write_bytes(rom.arm9OverlayTable)
-    
-    # 4. 执行智能逆向解压 (ARM9 & Overlays)
+    # 把整个 ROM 的文件树提取到 ORIGINAL_DIR / Data 下
+    _dump_folder(rom.filenames, "", rom, base_data_dir)
+
     print("🔓 正在执行 BLZ 逆向解压算法 (处理 ARM9 & Overlays)...")
     arm9_extract_dir.mkdir(parents=True, exist_ok=True)
     
+    # 1. 尝试解压 ARM9
     try:
         (arm9_extract_dir / "arm9.bin").write_bytes(comp.decompress(rom.arm9))
         print("  -> ✅ arm9.bin 解压成功")
     except Exception:
         (arm9_extract_dir / "arm9.bin").write_bytes(rom.arm9)
+        print("  -> ⚠️ arm9.bin 保持原样 (未检测到压缩)")
         
+    # 2. 【核心修复】精确查找到 overlay 文件夹，并遍历其中的文件
     ovl_count = 0
-    for ovl_id, ovl in rom.arm9Overlays.items():
-        try:
-            (arm9_extract_dir / f"overlay_{ovl_id:04d}.bin").write_bytes(comp.decompress(ovl.data))
-            ovl_count += 1
-        except Exception:
-            (arm9_extract_dir / f"overlay_{ovl_id:04d}.bin").write_bytes(ovl.data)
-            
-    print(f"  -> ✅ 成功解压了 {ovl_count} 个 Overlay 文件")
+    overlay_folder = next((folder for name, folder in rom.filenames.folders if name == 'overlay'), None)
+    
+    if overlay_folder:
+        for filename in overlay_folder.files:
+            if filename.startswith("overlay_") and filename.endswith(".bin"):
+                ovl_data = rom.getFileByName(f"overlay/{filename}")
+                try:
+                    # 尝试逆向 BLZ 解压
+                    (arm9_extract_dir / filename).write_bytes(comp.decompress(ovl_data))
+                    ovl_count += 1
+                except Exception:
+                    # 如果原版没有压缩，直接原样保存
+                    (arm9_extract_dir / filename).write_bytes(ovl_data)
+                    
+    print(f"  -> ✅ 成功处理并解压了 {ovl_count} 个 Overlay 文件")
     return True
 
 def decompress_ring_lz(f_in, decompressed_size):
@@ -99,7 +111,7 @@ def decompress_ring_lz(f_in, decompressed_size):
     return out_data
 
 def extract_archive(ezt_path, ezp_path, output_dir):
-    print(f"📦 提取内部数据: {os.path.basename(ezt_path)}")
+    print(f"📦 提取内部数据包: {os.path.basename(ezt_path)}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with open(ezt_path, "rb") as f_idx, open(ezp_path, "rb") as f_bin:
