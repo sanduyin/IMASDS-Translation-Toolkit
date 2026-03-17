@@ -22,8 +22,8 @@ from config import (
 from src.utils.text_encoder import PROTECTED_RANGES, is_protected
 from src.utils.binary_io import read_uint16, read_uint32
 
-converter_jp2t = opencc.OpenCC('jp2t.json')
-converter_t2s = opencc.OpenCC('t2s.json')
+converter_jp2t = opencc.OpenCC('jp2t')
+converter_t2s = opencc.OpenCC('t2s')
 
 def convert_to_simp(jis_char):
     try: return converter_t2s.convert(converter_jp2t.convert(jis_char))
