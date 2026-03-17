@@ -22,12 +22,23 @@ from config import (
 from src.utils.text_encoder import PROTECTED_RANGES, is_protected
 from src.utils.binary_io import read_uint16, read_uint32
 
-converter_jp2t = opencc.OpenCC('jp2t')
+# ===================================================================
+# 黑科技：OpenCC 柔性容错加载 (Graceful Degradation)
+# ===================================================================
 converter_t2s = opencc.OpenCC('t2s')
+try:
+    converter_jp2t = opencc.OpenCC('jp2t')
+except Exception:
+    converter_jp2t = None
+    print("  ⚠️ [环境提示] 当前 OpenCC 库缺失 jp2t 字典。已自动降级为单层映射 (不影响程序运行，仅少白嫖几个特殊日文槽位)。")
 
 def convert_to_simp(jis_char):
-    try: return converter_t2s.convert(converter_jp2t.convert(jis_char))
-    except: return jis_char
+    """智能转换链：如果有 jp2t 就双重转换，没有就直接繁转简"""
+    try:
+        char_trad = converter_jp2t.convert(jis_char) if converter_jp2t else jis_char
+        return converter_t2s.convert(char_trad)
+    except:
+        return jis_char
 
 NFTR_SPECS = {
     'LC12': {
@@ -152,7 +163,6 @@ def build_font_mapping():
         try:
             code_cp932 = char.encode('cp932')
             code_int = struct.unpack('>H', code_cp932)[0] if len(code_cp932) == 2 else code_cp932[0]
-            # 这里的保护逻辑保留！确保新汉字不会抢占英文字符的位置
             if is_protected(code_int):
                 final_mapping[char] = code_int
                 taken_slots.add(code_int)
@@ -191,7 +201,7 @@ def build_font_mapping():
     with open(MAPPING_FILE, 'w', encoding='utf-8') as f:
         json.dump(final_mapping, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ 映射分配更新完毕！")
+    print(f"✅ 映射分配更新完毕！成功复用原生汉字槽 {reused_count} 个。新增汉字 {len(to_be_added)} 个，剩余空位 {len(available_slots) - len(to_be_added)} 个。")
     return final_mapping
 
 def get_pixel_width(img):
@@ -208,10 +218,9 @@ def render_glyph_1bpp(char, font, code, spec):
 
     real_width = get_pixel_width(img)
 
-    # VWF 黑科技：根据图像真实像素计算光标步进！
     if code < 0x100:
         glyph_w = real_width if real_width > 0 else spec['space_w']
-        advance = glyph_w + 1 # 字母紧凑排版：真实像素 + 1px 空隙
+        advance = glyph_w + 1
         if char in (' ', '\u3000', '\xa0'): glyph_w, advance = spec['space_w'], spec['space_advance']
     else:
         glyph_w = spec['cjk_glyph_w']
@@ -244,7 +253,6 @@ def inject_nftr(spec_name, spec, char_map):
     count_translated, count_unified, count_skipped = 0, 0, 0
 
     for code in code_map.keys():
-        # 【修改点】移除了 if is_protected(code): continue，火力全开去渲染！
         idx = code_map[code]
         font_to_use = primary_font
         
@@ -259,7 +267,6 @@ def inject_nftr(spec_name, spec, char_map):
                 orig_jis = bytes_seq.decode('cp932')
                 char_to_render = convert_to_simp(orig_jis)
                 
-                # 【防线】如果该字符(如游戏特有符号)连备用字体都画不出，跳过保留原版图像！
                 if is_char_missing(primary_font, char_to_render, spec):
                     count_skipped += 1
                     continue
@@ -267,7 +274,6 @@ def inject_nftr(spec_name, spec, char_map):
             except:
                 continue
 
-        # 将英文和标点也交由 render 函数计算真实的 VWF 宽度！
         glyph_bytes, char_w, advance = render_glyph_1bpp(char_to_render, font_to_use, code, spec)
 
         addr_plgc = plgc_start + idx * glyph_size
@@ -291,7 +297,7 @@ def inject_nftr(spec_name, spec, char_map):
 
 def main():
     print("=" * 50)
-    print(" 智能字库生成引擎 (全面洗地 + VWF重排版)")
+    print(" 智能字库生成引擎 (防弹容错版 + VWF重排版)")
     print("=" * 50)
     
     try:
