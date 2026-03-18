@@ -22,23 +22,12 @@ from config import (
 from src.utils.text_encoder import PROTECTED_RANGES, is_protected
 from src.utils.binary_io import read_uint16, read_uint32
 
-# ===================================================================
-# 黑科技：OpenCC 柔性容错加载 (Graceful Degradation)
-# ===================================================================
-converter_t2s = opencc.OpenCC('t2s')
-try:
-    converter_jp2t = opencc.OpenCC('jp2t')
-except Exception:
-    converter_jp2t = None
-    print("  ⚠️ [环境提示] 当前 OpenCC 库缺失 jp2t 字典。已自动降级为单层映射 (不影响程序运行，仅少白嫖几个特殊日文槽位)。")
+converter_jp2t = opencc.OpenCC('jp2t.json')
+converter_t2s = opencc.OpenCC('t2s.json')
 
 def convert_to_simp(jis_char):
-    """智能转换链：如果有 jp2t 就双重转换，没有就直接繁转简"""
-    try:
-        char_trad = converter_jp2t.convert(jis_char) if converter_jp2t else jis_char
-        return converter_t2s.convert(char_trad)
-    except:
-        return jis_char
+    try: return converter_t2s.convert(converter_jp2t.convert(jis_char))
+    except: return jis_char
 
 NFTR_SPECS = {
     'LC12': {
@@ -69,7 +58,7 @@ def get_fallback_font(size):
     return None
 
 def is_char_missing(font, char, spec):
-    if char in (' ', '\u3000', '\n', '\r', '\t', '\xa0'): return False
+    if char in (' ', '\u3000', '\n', '\r', '\t', '\xa0', '\u2002', '\u2003'): return False
     if not hasattr(font, '_missing_bytes'):
         img = Image.new('1', (spec['cell_width'], spec['cell_height']), 0)
         ImageDraw.Draw(img).text((0, spec['y_offset']), chr(0xFFFE), font=font, fill=1)
@@ -110,7 +99,7 @@ def parse_nftr_pamac(filepath):
 
 def build_font_mapping():
     print("\n🔍 正在扫描 Excel 提取翻译字符...")
-    unique_chars = set([' ', '\u3000']) 
+    unique_chars = set([' ', '\u3000'])
     for filepath in[EXCEL_SCN, EXCEL_TBL, EXCEL_ARM9]:
         if not filepath.exists(): continue
         try:
@@ -138,10 +127,13 @@ def build_font_mapping():
             char_to_code_raw[char_simp] = code
         except: pass
 
+    # 兜底所有奇葩空格
     final_mapping = {
-        ' ': 0x20,         
-        '\u3000': 0x8140,  
-        '\xa0': 0x20       
+        ' ': 0x20,
+        '\u3000': 0x8140,
+        '\xa0': 0x20,
+        '\u2002': 0x20,
+        '\u2003': 0x8140
     }
 
     to_be_added =[]
@@ -154,11 +146,11 @@ def build_font_mapping():
             code_cp932 = char.encode('cp932')
             code_int = struct.unpack('>H', code_cp932)[0] if len(code_cp932) == 2 else code_cp932[0]
             if is_protected(code_int) and old_code != code_int:
-                old_mapping[char] = code_int 
+                old_mapping[char] = code_int
         except: pass
 
     for char in unique_chars:
-        if char in (' ', '\u3000', '\xa0'): continue 
+        if char in (' ', '\u3000', '\xa0', '\u2002', '\u2003'): continue
 
         try:
             code_cp932 = char.encode('cp932')
@@ -167,7 +159,7 @@ def build_font_mapping():
                 final_mapping[char] = code_int
                 taken_slots.add(code_int)
                 native_protected_count += 1
-                continue 
+                continue
         except: pass
 
         if char in char_to_code_raw:
@@ -188,7 +180,7 @@ def build_font_mapping():
         try:
             orig_char_jis = (struct.pack('>H', code) if code > 0xFF else struct.pack('B', code)).decode('cp932', errors='ignore')
             orig_char_simp = convert_to_simp(orig_char_jis)
-            if orig_char_simp in unique_chars: continue 
+            if orig_char_simp in unique_chars: continue
         except: pass
         available_slots.append(code)
 
@@ -201,7 +193,7 @@ def build_font_mapping():
     with open(MAPPING_FILE, 'w', encoding='utf-8') as f:
         json.dump(final_mapping, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ 映射分配更新完毕！成功复用原生汉字槽 {reused_count} 个。新增汉字 {len(to_be_added)} 个，剩余空位 {len(available_slots) - len(to_be_added)} 个。")
+    print(f"✅ 映射分配更新完毕！")
     return final_mapping
 
 def get_pixel_width(img):
@@ -210,21 +202,30 @@ def get_pixel_width(img):
     for x in range(width - 1, -1, -1):
         for y in range(height):
             if pixels[x, y] > 0: return x + 1
-    return 0 
+    return 0
 
 def render_glyph_1bpp(char, font, code, spec):
     img = Image.new('1', (spec['cell_width'], spec['cell_height']), 0)
-    if char: ImageDraw.Draw(img).text((0, spec['y_offset']), char, font=font, fill=1)
+    
+    # 【核心防弹修复】：只要是空格家族，绝对不让字体去画，强制生成 100% 透明图像！
+    is_space = char in (' ', '\u3000', '\xa0', '\u2002', '\u2003', '\u200b')
+    
+    if char and not is_space:
+        ImageDraw.Draw(img).text((0, spec['y_offset']), char, font=font, fill=1)
 
     real_width = get_pixel_width(img)
 
     if code < 0x100:
         glyph_w = real_width if real_width > 0 else spec['space_w']
         advance = glyph_w + 1
-        if char in (' ', '\u3000', '\xa0'): glyph_w, advance = spec['space_w'], spec['space_advance']
+        if is_space:
+            glyph_w, advance = spec['space_w'], spec['space_advance']
     else:
         glyph_w = spec['cjk_glyph_w']
         advance = spec['cjk_advance']
+        if is_space:
+            # 全角空格：本身不占像素，但光标必须推进一个完整汉字的宽度！
+            glyph_w, advance = spec['space_w'], spec['cjk_advance']
 
     pixels, bytes_data, buffer, bit_count = img.load(), bytearray(), 0, 0
     for y in range(spec['cell_height']):
@@ -282,9 +283,9 @@ def inject_nftr(spec_name, spec, char_map):
 
         addr_hdwc = hdwc_start + idx * 3
         if addr_hdwc + 3 <= len(rom_data):
-            rom_data[addr_hdwc] = 0           
-            rom_data[addr_hdwc + 1] = char_w  
-            rom_data[addr_hdwc + 2] = advance 
+            rom_data[addr_hdwc] = 0
+            rom_data[addr_hdwc + 1] = char_w
+            rom_data[addr_hdwc + 2] = advance
 
     if len(rom_data) != original_file_size:
         raise ValueError(f"严重错误！{spec_name} 体积被改变！")
@@ -297,14 +298,14 @@ def inject_nftr(spec_name, spec, char_map):
 
 def main():
     print("=" * 50)
-    print(" 智能字库生成引擎 (防弹容错版 + VWF重排版)")
+    print(" 智能字库生成引擎 (防弹容错版 + 空格强制隐身)")
     print("=" * 50)
     
     try:
         char_map = build_font_mapping()
         for name, spec in NFTR_SPECS.items():
             inject_nftr(name, spec, char_map)
-        print("\n🎉 字库构建完美落幕！你的英文和日文也将如丝般顺滑。")
+        print("\n🎉 字库构建完美落幕！幽灵 L 标志已被彻底抹除。")
     except Exception as e:
         print(f"\n❌ 字库构建失败: {e}")
 

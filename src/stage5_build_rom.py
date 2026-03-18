@@ -118,7 +118,7 @@ def build_nds_and_restore_twl():
     if (patched_prg_dir / "arm9.bin").exists():
         rom.arm9 = (patched_prg_dir / "arm9.bin").read_bytes()
         
-    # 3. 【核心修复】以底层原生方式操作 Overlay 文件树与内存映射表 (y9.bin)
+    # 3. 【核心黑科技】越过文件树，直接篡改 FAT 底层数据！
     y9_data = bytearray(rom.arm9OverlayTable)
     if patched_prg_dir.exists():
         for f in os.listdir(patched_prg_dir):
@@ -128,18 +128,21 @@ def build_nds_and_restore_twl():
                 
                 new_data = (patched_prg_dir / f).read_bytes()
                 
-                # 注入到底层文件系统
-                rom.setFileByName(f"overlay/{f}", new_data)
-                
-                # 解除压缩标记并更新大小
                 offset = ovl_id * 32
                 if offset + 32 <= len(y9_data):
-                    file_size = len(new_data)
-                    struct.pack_into('<I', y9_data, offset + 8, file_size)  # RAM Size
-                    struct.pack_into('<I', y9_data, offset + 28, file_size) # Size & Flag (0=未压缩)
-                    print(f"  -> 已注入并解除内存压缩: {f}")
+                    # 获取底层物理 ID
+                    file_id = struct.unpack_from('<I', y9_data, offset + 24)[0] & 0x00FFFFFF
                     
-    # 写回修改后的映射表
+                    if file_id < len(rom.files):
+                        # 一击致命：直接覆写底层内存块！
+                        rom.files[file_id] = new_data
+                        
+                    # 解除压缩标记并更新大小
+                    file_size = len(new_data)
+                    struct.pack_into('<I', y9_data, offset + 8, file_size)
+                    struct.pack_into('<I', y9_data, offset + 28, file_size)
+                    print(f"  -> 已底层物理注入并解除压缩: {f}")
+                    
     rom.arm9OverlayTable = bytes(y9_data)
             
     # 4. 在内存中生成基础 ROM 二进制流

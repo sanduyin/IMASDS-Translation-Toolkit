@@ -46,13 +46,22 @@ def unpack_nds_rom():
     
     print("  -> 正在遍历导出文件系统 (FNT)...")
     base_data_dir.mkdir(parents=True, exist_ok=True)
-    # 把整个 ROM 的文件树提取到 ORIGINAL_DIR / Data 下
     _dump_folder(rom.filenames, "", rom, base_data_dir)
+
+    # 导出映射表和核心文件 (供后续 Stage 2 提取 ARM9 文本计算 RAM 地址使用)
+    EXTRACT_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # 【核心修复】直接从原始文件切下前 512 字节作为 header.bin，绕过 ndspy 对象的限制！
+    with open(ORIGINAL_ROM, 'rb') as f:
+        (EXTRACT_DIR / "header.bin").write_bytes(f.read(0x200))
+        
+    (EXTRACT_DIR / "y9.bin").write_bytes(rom.arm9OverlayTable)
+    (EXTRACT_DIR / "arm7.bin").write_bytes(rom.arm7)
+    (EXTRACT_DIR / "y7.bin").write_bytes(rom.arm7OverlayTable)
 
     print("🔓 正在执行 BLZ 逆向解压算法 (处理 ARM9 & Overlays)...")
     arm9_extract_dir.mkdir(parents=True, exist_ok=True)
     
-    # 1. 尝试解压 ARM9
     try:
         (arm9_extract_dir / "arm9.bin").write_bytes(comp.decompress(rom.arm9))
         print("  -> ✅ arm9.bin 解压成功")
@@ -60,22 +69,23 @@ def unpack_nds_rom():
         (arm9_extract_dir / "arm9.bin").write_bytes(rom.arm9)
         print("  -> ⚠️ arm9.bin 保持原样 (未检测到压缩)")
         
-    # 2. 【核心修复】精确查找到 overlay 文件夹，并遍历其中的文件
+    # =======================================================
+    # 通过 y9.bin 直接狙击底层物理文件 (FAT ID)
+    # =======================================================
     ovl_count = 0
-    overlay_folder = next((folder for name, folder in rom.filenames.folders if name == 'overlay'), None)
-    
-    if overlay_folder:
-        for filename in overlay_folder.files:
-            if filename.startswith("overlay_") and filename.endswith(".bin"):
-                ovl_data = rom.getFileByName(f"overlay/{filename}")
-                try:
-                    # 尝试逆向 BLZ 解压
-                    (arm9_extract_dir / filename).write_bytes(comp.decompress(ovl_data))
-                    ovl_count += 1
-                except Exception:
-                    # 如果原版没有压缩，直接原样保存
-                    (arm9_extract_dir / filename).write_bytes(ovl_data)
-                    
+    y9_data = rom.arm9OverlayTable
+    for i in range(len(y9_data) // 32):
+        ovl_id = struct.unpack_from('<I', y9_data, i * 32)[0]
+        file_id = struct.unpack_from('<I', y9_data, i * 32 + 24)[0] & 0x00FFFFFF
+        
+        if file_id < len(rom.files):
+            ovl_data = rom.files[file_id]
+            try:
+                (arm9_extract_dir / f"overlay_{ovl_id:04d}.bin").write_bytes(comp.decompress(ovl_data))
+            except Exception:
+                (arm9_extract_dir / f"overlay_{ovl_id:04d}.bin").write_bytes(ovl_data)
+            ovl_count += 1
+            
     print(f"  -> ✅ 成功处理并解压了 {ovl_count} 个 Overlay 文件")
     return True
 
