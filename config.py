@@ -43,8 +43,8 @@ EXCEL_TBL = WORKSPACE_DIR / "TBL_Translation.xlsx"
 EXCEL_ARM9 = WORKSPACE_DIR / "ARM9_Overlays_Translation.xlsx"
 MAPPING_FILE = WORKSPACE_DIR / "font_mapping.json"
 
-FONT_12PX = WORKSPACE_DIR / "fusion-pixel-12px-monospaced-zh_hans.otf"
-FONT_10PX = WORKSPACE_DIR / "fusion-pixel-10px-monospaced-zh_hans.otf"
+FONT_12PX = WORKSPACE_DIR / "ZLabsRoundPix_12px_M_CN.ttf"
+FONT_10PX = WORKSPACE_DIR / "fusion-pixel-10px-monospaced-zh_hans.ttf"
 
 ORIGINAL_LC10 = EXTRACT_DIR / "TBL" / "0000_LC10.NFTR"
 ORIGINAL_LC12 = EXTRACT_DIR / "TBL" / "0001_LC12.NFTR"

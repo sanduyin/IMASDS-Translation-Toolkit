@@ -81,17 +81,21 @@ def rebuild_bbq_file(src_path, dst_path, translations, char_map):
         while len(new_pool_data) % 4 != 0: 
             new_pool_data.append(0)
 
+        # =======================================================
+        # 【核心优化：原地顶替与精准截断】
+        # =======================================================
+        # 1. 回写最新的指针表
         f.seek(ptr_tbl_abs)
         for p in new_pointers:
             f.write(struct.pack('<I', p))
             
-        f.seek(0, 2)
-        new_pool_abs_start = f.tell()
+        # 2. 定位到原始的日文文本池起始地址，直接覆盖！
+        f.seek(pool_abs)
         f.write(new_pool_data)
         
-        new_pool_rel = new_pool_abs_start - entry_pos
-        f.seek(entry_pos + 12) 
-        f.write(struct.pack('<I', new_pool_rel))
+        # 3. 截断文件：把后面多余的（或者之前残留的）旧数据统统砍掉！
+        # 这一刀下去，文件彻底瘦身，再长的文本也不会导致冗余体积。
+        f.truncate()
 
 def process_bbq_directory(excel_path, input_subfolder, output_subfolder, char_map):
     if not excel_path.exists():
@@ -187,25 +191,20 @@ def process_arm9_overlays(excel_path, char_map):
                         if b == b'\x00' or b == b'': break
                         original_len += 1
                     
-                    # 【核心修复】原本字符串的空间，必须包含最后的 \x00 结束符！
                     limit_bytes = original_len + 1
-                    
-                    # 编码后的 new_bytes 内部已经自带了 1 个 \x00
                     new_bytes = text_to_bytes(row['Translated_Text'], char_map)
                     
                     if len(new_bytes) > limit_bytes:
-                        print(f"  ⚠️ [溢出跳过] {filename} @ {row['Text_Offset']}")
+                        print(f"  ⚠️[溢出跳过] {filename} @ {row['Text_Offset']}")
                         print(f"     原文: {row['Original_Text']}")
                         print(f"     译文: {row['Translated_Text']}")
                         print(f"     ❌ 译文所需 {len(new_bytes)} 字节 > 原版安全空间 {limit_bytes} 字节\n")
                         total_overflow += 1
                         continue
                     
-                    # 写入 (new_bytes 已经包含 \x00，绝不能再次手写追加 \x00)
                     f.seek(offset)
                     f.write(new_bytes)
                     
-                    # 抹除原版日文字符残影
                     remaining = limit_bytes - len(new_bytes)
                     if remaining > 0:
                         f.write(b'\x00' * remaining)
@@ -225,7 +224,7 @@ def process_arm9_overlays(excel_path, char_map):
 
 def main():
     print("=" * 50)
-    print(" 文本注入与数据重建引擎")
+    print(" 文本注入与数据重建引擎 (极致瘦身版)")
     print("=" * 50)
     
     char_map = load_mapping(MAPPING_FILE)
