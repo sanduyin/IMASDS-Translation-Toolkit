@@ -1,28 +1,41 @@
 # src/utils/binary_io.py
+from __future__ import annotations
+
 import struct
 import io
+from typing import BinaryIO, Union
 
-def read_uint32(data_or_file, offset=None):
+# 支持 bytes/bytearray/memoryview 或文件对象
+BytesLike = Union[bytes, bytearray, memoryview]
+
+
+def read_uint32(data_or_file: BytesLike | BinaryIO, offset: int | None = None) -> int:
     """通用读取 4字节无符号整数"""
-    if hasattr(data_or_file, 'read'):
-        if offset is not None: data_or_file.seek(offset)
-        data = data_or_file.read(4)
-        if len(data) < 4: return 0
-        return struct.unpack('<I', data)[0]
-    else:
-        return struct.unpack('<I', data_or_file[offset:offset + 4])[0]
+    if isinstance(data_or_file, (bytes, bytearray, memoryview)):
+        off = offset if offset is not None else 0
+        return int(struct.unpack('<I', data_or_file[off:off + 4])[0])
+    if offset is not None:
+        data_or_file.seek(offset)
+    data = data_or_file.read(4)
+    if len(data) < 4:
+        return 0
+    return int(struct.unpack('<I', data)[0])
 
-def read_uint16(data_or_file, offset=None):
+
+def read_uint16(data_or_file: BytesLike | BinaryIO, offset: int | None = None) -> int:
     """通用读取 2字节无符号整数"""
-    if hasattr(data_or_file, 'read'):
-        if offset is not None: data_or_file.seek(offset)
-        data = data_or_file.read(2)
-        if len(data) < 2: return 0
-        return struct.unpack('<H', data)[0]
-    else:
-        return struct.unpack('<H', data_or_file[offset:offset + 2])[0]
+    if isinstance(data_or_file, (bytes, bytearray, memoryview)):
+        off = offset if offset is not None else 0
+        return int(struct.unpack('<H', data_or_file[off:off + 2])[0])
+    if offset is not None:
+        data_or_file.seek(offset)
+    data = data_or_file.read(2)
+    if len(data) < 2:
+        return 0
+    return int(struct.unpack('<H', data)[0])
 
-def read_string_bytes(f, offset):
+
+def read_string_bytes(f: BinaryIO, offset: int) -> bytes:
     """从二进制文件中读取遇到 0x00 结束的字符串"""
     pos = f.tell()
     f.seek(offset)
@@ -34,22 +47,30 @@ def read_string_bytes(f, offset):
     f.seek(pos)
     return b"".join(byte_list)
 
-def nlzss_compress(input_bytes):
+
+def nlzss_compress(input_bytes: bytes) -> bytes:
     """NDS LZ10 压缩算法 (提取自 5.Repack_ROM_v22.py)"""
     if len(input_bytes) == 0: return b""
     out = io.BytesIO()
     out.write(struct.pack("<I", (len(input_bytes) << 8) | 0x10))
-    
+
     class NLZ10Window:
+        size: int
+        match_min: int
+        match_max: int
+        data: bytes
+        hash: dict[int, list[int]]
+        index: int
+
         size, match_min, match_max = 4096, 3, 18
-        def __init__(self, buf):
+        def __init__(self, buf: bytes) -> None:
             self.data = buf
             self.hash = {}
             self.index = 0
-            
-        def search(self):
+
+        def search(self) -> tuple[int, int] | None:
             if self.index >= len(self.data): return None
-            counts =[]
+            counts: list[tuple[int, int]] =[]
             curr = self.data[self.index]
             if curr in self.hash:
                 for pos in reversed(self.hash[curr]):
@@ -66,7 +87,7 @@ def nlzss_compress(input_bytes):
             return max(counts, key=lambda x:x[0]) if counts else None
 
     window = NLZ10Window(input_bytes)
-    tokens =[]
+    tokens: list[tuple[int, int] | int] =[]
     while window.index < len(input_bytes):
         match = window.search()
         if match:
@@ -75,8 +96,8 @@ def nlzss_compress(input_bytes):
         else:
             tokens.append(input_bytes[window.index])
             window.index += 1
-            
-    def pack_chunk(chunk):
+
+    def pack_chunk(chunk: list[tuple[int, int] | int]) -> bytes:
         flag = 0
         data = bytearray()
         for i, token in enumerate(chunk):
@@ -91,7 +112,7 @@ def nlzss_compress(input_bytes):
 
     for i in range(0, len(tokens), 8):
         out.write(pack_chunk(tokens[i:i+8]))
-    
+
     padding = (4 - (out.tell() % 4)) % 4
     if padding: out.write(b'\x00' * padding)
     return out.getvalue()

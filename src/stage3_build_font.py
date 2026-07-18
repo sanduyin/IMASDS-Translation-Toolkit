@@ -1,9 +1,15 @@
 # src/stage3_build_font.py
+from __future__ import annotations
+
 import os
 import sys
 import json
 import struct
 import subprocess
+import glob
+from pathlib import Path
+from typing import Any
+
 import pandas as pd
 from PIL import Image, ImageFont, ImageDraw
 
@@ -11,22 +17,25 @@ try:
     import opencc
 except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "opencc"])
-    import opencc
+    import opencc  # type: ignore
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
     EXCEL_SCN, EXCEL_TBL, EXCEL_ARM9, MAPPING_FILE, WORKSPACE_DIR,
     FONT_12PX, FONT_10PX, ORIGINAL_LC12, ORIGINAL_LC10,
-    PATCHED_LC12, PATCHED_LC10
+    PATCHED_LC12, PATCHED_LC10,
+    CSV_SCN_DIR, CSV_TBL_DIR, CSV_ARM9_FILE
 )
 from src.utils.text_encoder import PROTECTED_RANGES, is_protected
 from src.utils.binary_io import read_uint16, read_uint32
+from src.io.csv_handler import read_text_csv, read_arm9_csv, is_csv_path
+from src.utils.mapping_backup import backup_mapping
 
 converter_jp2t = opencc.OpenCC('jp2t.json')
 converter_t2s = opencc.OpenCC('t2s.json')
 
-def convert_to_simp(jis_char):
-    try: return converter_t2s.convert(converter_jp2t.convert(jis_char))
+def convert_to_simp(jis_char: str) -> str:
+    try: return str(converter_t2s.convert(converter_jp2t.convert(jis_char)))
     except: return jis_char
 
 NFTR_SPECS = {
@@ -45,9 +54,9 @@ NFTR_SPECS = {
 }
 
 FALLBACK_FONTS =['msyh.ttc', 'simhei.ttf', 'simsun.ttc', 'Arial Unicode MS.ttf']
-fallback_cache = {}
+fallback_cache: dict[int, Any] = {}
 
-def get_fallback_font(size):
+def get_fallback_font(size: int) -> Any:
     if size in fallback_cache: return fallback_cache[size]
     for font_name in FALLBACK_FONTS:
         try:
@@ -57,7 +66,7 @@ def get_fallback_font(size):
         except: continue
     return None
 
-def is_char_missing(font, char, spec):
+def is_char_missing(font: Any, char: str, spec: dict[str, Any]) -> bool:
     if char in (' ', '\u3000', '\n', '\r', '\t', '\xa0', '\u2002', '\u2003'): return False
     if not hasattr(font, '_missing_bytes'):
         img = Image.new('1', (spec['cell_width'], spec['cell_height']), 0)
@@ -65,9 +74,9 @@ def is_char_missing(font, char, spec):
         font._missing_bytes = img.tobytes()
     img = Image.new('1', (spec['cell_width'], spec['cell_height']), 0)
     ImageDraw.Draw(img).text((0, spec['y_offset']), char, font=font, fill=1)
-    return img.tobytes() == font._missing_bytes
+    return bool(img.tobytes() == font._missing_bytes)
 
-def parse_nftr_pamac(filepath):
+def parse_nftr_pamac(filepath: Path) -> tuple[bytearray, int, int, dict[int, int]]:
     with open(filepath, 'rb') as f: data = bytearray(f.read())
     plgc_off, hdwc_off = data.find(b'PLGC'), data.find(b'HDWC')
     plgc_start, hdwc_start = plgc_off + 16, hdwc_off + 16
@@ -97,20 +106,73 @@ def parse_nftr_pamac(filepath):
         start_search = pamc_off + 4
     return data, plgc_start, hdwc_start, code_to_index
 
-def build_font_mapping():
-    print("\n🔍 正在扫描 Excel 提取翻译字符...")
-    unique_chars = set([' ', '\u3000']) 
-    for filepath in[EXCEL_SCN, EXCEL_TBL, EXCEL_ARM9]:
-        if not filepath.exists(): continue
+def _scan_xlsx_chars(unique_chars: set[str]) -> None:
+    """从 xlsx 翻译表收集字符（向后兼容）"""
+    for filepath in [EXCEL_SCN, EXCEL_TBL, EXCEL_ARM9]:
+        if not filepath.exists():
+            continue
         try:
             for sheet_name, df in pd.read_excel(filepath, sheet_name=None).items():
                 col = 'Translated_Text' if 'Translated_Text' in df.columns else '译文'
-                if col in df.columns: unique_chars.update(list("".join(df[col].dropna().astype(str))))
-        except Exception: pass
+                if col in df.columns:
+                    unique_chars.update(list("".join(df[col].dropna().astype(str))))
+        except Exception:
+            pass
+
+
+def _scan_csv_chars(unique_chars: set[str]) -> None:
+    """从 CSV 翻译表收集字符（P1-4 faraplay 兼容窄列格式）"""
+    import glob
+    # SCN/TBL 目录下的所有 .csv（含 _ML.csv 邮件文件）
+    for csv_dir in (CSV_SCN_DIR, CSV_TBL_DIR):
+        if not os.path.isdir(csv_dir):
+            continue
+        for csv_path in sorted(glob.glob(os.path.join(csv_dir, "*.csv"))):
+            try:
+                for row in read_text_csv(csv_path):
+                    txt = row.get("Translated_Text", "")
+                    if txt:
+                        unique_chars.update(list(txt))
+            except Exception:
+                pass
+    # ARM9 单文件
+    if CSV_ARM9_FILE.exists():
+        try:
+            for row in read_arm9_csv(CSV_ARM9_FILE):
+                txt = row.get("Translated_Text", "")
+                if txt:
+                    unique_chars.update(list(txt))
+        except Exception:
+            pass
+
+
+def build_font_mapping(fmt: str = "xlsx", incremental: bool = True) -> dict[str, int]:
+    """构建字库映射表。
+
+    Args:
+        fmt: "xlsx" 扫描 Excel 翻译表；"csv" 扫描 faraplay 兼容 CSV 目录/文件。
+        incremental: True=增量模式（默认，锁定 old_mapping 已有分配，防止编码漂移）；
+                     False=全量模式（重新优化分配，可能改变已有 code）。
+
+    P3-1 兼容性锁定：incremental 模式下，old_mapping 中所有条目（含翻译表已移除的字符）
+    都会被原样保留，避免字符临时移除导致 code 丢失/漂移。
+    """
+    print(f"\n🔍 正在扫描翻译表提取字符 (格式: {fmt}, 模式: {'增量' if incremental else '全量'})...")
+    unique_chars = set([' ', '\u3000'])
+
+    if fmt == "csv":
+        _scan_csv_chars(unique_chars)
+    else:
+        _scan_xlsx_chars(unique_chars)
+
     unique_chars.difference_update(['\n', '\r', '\t', ''])
 
     old_mapping = {}
     if MAPPING_FILE.exists():
+        # P3-2: 构建前自动备份旧 mapping（便于误操作后回滚）
+        bak = backup_mapping(reason="auto")
+        if bak:
+            print(f"  💾 已备份旧 mapping 至: {bak.name}")
         with open(MAPPING_FILE, 'r', encoding='utf-8') as f:
             old_mapping = json.load(f)
 
@@ -139,7 +201,9 @@ def build_font_mapping():
     taken_slots = set([0x20, 0x8140])
     reused_count = 0
     native_protected_count = 0
+    preserved_count = 0  # incremental 模式保留的 old_mapping 条目数
 
+    # 修正 old_mapping 中 protected 字符的 code（原版注入器一致性）
     for char, old_code in list(old_mapping.items()):
         try:
             code_cp932 = char.encode('cp932')
@@ -148,8 +212,22 @@ def build_font_mapping():
                 old_mapping[char] = code_int 
         except: pass
 
+    # === P3-1: 增量模式 — 先锁定 old_mapping 所有已有分配，防止编码漂移 ===
+    FIXED_CHARS = (' ', '\u3000', '\xa0', '\u2002', '\u2003')
+    if incremental:
+        for char, old_code in old_mapping.items():
+            if char in FIXED_CHARS or char in final_mapping:
+                continue
+            final_mapping[char] = old_code
+            taken_slots.add(old_code)
+            preserved_count += 1
+
     for char in unique_chars:
-        if char in (' ', '\u3000', '\xa0', '\u2002', '\u2003'): continue 
+        if char in FIXED_CHARS: continue 
+
+        # incremental 模式下，已被 old_mapping 锁定的字符跳过（code 不变）
+        if incremental and char in final_mapping:
+            continue
 
         try:
             code_cp932 = char.encode('cp932')
@@ -188,6 +266,22 @@ def build_font_mapping():
 
     for i, char in enumerate(to_be_added):
         final_mapping[char] = available_slots[i]
+
+    # === P3-1: 漂移检测 — 对比 old_mapping 与 final_mapping ===
+    if incremental and old_mapping:
+        drift_changes = []
+        for char, old_code in old_mapping.items():
+            new_code = final_mapping.get(char, old_code)
+            if new_code != old_code:
+                drift_changes.append((char, old_code, new_code))
+        if drift_changes:
+            print(f"  ⚠️[漂移警告] {len(drift_changes)} 个字符的 code 发生变化：")
+            for char, oc, nc in drift_changes[:10]:
+                print(f"     '{char}': 0x{oc:X} → 0x{nc:X}")
+            if len(drift_changes) > 10:
+                print(f"     ... 共 {len(drift_changes)} 个")
+        else:
+            print(f"  ✓ [漂移检测] old_mapping 中 {len(old_mapping)} 个字符的 code 全部稳定（无漂移）")
 
     with open(MAPPING_FILE, 'w', encoding='utf-8') as f:
         json.dump(final_mapping, f, ensure_ascii=False, indent=2)
@@ -228,10 +322,11 @@ def build_font_mapping():
     print(f"  -> ✅ CT2 码表已同步导出至: {ct2_txt_path.name}")
     # ===================================================================
 
-    print(f"✅ 映射分配更新完毕！成功复用原生汉字槽 {reused_count} 个。新增汉字 {len(to_be_added)} 个，剩余空位 {len(available_slots) - len(to_be_added)} 个。")
+    print(f"✅ 映射分配更新完毕！成功复用原生汉字槽 {reused_count} 个。新增汉字 {len(to_be_added)} 个，剩余空位 {len(available_slots) - len(to_be_added)} 个。"
+          + (f" 增量锁定 {preserved_count} 个已有分配（防漂移）。" if incremental and preserved_count else ""))
     return final_mapping
 
-def get_pixel_width(img):
+def get_pixel_width(img: Image.Image) -> int:
     width, height = img.size
     pixels = img.load()
     for x in range(width - 1, -1, -1):
@@ -239,7 +334,7 @@ def get_pixel_width(img):
             if pixels[x, y] > 0: return x + 1
     return 0 
 
-def render_glyph_1bpp(char, font, code, spec):
+def render_glyph_1bpp(char: str, font: Any, code: int, spec: dict[str, Any]) -> tuple[bytearray, int, int]:
     img = Image.new('1', (spec['cell_width'], spec['cell_height']), 0)
     is_space = char in (' ', '\u3000', '\xa0', '\u2002', '\u2003', '\u200b')
     
@@ -270,7 +365,7 @@ def render_glyph_1bpp(char, font, code, spec):
 
     return bytes_data, glyph_w, advance
 
-def inject_nftr(spec_name, spec, char_map):
+def inject_nftr(spec_name: str, spec: dict[str, Any], char_map: dict[str, int]) -> None:
     print(f"\n🔨 正在无损注入 {spec_name} (解开封印：全面洗地 + VWF 排版) ...")
     rom_data, plgc_start, hdwc_start, code_map = parse_nftr_pamac(spec['original'])
     
@@ -326,13 +421,25 @@ def inject_nftr(spec_name, spec, char_map):
 
     print(f"  ✅ {spec_name} 注入完成！\n     - 强覆盖字典汉字 {count_translated} 个\n     - 全局清洗(含英文/标点/假名) {count_unified} 个\n     - 特殊符号透明跳过 {count_skipped} 个。")
 
-def main():
+def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(description="智能字库生成引擎")
+    parser.add_argument("--format", choices=["xlsx", "csv"], default="xlsx",
+                        help="翻译表格式：xlsx（默认）或 csv（faraplay 兼容窄列）")
+    # P3-1: 增量/全量模式互斥组（默认增量，保护 font_mapping.json 已有进度）
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument("--incremental", action="store_true", default=True,
+                            help="增量模式（默认）：锁定 old_mapping 已有分配，防止编码漂移")
+    mode_group.add_argument("--full", dest="incremental", action="store_false",
+                            help="全量模式：重新优化分配（可能改变已有 code，慎用）")
+    args = parser.parse_args()
+
     print("=" * 50)
-    print(" 智能字库生成引擎 (防弹容错版 + 空格强制隐身)")
+    print(f" 智能字库生成引擎 (防弹容错版 + 空格强制隐身) [格式: {args.format}, 模式: {'增量' if args.incremental else '全量'}]")
     print("=" * 50)
-    
+
     try:
-        char_map = build_font_mapping()
+        char_map = build_font_mapping(fmt=args.format, incremental=args.incremental)
         for name, spec in NFTR_SPECS.items():
             inject_nftr(name, spec, char_map)
         print("\n🎉 字库构建完美落幕！幽灵 L 标志已被彻底抹除。")

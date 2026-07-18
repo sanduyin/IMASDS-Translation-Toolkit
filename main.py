@@ -22,10 +22,10 @@ def print_menu():
     print("=" * 60)
     print("  [1] 解包提取 (Unpack)        - 提取原始 BIN/IDX 并解压ARM9")
     print("  [2] 导出文本 (Export Text)   - 生成 SCN, TBL, ARM9 翻译表")
-    print("  [3] 导出图像 (Export Images) - 导出 GLD 与 BG(NCGR) 为 BMP")
-    print("  [4] 构建字库 (Build Font)    - 根据 Excel 动态生成字库")
+    print("  [3] 导出图像 (Export Images) - 导出 GLD→PNG sprite 与 BG(NCGR)")
+    print("  [4] 构建字库 (Build Font)    - 根据 Excel/CSV 动态生成字库")
     print("  [5] 注入文本 (Inject Text)   - 将翻译写回 SCN/TBL/ARM9")
-    print("  [6] 回写图像 (Import Images) - 将修改的 BMP 写回 GLD/BG")
+    print("  [6] 回写图像 (Import Images) - 将修改的 PNG 写回 GLD/BG")
     print("  [7] 打包生成 (Build ROM)     - 生成最终汉化版 .nds")
     print("  [8] 一键自动化 (Auto Build)  - 执行 4 -> 5 -> 6 -> 7")
     print("  [0] 退出控制台")
@@ -49,12 +49,14 @@ def interactive_mode():
             run_stage3()
         elif choice == '5':
             run_stage4_text()
-        elif choice == '6':                  
-            run_stage4_images()
+        elif choice == '6':
+            # 询问是否生成调色板匹配预览
+            want_preview = input("  是否生成调色板匹配预览图? (y/N): ").strip().lower() == 'y'
+            run_stage4_images(preview=want_preview)
             run_stage4_bg()         # <--- 同时回写 BG
-        elif choice == '7':                  
+        elif choice == '7':
             run_stage5()
-        elif choice == '8':                  
+        elif choice == '8':
             print("\n🚀 启动一键自动化构建流水线...")
             run_stage3()
             run_stage4_text()
@@ -72,6 +74,8 @@ def interactive_mode():
 def main():
     parser = argparse.ArgumentParser(description="偶像大师深情之星 汉化构建工具")
     parser.add_argument('command', nargs='?', choices=['unpack', 'export', 'export-images', 'font', 'inject', 'import-images', 'build', 'all'])
+    parser.add_argument('--preview', action='store_true',
+                        help='回写图像时生成调色板匹配预览图 (仅 import-images 有效)')
     args = parser.parse_args()
 
     if args.command == 'unpack':
@@ -79,15 +83,15 @@ def main():
     elif args.command == 'export':
         run_stage2_text()
         run_stage2_arm9()
-    elif args.command == 'export-images': 
+    elif args.command == 'export-images':
         run_stage2_images()
         run_stage2_bg()
     elif args.command == 'font':
         run_stage3()
     elif args.command == 'inject':
         run_stage4_text()
-    elif args.command == 'import-images':   
-        run_stage4_images()
+    elif args.command == 'import-images':
+        run_stage4_images(preview=args.preview)
         run_stage4_bg()
     elif args.command == 'build':
         run_stage5()

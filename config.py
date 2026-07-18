@@ -43,6 +43,17 @@ EXCEL_TBL = WORKSPACE_DIR / "TBL_Translation.xlsx"
 EXCEL_ARM9 = WORKSPACE_DIR / "ARM9_Overlays_Translation.xlsx"
 MAPPING_FILE = WORKSPACE_DIR / "font_mapping.json"
 
+# ================= CSV 翻译表配置 (P1-4, faraplay 兼容窄列) =================
+# 每个 sheet → 一个 CSV 文件，保持多人协作分工边界
+CSV_DIR = WORKSPACE_DIR / "csv"
+CSV_SCN_DIR = CSV_DIR / "SCN"
+CSV_TBL_DIR = CSV_DIR / "TBL"
+CSV_ARM9_DIR = CSV_DIR / "ARM9"
+CSV_ARM9_FILE = CSV_ARM9_DIR / "arm9_overlay_strings.csv"
+
+for _d in (CSV_DIR, CSV_SCN_DIR, CSV_TBL_DIR, CSV_ARM9_DIR):
+    _d.mkdir(parents=True, exist_ok=True)
+
 FONT_12PX = WORKSPACE_DIR / "ZLabsRoundPix_12px_M_CN.ttf"
 FONT_10PX = WORKSPACE_DIR / "fusion-pixel-10px-monospaced-zh_hans.ttf"
 

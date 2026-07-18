@@ -1,8 +1,12 @@
 # src/stage1_unpack.py
+from __future__ import annotations
+
 import os
 import sys
 import struct
 import subprocess
+from pathlib import Path
+from typing import Any
 
 try:
     import ndspy.rom
@@ -17,7 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import ORIGINAL_DIR, EXTRACT_DIR, FILE_PACKS, ORIGINAL_ROM
 from src.utils.binary_io import read_uint32
 
-def _dump_folder(folder_obj, current_path, rom, base_dir):
+def _dump_folder(folder_obj: Any, current_path: str, rom: Any, base_dir: Path) -> None:
     """递归爬树提取器：遍历 ndspy 的 FNT(文件目录表) 树"""
     for filename in folder_obj.files:
         rel_path = current_path + filename
@@ -28,7 +32,7 @@ def _dump_folder(folder_obj, current_path, rom, base_dir):
     for sub_name, sub_folder in folder_obj.folders:
         _dump_folder(sub_folder, current_path + sub_name + "/", rom, base_dir)
 
-def unpack_nds_rom():
+def unpack_nds_rom() -> bool:
     if not ORIGINAL_ROM.exists():
         print(f"❌ 找不到原版游戏 ROM: {ORIGINAL_ROM.name}")
         return False
@@ -89,10 +93,10 @@ def unpack_nds_rom():
     print(f"  -> ✅ 成功处理并解压了 {ovl_count} 个 Overlay 文件")
     return True
 
-def decompress_ring_lz(f_in, decompressed_size):
+def decompress_ring_lz(f_in: bytes, decompressed_size: int) -> bytearray:
     it = iter(f_in)
     out_data, ring_buffer, r_cursor = bytearray(), bytearray(0x1000), 0
-    def get_byte():
+    def get_byte() -> int | None:
         try: return next(it)
         except StopIteration: return None
 
@@ -113,14 +117,15 @@ def decompress_ring_lz(f_in, decompressed_size):
                     ring_buffer[r_cursor] = byte_val
                     r_cursor, read_pos = (r_cursor + 1) % 0x1000, (read_pos + 1) % 0x1000
             else:
-                byte_val = get_byte()
-                if byte_val is None: break
+                next_byte = get_byte()
+                if next_byte is None: break
+                byte_val = next_byte
                 out_data.append(byte_val)
                 ring_buffer[r_cursor] = byte_val
                 r_cursor = (r_cursor + 1) % 0x1000
     return out_data
 
-def extract_archive(ezt_path, ezp_path, output_dir):
+def extract_archive(ezt_path: Path, ezp_path: Path, output_dir: Path) -> None:
     print(f"📦 提取内部数据包: {os.path.basename(ezt_path)}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -142,6 +147,7 @@ def extract_archive(ezt_path, ezp_path, output_dir):
             f_bin.seek(offset)
             raw_data = f_bin.read(phys_len)
             
+            final_data: bytes | bytearray
             if is_compressed and len(raw_data) >= 4 and raw_data[0] == 0x10:
                 try: final_data = decompress_ring_lz(raw_data[4:], decomp_size)
                 except Exception: final_data = raw_data
@@ -167,7 +173,7 @@ def extract_archive(ezt_path, ezp_path, output_dir):
             with open(output_dir / f"{i:04d}_{file_name}", "wb") as f_out:
                 f_out.write(final_data)
 
-def main():
+def main() -> None:
     print("=" * 50)
     print(" 纯 Python NDS 底层解包引擎 (ndspy)")
     print("=" * 50)

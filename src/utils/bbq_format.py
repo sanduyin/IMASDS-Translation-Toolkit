@@ -1,12 +1,19 @@
 # src/utils/bbq_format.py
+from __future__ import annotations
+
 import struct
 import os
+from pathlib import Path
+from typing import Any
+
 from src.utils.binary_io import read_uint32, read_string_bytes
 
-def parse_bbq_file(file_path, is_scn=True):
+
+def parse_bbq_file(file_path: str | Path, is_scn: bool = True, skip_empty: bool = True) -> list[dict[str, Any]]:
     """
     解析游戏的 .bbq 封包文件格式。
     增加 is_scn 开关：如果是 TBL，强行跳过 Section 5 角色解析，避免串号乱码。
+    skip_empty: 为 False 时保留空行（CSV 模式需要，行顺序=字符串索引，兼容 faraplay 行顺序匹配）。
     """
     with open(file_path, 'rb') as f:
         header_sig = f.read(8)
@@ -23,7 +30,7 @@ def parse_bbq_file(file_path, is_scn=True):
         if f.tell() != header_size: 
             f.seek(header_size)
 
-        sections = {}
+        sections: dict[int, dict[str, Any]] = {}
         for _ in range(n_sections):
             offset = f.tell()
             sect_id = read_uint32(f)
@@ -95,8 +102,8 @@ def parse_bbq_file(file_path, is_scn=True):
             txt = raw_texts[i]
             max_bytes = max_bytes_list[i]
             
-            # 过滤“幽灵空行”
-            if max_bytes == 0 and not txt.strip():
+            # 过滤“幽灵空行”（CSV 模式 skip_empty=False 时保留，确保行顺序=字符串索引）
+            if skip_empty and max_bytes == 0 and not txt.strip():
                 continue
                 
             # 根据是否为 SCN 决定显示样式

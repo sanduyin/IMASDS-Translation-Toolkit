@@ -1,4 +1,6 @@
 # src/stage5_build_rom.py
+from __future__ import annotations
+
 import os
 import sys
 import struct
@@ -18,7 +20,7 @@ from config import (
 )
 from src.utils.binary_io import read_uint32, nlzss_compress
 
-def crc16_nds(data: bytes) -> int:
+def crc16_nds(data: bytes | bytearray) -> int:
     crc = 0xFFFF
     for byte in data:
         crc ^= byte
@@ -27,7 +29,7 @@ def crc16_nds(data: bytes) -> int:
             else: crc >>= 1
     return crc & 0xFFFF
 
-def repack_data_archives():
+def repack_data_archives() -> None:
     print("📦 开始重构建核心数据包 (BIN/IDX)...")
     orig_data_dir = ORIGINAL_DIR / "Data"
     
@@ -102,7 +104,7 @@ def repack_data_archives():
             
         print(f"     ✅ 写入完毕，压缩替换了 {mod_count} 个汉化文件。")
 
-def build_nds_and_restore_twl():
+def build_nds_and_restore_twl() -> None:
     print("\n🛠️  正在使用 ndspy 纯 Python 引擎在内存中构建 ROM...")
     rom = ndspy.rom.NintendoDSRom.fromFile(str(ORIGINAL_ROM))
     
@@ -136,11 +138,25 @@ def build_nds_and_restore_twl():
                     if file_id < len(rom.files):
                         # 一击致命：直接覆写底层内存块！
                         rom.files[file_id] = new_data
-                        
+
                     # 解除压缩标记并更新大小
+                    # overlay 表项字段（每个 32 字节）：
+                    #   offset+0   overlay_id
+                    #   offset+4   ram_address
+                    #   offset+8   ram_size（解压后 RAM 占用大小）
+                    #   offset+12  bss_size
+                    #   offset+16  static_init_start
+                    #   offset+20  static_init_end
+                    #   offset+24  file_id（低 24 位）+ 高字节压缩标志
+                    #   offset+28  compressed_size_flag：高字节 0x02=未压缩，0x03=BLZ 压缩
+                    #               低 24 位 = 文件大小
+                    # 旧代码直接写 file_size 到 offset+28，导致高字节=0x00（非法值），
+                    # NDS BIOS overlay loader 在严格模式下拒绝加载 → 进入 overlay 场景时白屏。
                     file_size = len(new_data)
                     struct.pack_into('<I', y9_data, offset + 8, file_size)
-                    struct.pack_into('<I', y9_data, offset + 28, file_size)
+                    # 高字节 0x02 = standard uncompressed flag（参见 ndstool/overlay.py:30-34）
+                    new_flag = 0x02000000 | (file_size & 0x00FFFFFF)
+                    struct.pack_into('<I', y9_data, offset + 28, new_flag)
                     print(f"  -> 已底层物理注入并解除压缩: {f}")
                     
     rom.arm9OverlayTable = bytes(y9_data)
@@ -180,14 +196,53 @@ def build_nds_and_restore_twl():
         
     struct.pack_into('<I', final_rom, 0x80, orig_ntr_size if has_twl else new_ntr_size)
     if has_twl: final_rom[0x1C0:0x200] = orig_header[0x1C0:0x200]
-    
-    new_crc = crc16_nds(final_rom[0x000:0x15C])
-    struct.pack_into('<H', final_rom, 0x15C, new_crc)
-    
-    OUTPUT_ROM.write_bytes(final_rom)
-    print(f"  ✅ DSi 数据嫁接完成！Header CRC16 已重新校验并更新：0x{new_crc:04X}")
 
-def main():
+    # ===================================================================
+    # NDS Header / ARM9 关键修复（4 项致命问题的补齐）
+    # ===================================================================
+    # ndspy 的 rom.save() 不会做以下 4 件事，导致 ROM 在 NDS BIOS 启动
+    # 校验阶段失败 → 白屏。参见 src/ndstool/rom_builder.py 与 reference/
+    # dearlystars_tool/ndstool/src/write_rom.rs 的对应实现。
+    # -------------------------------------------------------------------
+
+    # 修复 1: ARM9 内部 0x0FC4 = "压缩数据结束内存地址"
+    #   ndspy save() 不压缩 ARM9（ARM9 数据是解压后的），故 0x0FC4 必须为 0。
+    #   旧代码设 0x0FC4 = ARM9_RAM_BASE + arm9_size（非零），BIOS 误以为 ARM9
+    #   是 BLZ 压缩的，尝试解压未压缩数据 → 崩溃 → 白屏。
+    #   正确行为：0x0FC4 = 0 表示 ARM9 未压缩，BIOS 直接加载不解压。
+    ARM9_RAM_BASE = 0x02004000
+    ARM9_COMPRESSED_END_PTR_OFFSET = 0x0FC4
+    arm9_rom_offset = struct.unpack_from('<I', final_rom, 0x20)[0]
+    arm9_size = struct.unpack_from('<I', final_rom, 0x2C)[0]
+    if arm9_rom_offset + ARM9_COMPRESSED_END_PTR_OFFSET + 4 <= len(final_rom):
+        struct.pack_into('<I', final_rom,
+                         arm9_rom_offset + ARM9_COMPRESSED_END_PTR_OFFSET,
+                         0)
+        print(f"  -> ARM9 0x0FC4 已清零 (ARM9 未压缩, ndspy save 不压缩 ARM9)")
+
+    # 修复 2: Secure Area CRC (Header 0x06C)
+    #   Secure Area = ARM9 前 0x4000 字节 = ROM[0x4000:0x8000]
+    #   当 arm9_rom_offset == 0x4000 时（标准 NDS ROM 布局），
+    #   BIOS 校验这 0x4000 字节的 CRC16，不匹配 → 白屏。
+    if arm9_rom_offset == 0x4000 and len(final_rom) >= 0x8000:
+        secure_area_crc = crc16_nds(bytes(final_rom[0x4000:0x8000]))
+        struct.pack_into('<H', final_rom, 0x6C, secure_area_crc)
+        print(f"  -> Secure area CRC 已重算: 0x{secure_area_crc:04X}")
+
+    # 修复 3: Logo CRC (Header 0x15C) = CRC16 of 0x0C0~0x15B (Nintendo Logo)
+    logo_crc = crc16_nds(bytes(final_rom[0x0C0:0x15C]))
+    struct.pack_into('<H', final_rom, 0x15C, logo_crc)
+
+    # 修复 4: Header CRC (Header 0x15E) = CRC16 of 0x000~0x15D
+    #   旧代码错误地把 CRC 写入 0x15C（Logo CRC 位置），且范围用 0x000~0x15B，
+    #   既不是 Logo CRC 范围（应为 0x0C0~0x15B），也不是 Header CRC 范围。
+    header_crc = crc16_nds(bytes(final_rom[0x000:0x15E]))
+    struct.pack_into('<H', final_rom, 0x15E, header_crc)
+
+    OUTPUT_ROM.write_bytes(final_rom)
+    print(f"  ✅ DSi 数据嫁接完成！Logo CRC=0x{logo_crc:04X}, Header CRC=0x{header_crc:04X}")
+
+def main() -> None:
     print("=" * 50)
     print(" THE iDOLM@STER Dearly Stars - 纯 Python 终极构建")
     print("=" * 50)

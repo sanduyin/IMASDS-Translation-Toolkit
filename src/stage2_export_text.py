@@ -1,28 +1,37 @@
 # src/stage2_export_text.py
+from __future__ import annotations
+
 import os
 import sys
 import re
-import pandas as pd
+import argparse
+from pathlib import Path
+from typing import Any
 from collections import defaultdict
+
+import pandas as pd
 
 # 导入全局配置和工具类
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import EXTRACT_DIR, EXCEL_SCN, EXCEL_TBL
+from config import EXTRACT_DIR, EXCEL_SCN, EXCEL_TBL, CSV_SCN_DIR, CSV_TBL_DIR
 from src.utils.bbq_format import parse_bbq_file
+from src.utils.bbq_mail import parse_mail_bbq
+from src.io.csv_handler import write_text_csv, write_mail_csv, is_mail_file
 
-def extract_sort_key(filename):
+def extract_sort_key(filename: str) -> int:
     """提取文件名中的数字前缀用于排序，例如 '0001_A.bin' 返回 1"""
     match = re.search(r'(\d+)', filename)
     return int(match.group(1)) if match else 999999
 
-def extract_group_name(filename):
+def extract_group_name(filename: str) -> str:
     """去除文件名中的数字前缀和后缀，提取纯字母标识用于划分 Excel Sheet 页"""
     name = os.path.splitext(filename)[0]
     name = re.sub(r'^\d+_', '', name)
     name = re.sub(r'_MES$', '', name, flags=re.IGNORECASE)
     return name
 
-def create_styled_excel(data_groups, output_path, is_scn=False):
+def create_styled_excel(data_groups: dict[str, list[dict[str, Any]]],
+                        output_path: Path, is_scn: bool = False) -> None:
     """
     将提取的文本数据写入 Excel，并应用严格的条件格式和样式规则。
     """
@@ -91,49 +100,131 @@ def create_styled_excel(data_groups, output_path, is_scn=False):
             # 冻结首行和前三列 (TBL不需要冻结前三列)
             ws.freeze_panes(1, 3 if is_scn else 1)
 
-def export_bbq_directory(input_folder, output_excel, is_scn=False):
+def export_bbq_directory(input_folder: Path, output_excel: Path,
+                         is_scn: bool = False, fmt: str = "xlsx") -> None:
     """遍历指定目录读取所有 bbq/bin 文件并导出"""
     if not input_folder.exists():
         print(f"找不到文件夹，请先执行解包: {input_folder}")
         return
-        
+
     print(f"开始解析目录: {input_folder}")
     all_files =[]
-    
+
     for root, _, files in os.walk(input_folder):
         for file in files:
             if file.lower().endswith(('.bbq', '.bin')):
                 all_files.append(os.path.join(root, file))
-    
+
     # 按文件名前缀的数字序号严格排序
     all_files.sort(key=lambda x: extract_sort_key(os.path.basename(x)))
 
-    grouped_data = defaultdict(list)
+    if fmt == "csv":
+        _export_csv(all_files, is_scn, output_excel)
+    else:
+        grouped_data = defaultdict(list)
+        for file_path in all_files:
+            filename = os.path.basename(file_path)
+            entries = parse_bbq_file(file_path, is_scn=is_scn)
+            if entries:
+                group_name = extract_group_name(filename) if is_scn else filename
+                grouped_data[group_name].extend(entries)
+        if grouped_data:
+            create_styled_excel(grouped_data, output_excel, is_scn)
+        else:
+            print(f"未在 {input_folder} 中提取到有效文本。")
+
+
+def _export_csv(all_files: list[str], is_scn: bool, output_dir: Path) -> None:
+    """
+    CSV 模式导出：每个 sheet（一组 BBQ）→ 一个 CSV 文件。
+
+    - 普通文件 → {group_name}.csv（3 列 faraplay 兼容窄列）
+    - 邮件文件 → {basename}_ML.csv（5 列 faraplay ML 格式，所有邮件合并到一个文件）
+      邮件分支调用 parse_mail_bbq + write_mail_csv，每个邮件 BBQ 占 1 行，
+      Mail/Reply 列用 \\n 拼接多行字符串放在 quoted 单元格内。
+    - skip_empty=False：保留空行，行顺序=字符串索引（兼容 faraplay 行顺序匹配）
+
+    output_dir 参数实际为 CSV 目录（CSV_SCN_DIR 或 CSV_TBL_DIR）。
+    basename 取自 output_dir 名称（"SCN" 或 "TBL"），与 faraplay 文件命名一致。
+    """
+    # 按文件名数字前缀排序后，逐文件解析并按 group_name 分组
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    mail_rows: list[dict[str, Any]] = []  # 所有邮件合并到一个列表
+
     for file_path in all_files:
         filename = os.path.basename(file_path)
-        
-        # 【核心修复】这里将 is_scn 状态传递给了底层的解析器！
-        entries = parse_bbq_file(file_path, is_scn=is_scn)
-        
-        if entries:
-            # SCN 会根据文件名拆分 Sheet，TBL 为了方便也使用同样的分类
-            group_name = extract_group_name(filename) if is_scn else filename
-            grouped_data[group_name].extend(entries)
 
-    if grouped_data:
-        create_styled_excel(grouped_data, output_excel, is_scn)
-    else:
-        print(f"未在 {input_folder} 中提取到有效文本。")
+        if is_mail_file(filename):
+            # 邮件分支：调用 parse_mail_bbq 获取 (mail1, mail2)
+            try:
+                mail1, mail2 = parse_mail_bbq(file_path)
+            except Exception as e:
+                print(f"  ⚠️ 邮件解析失败 {filename}: {e}，跳过")
+                continue
+            mail_rows.append({
+                "Filename": filename,
+                "Mail": mail1,
+                "Translated Mail": "",
+                "Reply": mail2,
+                "Translated Reply": "",
+            })
+            continue
 
-def main():
+        # 普通文本分支：parse_bbq_file + 3 列 CSV
+        entries = parse_bbq_file(file_path, is_scn=is_scn, skip_empty=False)
+        if not entries:
+            continue
+
+        csv_rows = [{
+            "Filename": filename,
+            "Text": e["Original_Text"],
+            "Translated_Text": e.get("Translated_Text", ""),
+        } for e in entries]
+
+        group_name = extract_group_name(filename) if is_scn else filename
+        grouped[group_name].extend(csv_rows)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    total_files = 0
+
+    # 普通文本 CSV
+    for group_name, rows in sorted(grouped.items()):
+        csv_path = output_dir / f"{group_name}.csv"
+        count = write_text_csv(csv_path, rows)
+        total_files += 1
+        print(f"  -> {csv_path.name}: {count} 行")
+
+    # 邮件 CSV（所有邮件合并到一个文件，命名 {basename}_ML.csv，与 faraplay 一致）
+    if mail_rows:
+        # basename 取自 output_dir 名称（如 "TBL" / "SCN"）
+        basename = output_dir.name
+        ml_csv_path = output_dir / f"{basename}_ML.csv"
+        count = write_mail_csv(ml_csv_path, mail_rows)
+        total_files += 1
+        print(f"  -> {ml_csv_path.name}: {count} 个邮件 (5 列 ML 格式)")
+
+    print(f"✅ CSV 导出完毕：{total_files} 个文件 → {output_dir}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="SCN/TBL 文本导出")
+    parser.add_argument("--format", choices=["xlsx", "csv"], default="xlsx",
+                        help="输出格式：xlsx（默认，9列带条件格式）或 csv（faraplay 兼容窄列）")
+    args = parser.parse_args()
+
+    fmt = args.format
+    print(f"导出格式: {fmt}")
+
     # 1. 导出 SCN 剧情文本 (开启 is_scn=True, 会解析角色且冻结多列)
     scn_dir = EXTRACT_DIR / "SCN"
-    export_bbq_directory(scn_dir, EXCEL_SCN, is_scn=True)
-    
+    scn_output = CSV_SCN_DIR if fmt == "csv" else EXCEL_SCN
+    export_bbq_directory(scn_dir, scn_output, is_scn=True, fmt=fmt)
+
     # 2. 导出 TBL 系统文本 (开启 is_scn=False, 忽略角色名，Speaker 全填 ×)
     tbl_dir = EXTRACT_DIR / "TBL"
-    export_bbq_directory(tbl_dir, EXCEL_TBL, is_scn=False)
-    
+    tbl_output = CSV_TBL_DIR if fmt == "csv" else EXCEL_TBL
+    export_bbq_directory(tbl_dir, tbl_output, is_scn=False, fmt=fmt)
+
     print("✅ SCN/TBL 文本导出流程执行完毕。")
 
 if __name__ == "__main__":
