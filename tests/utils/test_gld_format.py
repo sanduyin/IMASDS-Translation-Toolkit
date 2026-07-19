@@ -117,27 +117,27 @@ class TestBGR555Conversion:
             assert r == (x << 3) | (x >> 2)
 
     def test_bgr555_is_transparent(self) -> None:
-        assert bgr555_is_transparent(0x8000) is True
-        assert bgr555_is_transparent(0x8001) is True
-        assert bgr555_is_transparent(0x7FFF) is False
-        assert bgr555_is_transparent(0x0000) is False
+        # bit15=1 → 不透明；bit15=0 → 透明
+        assert bgr555_is_transparent(0x8000) is False
+        assert bgr555_is_transparent(0x8001) is False
+        assert bgr555_is_transparent(0x7FFF) is True
+        assert bgr555_is_transparent(0x0000) is True
 
     def test_rgb888_to_bgr555_basic(self) -> None:
-        # 0,0,0 → 0
-        assert rgb888_to_bgr555(0, 0, 0) == 0x0000
-        # 255,255,255 → 0x7FFF
-        assert rgb888_to_bgr555(255, 255, 255) == 0x7FFF
-        # 255,0,0 → 0x001F
-        assert rgb888_to_bgr555(255, 0, 0) == 0x001F
+        # 默认 transparent=False → 不透明 → bit15=1
+        assert rgb888_to_bgr555(0, 0, 0) == 0x8000
+        assert rgb888_to_bgr555(255, 255, 255) == 0xFFFF
+        assert rgb888_to_bgr555(255, 0, 0) == 0x801F
 
     def test_rgb888_to_bgr555_transparent_flag(self) -> None:
+        # transparent=True → 透明 → bit15=0
         result = rgb888_to_bgr555(0, 0, 0, transparent=True)
-        assert result == 0x8000
+        assert result == 0x0000
 
     def test_rgb888_to_bgr555_is_lossy_truncation(self) -> None:
         # 8bit → 5bit 是有损截断：x >> 3
         # 例如 0xFF → 0x1F，0xFE → 0x1F，0xF8 → 0x1F
-        assert rgb888_to_bgr555(255, 0, 0) == rgb888_to_bgr555(248, 0, 0) == 0x001F
+        assert rgb888_to_bgr555(255, 0, 0) == rgb888_to_bgr555(248, 0, 0) == 0x801F
 
 
 # ----------------------------------------------------------------------
@@ -195,27 +195,27 @@ class TestPixelPacking:
 
 class TestPaletteMatching:
     def test_color_distance_zero_for_identical(self) -> None:
-        # 同色（5bit 各通道相同）距离为 0
-        color = 0x001F  # r=0x1F
+        # 同色（5bit 各通道相同）距离为 0；bit15=1 不透明
+        color = 0x801F  # r=0x1F, bit15=1 不透明
         dist = color_distance(0xFF, 0, 0, False, color)
         assert dist == 0
 
     def test_color_distance_transparent_penalty(self) -> None:
         # 透明标志不同时加 100 惩罚
-        palette_color = 0x8000  # 透明
-        dist_with_penalty = color_distance(0, 0, 0, False, palette_color)
-        dist_without = color_distance(0, 0, 0, True, palette_color)
+        palette_color = 0x8000  # 不透明（bit15=1）
+        dist_with_penalty = color_distance(0, 0, 0, True, palette_color)   # PNG透明 vs 调色板不透明
+        dist_without = color_distance(0, 0, 0, False, palette_color)       # 都不透明
         assert dist_with_penalty == 100
         assert dist_without == 0
 
     def test_get_color_index_exact_match(self) -> None:
-        palette = [0x0000, 0x001F, 0x03E0]  # 黑、红、绿
+        palette = [0x8000, 0x801F, 0x83E0]  # 黑、红、绿（均不透明）
         # 完全匹配红色
         idx = get_color_index(0xFF, 0, 0, False, palette)
         assert idx == 1
 
     def test_get_color_index_nearest(self) -> None:
-        palette = [0x0000, 0x7FFF]  # 黑、白
+        palette = [0x8000, 0xFFFF]  # 黑、白（均不透明）
         # 灰色 (128,128,128) 应更接近白色
         idx = get_color_index(128, 128, 128, False, palette)
         assert idx == 1
@@ -509,7 +509,7 @@ class TestExtractSpriteRgba:
         # pixel 0 = color 0, alpha 0 → 0x00
         # pixel 1 = color 1, alpha 7 (0xE0) → 0x01 | 0xE0 = 0xE1
         pixel_data = bytearray([0x00, 0xE1, 0x00, 0xE1])
-        palette_data = bytearray(struct.pack('<4H', 0x0000, 0x001F, 0x03E0, 0x7C00))
+        palette_data = bytearray(struct.pack('<4H', 0x8000, 0x801F, 0x83E0, 0xFC00))
 
         header = GldHeader(
             magic=GLD_MAGIC, data_04=2, data_06=FOOTER_TYPE_1,
@@ -549,7 +549,7 @@ class TestExtractSpriteRgba:
     def _build_format4_gld() -> GldFile:
         """Format 4 (8bpp, 256色, 纯索引)。"""
         pixel_data = bytearray([0, 1, 2, 3])
-        palette_data = bytearray(struct.pack('<4H', 0x0000, 0x001F, 0x03E0, 0x7C00))
+        palette_data = bytearray(struct.pack('<4H', 0x8000, 0x801F, 0x83E0, 0xFC00))
         header = GldHeader(
             magic=GLD_MAGIC, data_04=2, data_06=FOOTER_TYPE_1,
             total_size=0, data_0c=4, data_10=0,
@@ -575,8 +575,8 @@ class TestExtractSpriteRgba:
 
     def test_extract_format4_transparent_palette(self) -> None:
         gld = self._build_format4_gld()
-        # 把 palette[2] 设为透明 (bit15)
-        struct.pack_into('<H', gld.palette_data, 4, 0x83E0)  # 透明绿
+        # 把 palette[2] 设为透明（bit15=0）
+        struct.pack_into('<H', gld.palette_data, 4, 0x03E0)  # 透明绿
         w, h, rgba = gld.extract_sprite_rgba(0)
         # pixel 2 = color 2 = 透明绿 → alpha=0
         assert rgba[8:12] == bytes([0, 255, 0, 0])
@@ -586,7 +586,7 @@ class TestExtractSpriteRgba:
         """Format 3 (4bpp, 16色)。crop 4x1，render_width=4，4*4//8=2 字节。"""
         # 2 字节 = 4 像素：byte0=[p0,p1], byte1=[p2,p3]
         pixel_data = bytearray([0x10, 0x32])  # p0=0,p1=1,p2=2,p3=3
-        palette_data = bytearray(struct.pack('<4H', 0x0000, 0x001F, 0x03E0, 0x7C00))
+        palette_data = bytearray(struct.pack('<4H', 0x8000, 0x801F, 0x83E0, 0xFC00))
         header = GldHeader(
             magic=GLD_MAGIC, data_04=2, data_06=FOOTER_TYPE_1,
             total_size=0, data_0c=2, data_10=0,
@@ -617,7 +617,7 @@ class TestExtractSpriteRgba:
         """Format 2 (2bpp, 4色)。crop 4x1，render_width=4，4*2//8=1 字节。"""
         # 1 字节 = 4 像素：[p0,p1,p2,p3] = [0,1,2,3] = 0xE4
         pixel_data = bytearray([0xE4])
-        palette_data = bytearray(struct.pack('<4H', 0x0000, 0x001F, 0x03E0, 0x7C00))
+        palette_data = bytearray(struct.pack('<4H', 0x8000, 0x801F, 0x83E0, 0xFC00))
         header = GldHeader(
             magic=GLD_MAGIC, data_04=2, data_06=FOOTER_TYPE_1,
             total_size=0, data_0c=1, data_10=0,
@@ -648,7 +648,7 @@ class TestExtractSpriteRgba:
         # pixel 0 = color 0, alpha 0 → 0x00
         # pixel 1 = color 1, alpha 31 (0xF8) → 0x01 | 0xF8 = 0xF9
         pixel_data = bytearray([0x00, 0xF9])
-        palette_data = bytearray(struct.pack('<4H', 0x0000, 0x001F, 0x03E0, 0x7C00))
+        palette_data = bytearray(struct.pack('<4H', 0x8000, 0x801F, 0x83E0, 0xFC00))
         header = GldHeader(
             magic=GLD_MAGIC, data_04=2, data_06=FOOTER_TYPE_1,
             total_size=0, data_0c=2, data_10=0,
@@ -759,7 +759,7 @@ class TestInjectSpriteRgba:
         # 实际：crop_x=1, crop_width=2 → 修改 pixel[1], pixel[2]
         # 期望像素 [0,3,3,3]
         pixel_data = bytearray([0x10, 0x32])  # [0,1,2,3]
-        palette_data = bytearray(struct.pack('<4H', 0x0000, 0x001F, 0x03E0, 0x7C00))
+        palette_data = bytearray(struct.pack('<4H', 0x8000, 0x801F, 0x83E0, 0xFC00))
         header = GldHeader(
             magic=GLD_MAGIC, data_04=2, data_06=FOOTER_TYPE_1,
             total_size=0, data_0c=2, data_10=0,
@@ -789,7 +789,7 @@ class TestInjectSpriteRgba:
         # 原像素 [0,1,2,3]，修改 [1,2] 为 color 0
         # 期望像素 [0,0,0,3]
         pixel_data = bytearray([0xE4])  # [0,1,2,3]
-        palette_data = bytearray(struct.pack('<4H', 0x0000, 0x001F, 0x03E0, 0x7C00))
+        palette_data = bytearray(struct.pack('<4H', 0x8000, 0x801F, 0x83E0, 0xFC00))
         header = GldHeader(
             magic=GLD_MAGIC, data_04=2, data_06=FOOTER_TYPE_1,
             total_size=0, data_0c=1, data_10=0,

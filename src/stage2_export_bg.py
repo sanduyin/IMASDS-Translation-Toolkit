@@ -31,35 +31,32 @@ def parse_nclr(nclr_data: bytes) -> list[tuple[int, int, int]]:
     sec_data = sections.get('TTLP') or sections.get('PLTT')
     if not sec_data: raise ValueError("未找到调色板 Section")
 
-    # TTLP/PLTT body 结构（GBATEK + Tinke + ndspy 一致约定）：
-    #   0x00  4  hdr_size（实际值不可靠，部分文件为 0x4，但实际跳过 0x18）
-    #   0x04  4  pal_data_size（部分文件为 0，不可靠）
-    #   0x08  4  color_count（颜色数）
-    #   0x0C  4  bit_depth（3=4bpp, 4=8bpp, 5=direct, 0x10=16-bit 标记）
-    #   0x10  4  padding
-    #   0x14  4  extended_size（可选）
-    #   0x18  -  palette data（RGB555，每色 2 字节）
-    # 故固定从 0x18 起读取，size = section 末尾 - 0x18。
-    # 旧代码误从 0x08/0x0C 读取 color_count/bit_depth，导致 pal_offset=3/4
-    # 读到的是 section 头元数据，最终调色板几乎全黑 → 渲染为纯单色。
-    pal_offset = 0x18
-    if pal_offset >= len(sec_data):
-        # 极小 section 兜底（理论上不会触发，但保护避免越界）
-        pal_offset = max(struct.unpack_from('<I', sec_data, 0x00)[0], 0x10)
+    # TTLP/PLTT body 结构（GBATEK + 实测验证）：
+    #   0x00  4  hdr_size（实测值不可靠：0x3 或 0x4，不能用作偏移）
+    #   0x04  4  pal_data_size（实测全为 0，不可靠）
+    #   0x08  4  color_count（实测全为 512，不可靠）
+    #   0x0C  4  bit_depth（实测全为 0x10，不可靠）
+    #   0x10  -  palette data（RGB555，每色 2 字节，共 256 色 = 512 字节）
+    # 实测所有 NCLR body 长 528 字节 = 0x10 头 + 512 字节调色板数据。
+    # 旧代码误用 0x18 作为偏移，导致：
+    #   1) 8bpp 索引 252-255 越界补齐为黑色（原应为白色 0x7FFF）→ "白色变黑色"
+    #   2) 4bpp 子调色板边界错位 4 个颜色 → 调色板分配混乱
+    pal_offset = 0x10
     pal_size = len(sec_data) - pal_offset
     raw = sec_data[pal_offset : pal_offset + pal_size]
     colors =[]
     for i in range(len(raw) // 2):
         col = struct.unpack_from('<H', raw, i * 2)[0]
-        # RGB555 → RGB888 精确转换：(v << 3) | (v >> 2)
-        # 旧代码用 *8（等价于 <<3），5位最大值31映射到248而非255，
-        # 导致白色偏灰、色阶不连续 → 颜色锯齿
+        # RGB555 → RGB888：直接 <<3（NDS 硬件实际行为）
+        # NDS LCD 硬件就是直接 <<3 不做高位回填，所以 31→248（不是 255）。
+        # 旧代码用 (v<<3)|(v>>2) 高位回填，虽然数学上"精确"，但与硬件行为不一致，
+        # 导致导出的颜色与游戏实际显示不符。
         r5 = col & 0x1F
         g5 = (col >> 5) & 0x1F
         b5 = (col >> 10) & 0x1F
-        r = (r5 << 3) | (r5 >> 2)
-        g = (g5 << 3) | (g5 >> 2)
-        b = (b5 << 3) | (b5 >> 2)
+        r = r5 << 3
+        g = g5 << 3
+        b = b5 << 3
         colors.append((r, g, b))
 
     while len(colors) < 256:

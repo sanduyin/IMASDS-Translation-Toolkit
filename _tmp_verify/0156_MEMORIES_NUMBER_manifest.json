@@ -1,0 +1,439 @@
+{
+  "stem": "0156_MEMORIES_NUMBER",
+  "bpp": 4,
+  "mapping_mode": 2,
+  "n_tiles": 40,
+  "n_cells": 10,
+  "green_screen": [
+    0,
+    255,
+    0
+  ],
+  "gray_palette": [
+    [
+      0,
+      255,
+      0
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      17,
+      17,
+      17
+    ],
+    [
+      34,
+      34,
+      34
+    ],
+    [
+      51,
+      51,
+      51
+    ],
+    [
+      68,
+      68,
+      68
+    ],
+    [
+      85,
+      85,
+      85
+    ],
+    [
+      102,
+      102,
+      102
+    ],
+    [
+      119,
+      119,
+      119
+    ],
+    [
+      136,
+      136,
+      136
+    ],
+    [
+      153,
+      153,
+      153
+    ],
+    [
+      170,
+      170,
+      170
+    ],
+    [
+      187,
+      187,
+      187
+    ],
+    [
+      204,
+      204,
+      204
+    ],
+    [
+      221,
+      221,
+      221
+    ],
+    [
+      238,
+      238,
+      238
+    ]
+  ],
+  "cells": [
+    {
+      "cell_idx": 0,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        0,
+        0,
+        16,
+        16
+      ],
+      "representative_cell_idx": 0,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 0,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            0,
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "cell_idx": 1,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        17,
+        0,
+        16,
+        16
+      ],
+      "representative_cell_idx": 1,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 1,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "cell_idx": 2,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        34,
+        0,
+        16,
+        16
+      ],
+      "representative_cell_idx": 2,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 2,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            8,
+            9,
+            10,
+            11
+          ]
+        }
+      ]
+    },
+    {
+      "cell_idx": 3,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        0,
+        17,
+        16,
+        16
+      ],
+      "representative_cell_idx": 3,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 3,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            12,
+            13,
+            14,
+            15
+          ]
+        }
+      ]
+    },
+    {
+      "cell_idx": 4,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        17,
+        17,
+        16,
+        16
+      ],
+      "representative_cell_idx": 4,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 4,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            16,
+            17,
+            18,
+            19
+          ]
+        }
+      ]
+    },
+    {
+      "cell_idx": 5,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        34,
+        17,
+        16,
+        16
+      ],
+      "representative_cell_idx": 5,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 5,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            20,
+            21,
+            22,
+            23
+          ]
+        }
+      ]
+    },
+    {
+      "cell_idx": 6,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        0,
+        34,
+        16,
+        16
+      ],
+      "representative_cell_idx": 6,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 6,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            24,
+            25,
+            26,
+            27
+          ]
+        }
+      ]
+    },
+    {
+      "cell_idx": 7,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        17,
+        34,
+        16,
+        16
+      ],
+      "representative_cell_idx": 7,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 7,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            28,
+            29,
+            30,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "cell_idx": 8,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        34,
+        34,
+        16,
+        16
+      ],
+      "representative_cell_idx": 8,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 8,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            32,
+            33,
+            34,
+            35
+          ]
+        }
+      ]
+    },
+    {
+      "cell_idx": 9,
+      "width": 16,
+      "height": 16,
+      "min_x": 0,
+      "min_y": 0,
+      "sheet_rect": [
+        0,
+        51,
+        16,
+        16
+      ],
+      "representative_cell_idx": 9,
+      "oam": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "flip_x": false,
+          "flip_y": false,
+          "color_mode": 0,
+          "char_name": 9,
+          "palette": 0,
+          "disabled": false,
+          "tiles": [
+            36,
+            37,
+            38,
+            39
+          ]
+        }
+      ]
+    }
+  ],
+  "shared_tiles": {},
+  "n_unique_cells": 10,
+  "n_duplicate_cells": 0
+}

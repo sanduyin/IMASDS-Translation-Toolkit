@@ -120,14 +120,21 @@ def bgr555_to_rgb888(x: int) -> tuple[int, int, int]:
 
 
 def bgr555_is_transparent(x: int) -> bool:
-    """BGR555 的 bit15 = 透明标志"""
-    return ((x >> 15) & 1) != 0
+    """BGR555 的 bit15 = 不透明标志（bit15=0 透明，bit15=1 不透明）
+
+    参考实现 gld.rs u16_to_transparency：bit15=1 → is_opaque=true → alpha=0xFF。
+    故 bit15=0 才表示透明。
+    """
+    return ((x >> 15) & 1) == 0
 
 
 def rgb888_to_bgr555(r: int, g: int, b: int, transparent: bool = False) -> int:
-    """RGB888 → BGR555（有损截断）"""
+    """RGB888 → BGR555（有损截断）
+
+    transparent=True 生成透明色（bit15=0），否则不透明（bit15=1）。
+    """
     val = (r >> 3) | ((g >> 3) << 5) | ((b >> 3) << 10)
-    if transparent:
+    if not transparent:  # 不透明 → bit15=1
         val |= 0x8000
     return val
 
@@ -402,7 +409,7 @@ class GldFile:
             return bytes([r, g, b, alpha])
 
         elif fmt in (2, 3, 4):
-            # 纯索引，透明通过调色板 bit15
+            # 纯索引，透明通过调色板 bit15（bit15=0 透明，bit15=1 不透明）
             if pixel_val < len(palette):
                 pc = palette[pixel_val]
                 r, g, b = bgr555_to_rgb888(pc)

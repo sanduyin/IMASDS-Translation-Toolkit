@@ -9,11 +9,13 @@ from src.stage1_unpack import main as run_stage1
 from src.stage2_export_text import main as run_stage2_text
 from src.stage2_export_images import main as run_stage2_images
 from src.stage2_export_bg import main as run_stage2_bg       # <--- 导入 BG 导出
+from src.stage2_export_obj import main as run_stage2_obj     # <--- 导入 OBJ 导出
 from src.stage2_export_arm9 import main as run_stage2_arm9
 from src.stage3_build_font import main as run_stage3
 from src.stage4_inject_text import main as run_stage4_text
 from src.stage4_import_images import main as run_stage4_images
 from src.stage4_import_bg import main as run_stage4_bg       # <--- 导入 BG 回写
+from src.stage4_import_obj import main as run_stage4_obj     # <--- 导入 OBJ 回写
 from src.stage5_build_rom import main as run_stage5
 
 def print_menu():
@@ -22,10 +24,10 @@ def print_menu():
     print("=" * 60)
     print("  [1] 解包提取 (Unpack)        - 提取原始 BIN/IDX 并解压ARM9")
     print("  [2] 导出文本 (Export Text)   - 生成 SCN, TBL, ARM9 翻译表")
-    print("  [3] 导出图像 (Export Images) - 导出 GLD→PNG sprite 与 BG(NCGR)")
+    print("  [3] 导出图像 (Export Images) - 导出 GLD→PNG sprite 与 BG(NCGR) 与 OBJ(NCER)")
     print("  [4] 构建字库 (Build Font)    - 根据 Excel/CSV 动态生成字库")
     print("  [5] 注入文本 (Inject Text)   - 将翻译写回 SCN/TBL/ARM9")
-    print("  [6] 回写图像 (Import Images) - 将修改的 PNG 写回 GLD/BG")
+    print("  [6] 回写图像 (Import Images) - 将修改的 PNG 写回 GLD/BG/OBJ")
     print("  [7] 打包生成 (Build ROM)     - 生成最终汉化版 .nds")
     print("  [8] 一键自动化 (Auto Build)  - 执行 4 -> 5 -> 6 -> 7")
     print("  [0] 退出控制台")
@@ -45,6 +47,7 @@ def interactive_mode():
         elif choice == '3':
             run_stage2_images()
             run_stage2_bg()         # <--- 同时导出 BG
+            run_stage2_obj()        # <--- 同时导出 OBJ UI
         elif choice == '4':
             run_stage3()
         elif choice == '5':
@@ -54,6 +57,7 @@ def interactive_mode():
             want_preview = input("  是否生成调色板匹配预览图? (y/N): ").strip().lower() == 'y'
             run_stage4_images(preview=want_preview)
             run_stage4_bg()         # <--- 同时回写 BG
+            run_stage4_obj()        # <--- 同时回写 OBJ UI
         elif choice == '7':
             run_stage5()
         elif choice == '8':
@@ -62,6 +66,7 @@ def interactive_mode():
             run_stage4_text()
             run_stage4_images()
             run_stage4_bg()         # <--- 一键打包也包含 BG 回写
+            run_stage4_obj()        # <--- 一键打包也包含 OBJ 回写
             run_stage5()
         elif choice == '0':
             print("再见！祝汉化顺利！")
@@ -86,6 +91,7 @@ def main():
     elif args.command == 'export-images':
         run_stage2_images()
         run_stage2_bg()
+        run_stage2_obj()
     elif args.command == 'font':
         run_stage3()
     elif args.command == 'inject':
@@ -93,6 +99,7 @@ def main():
     elif args.command == 'import-images':
         run_stage4_images(preview=args.preview)
         run_stage4_bg()
+        run_stage4_obj()
     elif args.command == 'build':
         run_stage5()
     elif args.command == 'all':
@@ -100,6 +107,7 @@ def main():
         run_stage4_text()
         run_stage4_images()
         run_stage4_bg()
+        run_stage4_obj()
         run_stage5()
     else:
         interactive_mode()

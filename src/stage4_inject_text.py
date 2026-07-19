@@ -165,12 +165,49 @@ def process_bbq_directory(translation_path: str | Path, input_subfolder: str,
             return
 
         print(f"\n📂 开始注入 {input_subfolder} 文本 (Excel 模式)...")
+        # 读取普通文本 sheet（含 File/Index 列的 sheet）
         trans_db = cast(dict[str, dict[int, str]], read_translation_table(excel_path, is_arm9=False))
+
+        # 读取邮件 sheet（2 行标准格式：行 0 = 邮件，行 1 = 回信）
+        # 邮件 sheet 名 = 邮件文件名（含 .BBQ 后缀），如 "0082_ML_AIH_B01_MAIL01.BBQ"
+        def _cell_str(v: Any) -> str:
+            return "" if pd.isna(v) else str(v)
+
+        xls = pd.read_excel(excel_path, sheet_name=None)
+        for sheet_name, df in xls.items():
+            # 邮件 sheet 判定：sheet 名符合邮件文件命名（含 "_ML_"）
+            if not is_mail_file(sheet_name):
+                continue
+            if df.empty or "Original_Text" not in df.columns:
+                continue
+            # sheet 名即文件名（含 .BBQ 后缀）
+            filename = sheet_name
+
+            row0 = df.iloc[0]
+            mail_orig = _cell_str(row0.get("Original_Text"))
+            mail_trans = _cell_str(row0.get("Translated_Text"))
+            if len(df) > 1:
+                row1 = df.iloc[1]
+                reply_orig = _cell_str(row1.get("Original_Text"))
+                reply_trans = _cell_str(row1.get("Translated_Text"))
+            else:
+                reply_orig = reply_trans = ""
+
+            # 译文非空则用译文，否则回退原文（faraplay row_to_mail 语义）
+            mail_translated = bool(mail_trans.strip())
+            reply_translated = bool(reply_trans.strip())
+            final_mail = mail_trans if mail_translated else mail_orig
+            final_reply = reply_trans if reply_translated else reply_orig
+
+            mail_db[filename] = (final_mail, final_reply, mail_translated, reply_translated)
+
+        if mail_db:
+            print(f"  📧 读取邮件 sheet: {len(mail_db)} 个")
 
     src_dir = EXTRACT_DIR / input_subfolder
     dst_dir = PATCHED_DIR / output_subfolder
     dst_dir.mkdir(parents=True, exist_ok=True)
-    
+
     success_count = 0
     for root, _, files in os.walk(src_dir):
         for file in files:
@@ -179,8 +216,8 @@ def process_bbq_directory(translation_path: str | Path, input_subfolder: str,
                 dst_path = os.path.join(dst_dir, file)
 
                 try:
-                    # 邮件分支（仅 CSV 模式且 ML CSV 中有该文件）：
-                    if is_csv_mode and is_mail_file(file) and file in mail_db:
+                    # 邮件分支（CSV 或 xlsx 模式，只要 mail_db 中有该文件）：
+                    if is_mail_file(file) and file in mail_db:
                         mail1, mail2, mail_translated, reply_translated = mail_db[file]
                         if not mail_translated and not reply_translated:
                             # 未翻译：直接复制原文件，保留原始 Shift-JIS 字节

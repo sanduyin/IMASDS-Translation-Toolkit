@@ -407,7 +407,12 @@ def read_translation_table(
         else:
             trans_db = {}
             xls = pd.read_excel(path, sheet_name=None)
-            for _, df in xls.items():
+            for sheet_name, df in xls.items():
+                # 邮件 sheet（2 行布局：行 0 邮件、行 1 回信）由 stage4 邮件分支
+                # 单独读取重建，不能按普通文本注入（会把整封邮件按 Index 拆成
+                # 独立 Type7 字符串写入，破坏邮件 Type5/Type7 结构）
+                if is_mail_file(sheet_name):
+                    continue
                 if "File" not in df.columns:
                     continue
                 for _, row_series in df.iterrows():

@@ -15,7 +15,7 @@ import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import EXTRACT_DIR, EXCEL_SCN, EXCEL_TBL, CSV_SCN_DIR, CSV_TBL_DIR
 from src.utils.bbq_format import parse_bbq_file
-from src.utils.bbq_mail import parse_mail_bbq
+from src.utils.bbq_mail import parse_mail_bbq, parse_mail_bbq_meta
 from src.io.csv_handler import write_text_csv, write_mail_csv, is_mail_file
 
 def extract_sort_key(filename: str) -> int:
@@ -30,44 +30,93 @@ def extract_group_name(filename: str) -> str:
     name = re.sub(r'_MES$', '', name, flags=re.IGNORECASE)
     return name
 
+def _make_mail_entries(filename: str, mail1: str, mail2: str,
+                       idx1: int, idx2: int) -> list[dict[str, Any]]:
+    """构建邮件 sheet 的 2 行标准格式 entries（行 0 = 邮件，行 1 = 回信）。
+
+    与普通文本 sheet 共用 9 列布局；Text_Offset/Pointer_Locs/Max_Bytes 留空
+    （邮件注入按整封邮件重建 Type7 池，不消费这些列；留空也避免触发长度校验红线）。
+    Index 列为首行字符串在 Type7 池中的真实索引（仅展示用）。
+    """
+    rows = [(mail1, idx1), (mail2, idx2)]
+    return [{
+        'Original_Text': text,
+        'Speaker': '×',
+        'Translated_Text': '',
+        'File': filename,
+        'Text_Offset': '',
+        'Pointer_Locs': '',
+        'Max_Bytes': '',
+        'Index': idx,
+        'Type': '系统文本',
+    } for text, idx in rows]
+
+
 def create_styled_excel(data_groups: dict[str, list[dict[str, Any]]],
-                        output_path: Path, is_scn: bool = False) -> None:
+                        output_path: Path, is_scn: bool = False,
+                        mail_sheet_names: set[str] | None = None) -> None:
     """
     将提取的文本数据写入 Excel，并应用严格的条件格式和样式规则。
+
+    Args:
+        data_groups: 普通文本数据 {sheet_name: [entry, ...]}（邮件 sheet 也在其中，
+                    每个邮件 BBQ 一个 sheet，2 行标准格式：行 0 = 邮件，行 1 = 回信）
+        output_path: 输出 xlsx 路径
+        is_scn: 是否为 SCN（影响条件格式和冻结列）
+        mail_sheet_names: 邮件 sheet 名集合（sheet 名 = 邮件文件名，含 .BBQ 后缀）。
+                    邮件 sheet 跳过长度校验规则（Max_Bytes 留空），
+                    仅保留"已翻译"绿色标记，并按内容行数自动调整行高。
     """
     print(f"正在导出表格至: {output_path}")
-    
+    if mail_sheet_names is None:
+        mail_sheet_names = set()
+
     with pd.ExcelWriter(output_path, engine='xlsxwriter') as writer:
         workbook = writer.book
-        
+
         # 定义样式格式
         fmt_green = workbook.add_format({'bg_color': '#C6EFCE', 'font_color': '#006100'})
         fmt_blue = workbook.add_format({'bg_color': '#BDD7EE', 'font_color': '#1F497D'})
         fmt_red = workbook.add_format({'bg_color': '#FFC7CE', 'font_color': '#9C0006'})
-        fmt_purple = workbook.add_format({'bg_color': '#E4D7F5'}) 
+        fmt_purple = workbook.add_format({'bg_color': '#E4D7F5'})
         fmt_text = workbook.add_format({'text_wrap': True, 'valign': 'top'})
-        
+
         # 定义列顺序
         columns_order =[
-            'Original_Text', 'Speaker', 'Translated_Text', 
+            'Original_Text', 'Speaker', 'Translated_Text',
             'File', 'Text_Offset', 'Pointer_Locs', 'Max_Bytes', 'Index', 'Type'
         ]
-        
+
         for sheet_name, entries in data_groups.items():
             # Excel Sheet 名称最多 31 个字符
             safe_sheet_name = sheet_name[:31]
             df = pd.DataFrame(entries)[columns_order]
             df.to_excel(writer, sheet_name=safe_sheet_name, index=False)
-            
+
             ws = writer.sheets[safe_sheet_name]
             last_row = len(df) + 1
-            
+
             # 设置基础列宽和文本换行
             ws.set_column('A:A', 40, fmt_text)
             ws.set_column('B:B', 12)
             ws.set_column('C:C', 40, fmt_text)
             ws.set_column('D:G', 15)
-            
+
+            if sheet_name in mail_sheet_names:
+                # 邮件 sheet：按内容行数自动调整行高（邮件/回信通常多行，给足空间）
+                for row_idx, entry in enumerate(entries):
+                    lines = str(entry['Original_Text']).count('\n') + 1
+                    ws.set_row(row_idx + 1, min(lines, 30) * 15)
+                # 仅保留"已翻译"绿色标记（邮件 Max_Bytes 留空，长度校验规则不适用）
+                ws.conditional_format(1, 2, last_row - 1, 2, {
+                    'type': 'formula',
+                    'criteria': '=$C2<>""',
+                    'format': fmt_green,
+                })
+                # 冻结首行和第一列
+                ws.freeze_panes(1, 1)
+                continue
+
             # SCN 文件特有的系统/选项文本高亮规则 (通过检查文件名是否包含 _MES)
             if is_scn:
                 purple_range_1 = f"A2:B{last_row}"
@@ -80,23 +129,23 @@ def create_styled_excel(data_groups: dict[str, list[dict[str, Any]]],
             # 翻译文本长度校验规则 (应用在 C 列 Translated_Text)
             # 规则1: 字节数大于 H 列(Max_Bytes) 限制，或大于 40 时标红 (溢出)
             ws.conditional_format(1, 2, last_row - 1, 2, {
-                'type': 'formula', 
-                'criteria': '=LENB($C2)>$G2' if not is_scn else '=LENB($C2)>40', 
+                'type': 'formula',
+                'criteria': '=LENB($C2)>$G2' if not is_scn else '=LENB($C2)>40',
                 'format': fmt_red
             })
             # 规则2: 翻译长度大于原文长度但在安全范围内，标蓝
             ws.conditional_format(1, 2, last_row - 1, 2, {
-                'type': 'formula', 
-                'criteria': '=AND(LENB($C2)>LENB($A2), LENB($C2)<=$G2)' if not is_scn else '=AND(LENB($C2)>LENB($A2), LENB($C2)<=40)', 
+                'type': 'formula',
+                'criteria': '=AND(LENB($C2)>LENB($A2), LENB($C2)<=$G2)' if not is_scn else '=AND(LENB($C2)>LENB($A2), LENB($C2)<=40)',
                 'format': fmt_blue
             })
             # 规则3: 翻译完成且长度短于或等于原文，标绿
             ws.conditional_format(1, 2, last_row - 1, 2, {
-                'type': 'formula', 
-                'criteria': '=AND(LENB($C2)<=$LENB($A2), $C2<>"")', 
+                'type': 'formula',
+                'criteria': '=AND(LENB($C2)<=$LENB($A2), $C2<>"")',
                 'format': fmt_green
             })
-            
+
             # 冻结首行和前三列 (TBL不需要冻结前三列)
             ws.freeze_panes(1, 3 if is_scn else 1)
 
@@ -121,15 +170,33 @@ def export_bbq_directory(input_folder: Path, output_excel: Path,
     if fmt == "csv":
         _export_csv(all_files, is_scn, output_excel)
     else:
-        grouped_data = defaultdict(list)
+        grouped_data: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        mail_sheet_names: set[str] = set()  # 邮件 sheet 名（= 邮件文件名，含 .BBQ）
+
         for file_path in all_files:
             filename = os.path.basename(file_path)
+
+            # 邮件 BBQ 单独处理：每个邮件一个 sheet，2 行标准格式（行 0 = 邮件，行 1 = 回信）
+            if is_mail_file(filename):
+                try:
+                    mail1, mail2, idx1, idx2 = parse_mail_bbq_meta(file_path)
+                except Exception as e:
+                    print(f"  ⚠️ 邮件解析失败 {filename}: {e}，跳过")
+                    continue
+                grouped_data[filename] = _make_mail_entries(filename, mail1, mail2, idx1, idx2)
+                mail_sheet_names.add(filename)
+                continue
+
+            # 普通文本 BBQ
             entries = parse_bbq_file(file_path, is_scn=is_scn)
             if entries:
                 group_name = extract_group_name(filename) if is_scn else filename
                 grouped_data[group_name].extend(entries)
+
         if grouped_data:
-            create_styled_excel(grouped_data, output_excel, is_scn)
+            create_styled_excel(grouped_data, output_excel, is_scn, mail_sheet_names)
+            if mail_sheet_names:
+                print(f"  📧 邮件 sheet: {len(mail_sheet_names)} 个")
         else:
             print(f"未在 {input_folder} 中提取到有效文本。")
 

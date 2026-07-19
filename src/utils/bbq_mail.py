@@ -143,21 +143,32 @@ def parse_mail_bbq(file_path: str | Path) -> tuple[str, str]:
 
     如果文件不是邮件格式（无 Type5 或 Type7），返回 ("", "")。
     """
+    mail1, mail2, _, _ = parse_mail_bbq_meta(file_path)
+    return (mail1, mail2)
+
+
+def parse_mail_bbq_meta(file_path: str | Path) -> tuple[str, str, int, int]:
+    """解析邮件 BBQ，返回 (mail1, mail2, mail1_start_idx, mail2_start_idx)。
+
+    mail1_start_idx / mail2_start_idx = 邮件正文 / 回信正文首行在 Type7 字符串池
+    中的索引（xlsx 邮件 sheet 的 Index 列展示用，注入时不消费）。
+    如果文件不是邮件格式（无 Type5 或 Type7），返回 ("", "", 0, 0)。
+    """
     data = Path(file_path).read_bytes()
     if not data or data[:8] != BBQ_HEADER_MAGIC:
-        return ("", "")
+        return ("", "", 0, 0)
 
     bbq = _read_bbq_raw(data)
     sections = bbq["sections"]
 
     if 5 not in sections or 7 not in sections:
-        return ("", "")
+        return ("", "", 0, 0)
 
     indices = _read_type5_indices(sections[5])
     strings = _read_type7_strings(sections[7])
 
     if len(indices) < 32:
-        return ("", "")
+        return ("", "", 0, 0)
 
     # 邮件正文：indices[0] = 行数 N1，indices[1..1+N1] = 字符串索引
     n1 = indices[0]
@@ -167,6 +178,7 @@ def parse_mail_bbq(file_path: str | Path) -> tuple[str, str]:
         for idx in mail1_indices
     ]
     mail1 = "\n".join(mail1_parts)
+    mail1_start_idx = mail1_indices[0] if mail1_indices else 0
 
     # 回信正文：indices[31] = 行数 N2，indices[32..32+N2] = 字符串索引
     n2 = indices[31]
@@ -176,8 +188,9 @@ def parse_mail_bbq(file_path: str | Path) -> tuple[str, str]:
         for idx in mail2_indices
     ]
     mail2 = "\n".join(mail2_parts)
+    mail2_start_idx = mail2_indices[0] if mail2_indices else 0
 
-    return (mail1, mail2)
+    return (mail1, mail2, mail1_start_idx, mail2_start_idx)
 
 
 # ----------------------------------------------------------------------
