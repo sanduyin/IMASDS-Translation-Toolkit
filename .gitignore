@@ -21,3 +21,13 @@ Thumbs.db
 *.xlsx
 /workspace
 *.NFTR
+
+# 忽略临时测试脚本和诊断输出（不入库）
+_test_*.py
+_audit_*.py
+_compare_*.py
+_probe_*.py
+_diag_*.out
+_diag_*.txt
+_scout_*.txt
+_tmp_verify/
