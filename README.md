@@ -27,7 +27,6 @@ This project stands on the shoulders of giants. Special thanks to:
 *   [ndstool](https://github.com/Relys/ndstool) by DarkFader / Relys for the foundational NDS file system tool.
 *   [ndspy](https://github.com/RoadrunnerWMC/ndspy) by RoadrunnerWMC for the excellent BLZ decompression engine.
 *   [OpenCC](https://github.com/BYVoid/OpenCC) by BYVoid for the flawless CJK mapping capabilities.
-*   [dearlystars_tool](https://github.com/Relys/dearlystars_tool) (Rust) — the reference implementation that taught us how to parse and rebuild the game's proprietary formats.
 *   [NitroPaint](https://github.com/Garhoogin/NitroPaint) by Garhoogin — an invaluable DS graphics editor whose source code guided our NCER/OBJ implementation.
 *   [dearlystars_tool](https://github.com/faraplay/dearlystars_tool) by Faraplay — the reference builder whose DSi-enhanced reconstruction pipeline (digest tables, HMAC, modcrypt, TWL header) made the real-hardware DSi boot of this localization possible. This project is deeply grateful for its open documentation of the complete DSi cryptographic chain.
 
@@ -64,7 +63,7 @@ This project is for educational and technical research purposes only. The reposi
 *   [OpenCC](https://github.com/BYVoid/OpenCC) (BYVoid) 提供完美的简繁日汉字映射技术。
 *   [dearlystars_tool](https://github.com/Relys/dearlystars_tool) (Rust) —— 参考实现，本项目从中学习了游戏专有格式的解析与重建方法。
 *   [NitroPaint](https://github.com/Garhoogin/NitroPaint) (Garhoogin) —— 优秀的 DS 图像编辑器，其源代码指导了我们的 NCER/OBJ 实现。
-*   [faraplay/dearlystars_tool](https://github.com/faraplay/dearlystars_tool) —— 参考构建器，其 DSi 增强区重建流程（digest 摘要表、HMAC、modcrypt、TWL Header）使本汉化版在 DSi 实机上成功启动成为可能。本项目对其完整公开 DSi 密码学链路的文档深表感谢。
+*   [dearlystars_tool](https://github.com/faraplay/dearlystars_tool) —— 参考构建器，其 DSi 增强区重建流程（digest 摘要表、HMAC、modcrypt、TWL Header）使本汉化版在 DSi 实机上成功启动成为可能。本项目对其完整公开 DSi 密码学链路的文档深表感谢。
 
 ### AI 生成代码声明
 **本仓库全部源代码均由 AI 生成。** 代码的实现、调试与迭代均通过与 AI 编程助手协作完成。我们力求正确性，但使用者在任何关键场景前请务必自行审查代码。
