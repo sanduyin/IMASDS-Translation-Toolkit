@@ -4,22 +4,70 @@ from __future__ import annotations
 import os
 import sys
 import struct
-import subprocess
+import shutil
+import re
 from pathlib import Path
 from typing import Any
 
-try:
-    import ndspy.rom
-    import ndspy.codeCompression as comp
-except ImportError:
-    print("🔧 首次运行：正在自动安装核心 NDS 引擎 [ndspy]...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "ndspy"])
-    import ndspy.rom
-    import ndspy.codeCompression as comp
+import ndspy.rom
+import ndspy.codeCompression as comp
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import ORIGINAL_DIR, EXTRACT_DIR, FILE_PACKS, ORIGINAL_ROM
-from src.utils.binary_io import read_uint32
+from src.packez.ezp_pack import extract_pack
+
+_INDEXED_FILENAME = re.compile(r"^(\d{4})(_.+)$")
+
+
+def _preserve_legacy_pack_numbering(output_dir: Path) -> bool:
+    """Keep the file numbers previously exposed by Stage 1.
+
+    Game archives commonly wrap all real files in an outer ``*_BEGIN`` /
+    ``*_END`` pair.  The historical extractor skipped that first marker and
+    therefore exposed file number ``raw_entry - 1``.  Translation sheets and
+    image work already use those numbers, so the canonical parser must retain
+    that user-facing convention even though it reads the correct 16-byte EZT
+    header internally.
+    """
+
+    index_path = output_dir / ".index"
+    lines = index_path.read_text(encoding="utf-8").splitlines()
+    if len(lines) < 2:
+        return False
+    first_name = lines[1].strip()
+    if first_name.endswith("_BEGIN") or first_name.endswith("_START"):
+        wrapper_name = first_name[:-6]
+    else:
+        return False
+
+    indexed_paths = [
+        path for path in sorted(output_dir.rglob("*"))
+        if path.is_file() and _INDEXED_FILENAME.match(path.name)
+    ]
+    for path in indexed_paths:
+        match = _INDEXED_FILENAME.match(path.name)
+        assert match is not None
+        raw_index = int(match.group(1))
+        if raw_index == 0:
+            raise ValueError(f"包装标记之后出现无法下移的 entry 0000：{path}")
+        legacy_name = f"{raw_index - 1:04d}{match.group(2)}"
+        target = path.with_name(legacy_name)
+        if target.exists():
+            raise FileExistsError(f"PackEZ 兼容编号发生冲突：{target}")
+        path.replace(target)
+
+    # The old extractor also exposed the contents of the outer wrapper at the
+    # archive root.  Unwrap only that exact directory; nested real directories
+    # remain intact.
+    wrapper_dir = output_dir / wrapper_name
+    if wrapper_dir.is_dir():
+        for child in sorted(wrapper_dir.iterdir()):
+            target = output_dir / child.name
+            if target.exists():
+                raise FileExistsError(f"PackEZ 外层目录展开发生冲突：{target}")
+            child.replace(target)
+        wrapper_dir.rmdir()
+    return True
 
 def _dump_folder(folder_obj: Any, current_path: str, rom: Any, base_dir: Path) -> None:
     """递归爬树提取器：遍历 ndspy 的 FNT(文件目录表) 树"""
@@ -127,51 +175,22 @@ def decompress_ring_lz(f_in: bytes, decompressed_size: int) -> bytearray:
 
 def extract_archive(ezt_path: Path, ezp_path: Path, output_dir: Path) -> None:
     print(f"📦 提取内部数据包: {os.path.basename(ezt_path)}")
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    with open(ezt_path, "rb") as f_idx, open(ezp_path, "rb") as f_bin:
-        h_size = struct.unpack('<H', f_idx.read(12)[10:12])[0]
-        f_idx.seek(0x0C)
-        file_count = read_uint32(f_idx)
-        idx_data_start = h_size + 6
-        f_bin.seek(0x0C)
-        name_table_offset = read_uint32(f_bin)
-
-        for i in range(file_count):
-            f_idx.seek(idx_data_start + i * 12)
-            offset, size_raw, name_rel = read_uint32(f_idx), read_uint32(f_idx), read_uint32(f_idx)
-            decomp_size = size_raw & 0xFFFFFFF
-            is_compressed = (size_raw & 0x10000000) != 0
-
-            phys_len = (read_uint32(f_idx) if i < file_count - 1 else name_table_offset) - offset
-            f_bin.seek(offset)
-            raw_data = f_bin.read(phys_len)
-            
-            final_data: bytes | bytearray
-            if is_compressed and len(raw_data) >= 4 and raw_data[0] == 0x10:
-                try: final_data = decompress_ring_lz(raw_data[4:], decomp_size)
-                except Exception: final_data = raw_data
-            else:
-                final_data = raw_data[:decomp_size]
-
-            file_name = f"file_{i}.bin"
-            if name_rel > 0:
-                saved_pos = f_bin.tell()
-                f_bin.seek(name_table_offset + name_rel)
-                name_bytes = bytearray()
-                while True:
-                    char = f_bin.read(1)
-                    if char == b'\x00' or not char: break
-                    name_bytes += char
-                try: file_name = name_bytes.decode('cp932')
-                except: file_name = name_bytes.decode('ascii', errors='ignore')
-                f_bin.seek(saved_pos)
-
-            file_name = "".join([c for c in file_name if c.isalnum() or c in (' ', '.', '_', '-', '+', '[', ']')])
-            if not file_name: file_name = f"file_{i}.bin"
-
-            with open(output_dir / f"{i:04d}_{file_name}", "wb") as f_out:
-                f_out.write(final_data)
+    # Extract through the canonical 16-byte EZT parser.  Use a sibling
+    # temporary directory so an interrupted extraction never leaves a mix of
+    # old and new entry numbering behind.
+    temp_dir = output_dir.with_name(f"{output_dir.name}.extracting")
+    if temp_dir.exists():
+        shutil.rmtree(temp_dir)
+    try:
+        extract_pack(ezt_path, ezp_path, temp_dir)
+        if _preserve_legacy_pack_numbering(temp_dir):
+            print("  🔒 保留既有翻译素材使用的 entry 编号")
+        if output_dir.exists():
+            shutil.rmtree(output_dir)
+        temp_dir.replace(output_dir)
+    finally:
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
 
 def main() -> None:
     print("=" * 50)

@@ -5,7 +5,6 @@ import os
 import sys
 import struct
 from pathlib import Path
-from typing import cast
 
 from PIL import Image
 
@@ -156,7 +155,7 @@ def extract_tiles_from_bmp(
     entries: list[tuple[int, bool, bool, int]],
     map_w_tiles: int,
     map_h_tiles: int,
-    original_tile_count: int,
+    original_tiles: list[list[int]],
     bpp: int,
 ) -> list[list[int]]:
     """从 BMP 像素数据提取 tile。
@@ -167,17 +166,17 @@ def extract_tiles_from_bmp(
         entries: NSCR map entries [(tile_idx, flip_h, flip_v, pal_idx), ...]
         map_w_tiles, map_h_tiles: NSCR 的 tile 列数/行数（P3-3 修复：必须用 NSCR 的，
                                   而非 BMP 宽度//8，否则 BMP 尺寸与 NSCR 不一致时错位）
-        original_tile_count: 原始 NCGR 中的 tile 数量
+        original_tiles: 原始 NCGR tile；未被 NSCR 引用的 tile 必须原样保留
         bpp: 4 或 8
     """
-    tiles: list[list[int] | None] = [None] * original_tile_count
+    tiles = [list(tile) for tile in original_tiles]
+    seen_tiles: dict[int, list[int]] = {}
     # P3-3 修复：用 NSCR 的 map_w_tiles 计算 col/row，而非 bmp_w // 8
     # entries 按 NSCR 的 map_w_tiles 排列，必须与之对齐
     nscr_map_w_tiles = map_w_tiles
 
     for entry_idx, (tile_idx, flip_h, flip_v, pal_idx) in enumerate(entries):
-        if tile_idx >= original_tile_count: continue
-        if tiles[tile_idx] is not None: continue
+        if tile_idx >= len(original_tiles): continue
 
         col, row = entry_idx % nscr_map_w_tiles, entry_idx // nscr_map_w_tiles
         # P3-3 修复：越界保护 — 如果 col/row 超出 NSCR map 尺寸，跳过
@@ -199,11 +198,15 @@ def extract_tiles_from_bmp(
                 if bpp == 4: raw_idx &= 0x0F
                 tile_pixels.append(raw_idx)
 
+        previous = seen_tiles.get(tile_idx)
+        if previous is not None and previous != tile_pixels:
+            raise ValueError(
+                f"共享 tile {tile_idx} 在 NSCR 的多个位置被编辑成不同内容"
+            )
+        seen_tiles[tile_idx] = tile_pixels
         tiles[tile_idx] = tile_pixels
 
-    for i in range(original_tile_count):
-        if tiles[i] is None: tiles[i] = [0] * 64
-    return cast(list[list[int]], tiles)
+    return tiles
 
 def _nearest_in_subpalette(r: int, g: int, b: int, subpal: list[tuple[int, int, int]]) -> int:
     """在子调色板（最多 16 色）内找最近色索引（欧氏距离）。"""
@@ -226,7 +229,7 @@ def extract_tiles_from_bmp_rgb(
     entries: list[tuple[int, bool, bool, int]],
     map_w_tiles: int,
     map_h_tiles: int,
-    original_tile_count: int,
+    original_tiles: list[list[int]],
     palette_rgb: list[tuple[int, int, int]],
 ) -> list[list[int]]:
     """从 RGB BMP 像素数据提取 4bpp tile（每个 entry 在子调色板内做最近色匹配）。
@@ -237,7 +240,8 @@ def extract_tiles_from_bmp_rgb(
         避免全局匹配选错子调色板导致 & 0x0F 截断后 raw_idx 错误
       - 仅用于 4bpp RGB BMP 导入（8bpp RGB 用 rgb_to_indexed + extract_tiles_from_bmp）
     """
-    tiles: list[list[int] | None] = [None] * original_tile_count
+    tiles = [list(tile) for tile in original_tiles]
+    seen_tiles: dict[int, list[int]] = {}
     nscr_map_w_tiles = map_w_tiles
 
     # 预计算 16 个子调色板（每个 16 色）
@@ -249,8 +253,7 @@ def extract_tiles_from_bmp_rgb(
     cache: dict[tuple[int, int, int, int], int] = {}
 
     for entry_idx, (tile_idx, flip_h, flip_v, pal_idx) in enumerate(entries):
-        if tile_idx >= original_tile_count: continue
-        if tiles[tile_idx] is not None: continue
+        if tile_idx >= len(original_tiles): continue
 
         col, row = entry_idx % nscr_map_w_tiles, entry_idx // nscr_map_w_tiles
         if col >= nscr_map_w_tiles or row >= map_h_tiles:
@@ -277,11 +280,29 @@ def extract_tiles_from_bmp_rgb(
                     raw_idx = idx
                 tile_pixels.append(raw_idx)
 
+        previous = seen_tiles.get(tile_idx)
+        if previous is not None and previous != tile_pixels:
+            raise ValueError(
+                f"共享 tile {tile_idx} 在 NSCR 的多个位置被编辑成不同内容"
+            )
+        seen_tiles[tile_idx] = tile_pixels
         tiles[tile_idx] = tile_pixels
 
-    for i in range(original_tile_count):
-        if tiles[i] is None: tiles[i] = [0] * 64
-    return cast(list[list[int]], tiles)
+    return tiles
+
+
+def _validate_bg_dimensions(
+    width: int,
+    height: int,
+    map_w_tiles: int,
+    map_h_tiles: int,
+) -> None:
+    expected = (map_w_tiles * 8, map_h_tiles * 8)
+    if (width, height) != expected:
+        raise ValueError(
+            f"背景图尺寸必须与 NSCR 一致：期望 {expected[0]}x{expected[1]}，"
+            f"实际 {width}x{height}"
+        )
 
 def encode_tiles(tiles: list[list[int]], bpp: int) -> bytes:
     raw = bytearray()
@@ -339,38 +360,41 @@ def import_bg_triplet(
 
     if is_png:
         width, height, rgb_data = read_png_rgb(img_path)
+        _validate_bg_dimensions(width, height, map_w_tiles, map_h_tiles)
         palette_rgb = parse_nclr(nclr_data)  # RGB888 列表（与 NDS 硬件 <<3 行为一致）
         nds_palette: bytes | None = None  # RGB 模式保留原始 NCLR 调色板
         if bpp == 4:
             # 4bpp：子调色板内匹配，避免跨子调色板的颜色冲突
             new_tiles = extract_tiles_from_bmp_rgb(rgb_data, width, height, entries,
                                                     map_w_tiles, map_h_tiles,
-                                                    len(tiles_original), palette_rgb)
+                                                    tiles_original, palette_rgb)
         else:
             # 8bpp：全局匹配
             pixel_data = rgb_to_indexed(rgb_data, width * height, palette_rgb)
             new_tiles = extract_tiles_from_bmp(pixel_data, width, height, entries,
-                                               map_w_tiles, map_h_tiles, len(tiles_original), bpp)
+                                               map_w_tiles, map_h_tiles, tiles_original, bpp)
     else:
         # BMP 向后兼容路径
         bmp_bpp = read_bmp_bpp(img_path)
         if bmp_bpp == 8:
             width, height, pixel_data, raw_palette = read_bmp_8bpp(img_path)
+            _validate_bg_dimensions(width, height, map_w_tiles, map_h_tiles)
             nds_palette = bmp_palette_to_nds(raw_palette)
             new_tiles = extract_tiles_from_bmp(pixel_data, width, height, entries,
-                                               map_w_tiles, map_h_tiles, len(tiles_original), bpp)
+                                               map_w_tiles, map_h_tiles, tiles_original, bpp)
         elif bmp_bpp in (24, 32):
             width, height, rgb_data = read_bmp_rgb(img_path)
+            _validate_bg_dimensions(width, height, map_w_tiles, map_h_tiles)
             palette_rgb = parse_nclr(nclr_data)
             nds_palette = None
             if bpp == 4:
                 new_tiles = extract_tiles_from_bmp_rgb(rgb_data, width, height, entries,
                                                         map_w_tiles, map_h_tiles,
-                                                        len(tiles_original), palette_rgb)
+                                                        tiles_original, palette_rgb)
             else:
                 pixel_data = rgb_to_indexed(rgb_data, width * height, palette_rgb)
                 new_tiles = extract_tiles_from_bmp(pixel_data, width, height, entries,
-                                                   map_w_tiles, map_h_tiles, len(tiles_original), bpp)
+                                                   map_w_tiles, map_h_tiles, tiles_original, bpp)
         else:
             raise ValueError(f"不支持的 BMP 位深度: {bmp_bpp}（仅支持 8/24/32 bpp）")
 
@@ -431,6 +455,7 @@ def main() -> None:
     triplets = find_bg_triplets(orig_dir)
 
     success = 0
+    failures: list[str] = []
     for ncgr, nclr, nscr, base, stem in triplets:
         # 优先查找 PNG（新格式），回退到 BMP（向后兼容）
         png_path = img_dir / f"{stem}.png"
@@ -446,9 +471,15 @@ def main() -> None:
             import_bg_triplet(img_path, ncgr, nclr, nscr,
                               out_dir / ncgr.name, out_dir / nclr.name, out_dir / nscr.name)
             success += 1
-        except Exception as e: print(f"  ❌ 失败: {e}")
+        except Exception as e:
+            print(f"  ❌ 失败: {e}")
+            failures.append(f"{stem}: {e}")
 
     print(f"\n🎉 成功回写了 {success} 组背景图到 Patched 目录！")
+    if failures:
+        raise RuntimeError(
+            f"BG 回写失败 {len(failures)} 组：\n  - " + "\n  - ".join(failures)
+        )
 
 if __name__ == "__main__":
     main()

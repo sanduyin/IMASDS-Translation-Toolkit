@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import os
 import sys
-import struct
 import shutil
 import argparse
 from pathlib import Path
@@ -20,6 +19,7 @@ from config import (
     MAPPING_FILE, EMPTY_MARKERS,
 )
 from src.utils.text_encoder import load_mapping, text_to_bytes
+from src.utils.bbq_format import replace_type7_strings
 from src.io.csv_handler import (
     read_translation_table, is_csv_path, is_mail_file, read_mail_csv,
 )
@@ -31,79 +31,21 @@ from src.utils.bbq_mail import rebuild_mail_bbq
 
 def rebuild_bbq_file(src_path: str | Path, dst_path: str | Path,
                      translations: dict[int, str], char_map: dict[str, int]) -> None:
-    shutil.copy2(src_path, dst_path)
-
     if not translations:
+        shutil.copy2(src_path, dst_path)
         return
 
-    with open(dst_path, 'rb+') as f:
-        f.seek(0, 2)
-        if f.tell() < 32: return
-        f.seek(0)
+    encoded: dict[int, bytes] = {}
+    for index, text in translations.items():
+        # text_to_bytes includes the trailing NUL; replace_type7_strings owns
+        # termination and alignment for the rebuilt pool.
+        encoded[index] = bytes(text_to_bytes(text, char_map)[:-1])
 
-        if f.read(4) != b'\x2E\x42\x42\x51':
-            return
-
-        f.seek(16)
-        header_size = struct.unpack('<I', f.read(4))[0]
-        num_sec = struct.unpack('<I', f.read(4))[0]
-
-        f.seek(header_size)
-        sec7_info = None
-        for i in range(num_sec):
-            entry_pos = header_size + i * 20
-            f.seek(entry_pos)
-            sec_id = struct.unpack('<I', f.read(4))[0]
-            if sec_id == 7:
-                vals = struct.unpack('<4I', f.read(16))
-                sec7_info = {'entry_pos': entry_pos, 'values': vals}
-                break
-
-        if not sec7_info: return
-
-        entry_pos = sec7_info['entry_pos']
-        ptr_tbl_rel = sec7_info['values'][0]
-        num_str = sec7_info['values'][1]
-        pool_rel = sec7_info['values'][2]
-
-        ptr_tbl_abs = entry_pos + ptr_tbl_rel
-        pool_abs = entry_pos + pool_rel
-
-        f.seek(ptr_tbl_abs)
-        old_pointers = list(struct.unpack(f'<{num_str}I', f.read(num_str * 4)))
-
-        new_pool_data = bytearray()
-        new_pointers =[]
-
-        for i in range(num_str):
-            new_pointers.append(len(new_pool_data))
-
-            if i in translations:
-                # text_to_bytes 已经自带 \x00
-                new_pool_data.extend(text_to_bytes(translations[i], char_map))
-            else:
-                f.seek(pool_abs + old_pointers[i])
-                raw = bytearray()
-                while True:
-                    b = f.read(1)
-                    raw.extend(b)
-                    if b == b'\x00': break
-                new_pool_data.extend(raw)
-
-        while len(new_pool_data) % 4 != 0:
-            new_pool_data.append(0)
-
-        # 1. 回写最新的指针表
-        f.seek(ptr_tbl_abs)
-        for p in new_pointers:
-            f.write(struct.pack('<I', p))
-
-        # 2. 定位到原始的日文文本池起始地址，直接覆盖
-        f.seek(pool_abs)
-        f.write(new_pool_data)
-
-        # 3. 截断文件
-        f.truncate()
+    source = Path(src_path).read_bytes()
+    rebuilt = replace_type7_strings(source, encoded)
+    destination = Path(dst_path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(rebuilt)
 
 def process_bbq_directory(translation_path: str | Path, input_subfolder: str,
                           output_subfolder: str, char_map: dict[str, int]) -> None:
@@ -205,6 +147,7 @@ def process_bbq_directory(translation_path: str | Path, input_subfolder: str,
     dst_dir.mkdir(parents=True, exist_ok=True)
 
     success_count = 0
+    failures: list[str] = []
     for root, _, files in os.walk(src_dir):
         for file in files:
             if file.lower().endswith(('.bin', '.bbq')):
@@ -235,8 +178,13 @@ def process_bbq_directory(translation_path: str | Path, input_subfolder: str,
                         if translations: success_count += 1
                 except Exception as e:
                     print(f"  ❌ 错误 {file}: {e}")
-                    shutil.copy2(src_path, dst_path)
+                    failures.append(f"{file}: {e}")
 
+    if failures:
+        raise RuntimeError(
+            f"{input_subfolder} 注入失败 {len(failures)} 个文件：\n  - "
+            + "\n  - ".join(failures)
+        )
     print(f"  ✅ 完成！共成功修改 {success_count} 个 {input_subfolder} 文件。")
 
 # ===================================================================
@@ -292,8 +240,7 @@ def process_arm9_overlays(translation_path: str | Path, char_map: dict[str, int]
 
     src_arm9_dir = EXTRACT_DIR / "ARM9"
     if not src_arm9_dir.exists():
-        print("  ⚠️ 警告: 未找到 Extracted/ARM9 目录。")
-        return
+        raise FileNotFoundError(f"未找到 Extracted/ARM9 目录：{src_arm9_dir}")
 
     # Stage 3.5 已部署 overlay_0006 和 y9 到 PRG_CHS_PATCHED/
     # Stage 4 不能从原始 Extracted/ARM9 覆盖它们
@@ -366,10 +313,19 @@ def process_arm9_overlays(translation_path: str | Path, char_map: dict[str, int]
 
                 # 区间重叠检查
                 new_range = (offset, offset + max_bytes)
-                for prev_start, prev_end in used_ranges:
-                    if offset < prev_end and prev_start < offset + max_bytes:
-                        file_failures.append(f"  0x{offset:X}: 槽位与 0x{prev_start:X} 重叠")
-                        continue
+                overlap = next(
+                    (
+                        (prev_start, prev_end)
+                        for prev_start, prev_end in used_ranges
+                        if offset < prev_end and prev_start < offset + max_bytes
+                    ),
+                    None,
+                )
+                if overlap is not None:
+                    file_failures.append(
+                        f"  0x{offset:X}: 槽位与 0x{overlap[0]:X} 重叠"
+                    )
+                    continue
                 used_ranges.append(new_range)
 
                 # 预检：原槽位在第一个 NUL 之后必须全是 0x00
@@ -405,6 +361,10 @@ def process_arm9_overlays(translation_path: str | Path, char_map: dict[str, int]
                     print(f"     译文: {trans_text}")
                     print(f"     ❌ 译文所需 {len(new_bytes)} 字节 > 可用空间 {max_bytes} 字节\n")
                     total_overflow += 1
+                    file_failures.append(
+                        f"  0x{offset:X}: 译文需要 {len(new_bytes)} 字节，"
+                        f"槽位只有 {max_bytes} 字节"
+                    )
                     continue
 
                 # 在内存副本中写入：译文 + 零填充
@@ -432,6 +392,11 @@ def process_arm9_overlays(translation_path: str | Path, char_map: dict[str, int]
         print(f"  🚨 注意: 仍有 {total_overflow} 条文本由于确实过长被跳过。")
     if total_rejected > 0:
         print(f"  🚫 有 {total_rejected} 行因槽位验证失败被拒绝（未写入任何文件）。")
+    if total_overflow or total_rejected:
+        raise RuntimeError(
+            f"ARM9/Overlay 注入未完整完成：溢出 {total_overflow} 条，"
+            f"验证失败 {total_rejected} 条"
+        )
 
 # ===================================================================
 #  主流程入口
@@ -450,8 +415,7 @@ def main() -> None:
 
     char_map = load_mapping(MAPPING_FILE)
     if not char_map:
-        print("❌ 找不到 font_mapping.json，请先执行 Stage 3 字库生成脚本。")
-        return
+        raise FileNotFoundError("找不到 font_mapping.json，请先执行 Stage 3 字库生成脚本。")
 
     # 根据格式选择翻译表路径
     if fmt == "csv":

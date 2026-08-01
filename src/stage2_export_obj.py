@@ -287,6 +287,7 @@ def build_manifest(
                 'char_name': oam.char_name,
                 'palette': oam.palette,
                 'disabled': oam.disabled,
+                'affine': oam.affine,
                 'tiles': tile_idxs,
             }
             cell_info['oam'].append(oam_info)
@@ -328,6 +329,18 @@ def export_obj_quartet(
         cells: list[Cell] = ncer_info['cells']
         mapping_mode = ncer_info['mapping_mode']
         ncgr_tile_count = len(tiles)
+
+        affine_refs = [
+            f"cell {cell.cell_idx} OAM {index}"
+            for cell in cells
+            for index, oam in enumerate(cell.oam)
+            if oam.affine and not oam.disabled
+        ]
+        if affine_refs:
+            raise NotImplementedError(
+                "OBJ 含 affine OAM，当前导出器无法无损处理旋转/缩放："
+                + ", ".join(affine_refs[:10])
+            )
 
         out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -394,6 +407,7 @@ def main() -> None:
     print(f'🎨 正在处理 OBJ 下的 {len(quartets)} 套 4 件套...')
 
     success = 0
+    failures: list[str] = []
     for ncgr, nclr, _nanr, ncer, base, stem in quartets:
         manifest = export_obj_quartet(ncgr, nclr, ncer, output_dir, stem)
         if manifest is not None:
@@ -402,8 +416,14 @@ def main() -> None:
             print(f'   ✅ {stem}: {manifest["n_cells"]} cells, '
                   f'bpp={manifest["bpp"]}, mapping={manifest["mapping_mode"]}, '
                   f'tiles={manifest["n_tiles"]}, shared={n_shared}')
+        else:
+            failures.append(stem)
 
     print(f'\n🎉 成功导出 {success}/{len(quartets)} 套 OBJ UI')
+    if failures:
+        raise RuntimeError(
+            f"OBJ 导出失败 {len(failures)} 套：" + ", ".join(failures)
+        )
 
 
 if __name__ == '__main__':

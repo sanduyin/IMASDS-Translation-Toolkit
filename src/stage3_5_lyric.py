@@ -233,6 +233,10 @@ def _do_build_patches(xlsx: Path, build_dir: Path, deploy: bool) -> None:
         build_dir=build_dir,
     )
 
+    # Dynamic cross-resource gate: BBQ encodings, charmap glyph IDs and both
+    # AGL/GLD pairs must describe the same build before deployment is allowed.
+    lesvoice.validate_lyric_build(build_dir)
+
     if deploy:
         lesvoice.deploy_lyric_patches_to_patched(
             build_dir=build_dir, patched_dir=PATCHED_DIR

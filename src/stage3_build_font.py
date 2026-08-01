@@ -5,7 +5,6 @@ import os
 import sys
 import json
 import struct
-import subprocess
 import glob
 from pathlib import Path
 from typing import Any
@@ -13,11 +12,7 @@ from typing import Any
 import pandas as pd
 from PIL import Image, ImageFont, ImageDraw
 
-try:
-    import opencc
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "opencc"])
-    import opencc
+import opencc
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
@@ -28,11 +23,11 @@ from config import (
 )
 from src.utils.text_encoder import PROTECTED_RANGES, is_protected
 from src.utils.binary_io import read_uint16, read_uint32
-from src.io.csv_handler import read_text_csv, read_arm9_csv, is_csv_path
+from src.io.csv_handler import read_text_csv, read_arm9_csv, read_mail_csv, is_csv_path
 from src.utils.mapping_backup import backup_mapping
 
-converter_jp2t = opencc.OpenCC('jp2t.json')
-converter_t2s = opencc.OpenCC('t2s.json')
+converter_jp2t = opencc.OpenCC('jp2t')
+converter_t2s = opencc.OpenCC('t2s')
 
 def convert_to_simp(jis_char: str) -> str:
     try: return str(converter_t2s.convert(converter_jp2t.convert(jis_char)))
@@ -108,6 +103,7 @@ def parse_nftr_pamac(filepath: Path) -> tuple[bytearray, int, int, dict[int, int
 
 def _scan_xlsx_chars(unique_chars: set[str]) -> None:
     """从 xlsx 翻译表收集字符（向后兼容）"""
+    errors: list[str] = []
     for filepath in [EXCEL_SCN, EXCEL_TBL, EXCEL_ARM9]:
         if not filepath.exists():
             continue
@@ -116,25 +112,38 @@ def _scan_xlsx_chars(unique_chars: set[str]) -> None:
                 col = 'Translated_Text' if 'Translated_Text' in df.columns else '译文'
                 if col in df.columns:
                     unique_chars.update(list("".join(df[col].dropna().astype(str))))
-        except Exception:
-            pass
+        except Exception as exc:
+            errors.append(f"{filepath}: {exc}")
+    if errors:
+        raise RuntimeError("Excel 翻译表扫描失败：\n  - " + "\n  - ".join(errors))
 
 
 def _scan_csv_chars(unique_chars: set[str]) -> None:
     """从 CSV 翻译表收集字符（P1-4 faraplay 兼容窄列格式）"""
     import glob
+    errors: list[str] = []
     # SCN/TBL 目录下的所有 .csv（含 _ML.csv 邮件文件）
     for csv_dir in (CSV_SCN_DIR, CSV_TBL_DIR):
         if not os.path.isdir(csv_dir):
             continue
         for csv_path in sorted(glob.glob(os.path.join(csv_dir, "*.csv"))):
             try:
-                for row in read_text_csv(csv_path):
-                    txt = row.get("Translated_Text", "")
-                    if txt:
-                        unique_chars.update(list(txt))
-            except Exception:
-                pass
+                if os.path.basename(csv_path).endswith("_ML.csv"):
+                    # Mail CSV has five columns.  Scan both translated body
+                    # and translated reply; treating it as a three-column text
+                    # CSV shifts columns and silently misses every reply.
+                    for mail, reply, mail_translated, reply_translated in read_mail_csv(csv_path).values():
+                        if mail_translated:
+                            unique_chars.update(mail)
+                        if reply_translated:
+                            unique_chars.update(reply)
+                else:
+                    for row in read_text_csv(csv_path):
+                        txt = row.get("Translated_Text", "")
+                        if txt:
+                            unique_chars.update(txt)
+            except Exception as exc:
+                errors.append(f"{csv_path}: {exc}")
     # ARM9 单文件
     if CSV_ARM9_FILE.exists():
         try:
@@ -142,8 +151,10 @@ def _scan_csv_chars(unique_chars: set[str]) -> None:
                 txt = row.get("Translated_Text", "")
                 if txt:
                     unique_chars.update(list(txt))
-        except Exception:
-            pass
+        except Exception as exc:
+            errors.append(f"{CSV_ARM9_FILE}: {exc}")
+    if errors:
+        raise RuntimeError("CSV 翻译表扫描失败：\n  - " + "\n  - ".join(errors))
 
 
 def build_font_mapping(fmt: str = "xlsx", incremental: bool = True) -> dict[str, int]:
@@ -222,7 +233,9 @@ def build_font_mapping(fmt: str = "xlsx", incremental: bool = True) -> dict[str,
             taken_slots.add(old_code)
             preserved_count += 1
 
-    for char in unique_chars:
+    # Stable iteration is part of the mapping contract.  A set's process-
+    # randomized order must never decide which character receives which slot.
+    for char in sorted(unique_chars):
         if char in FIXED_CHARS: continue 
 
         # incremental 模式下，已被 old_mapping 锁定的字符跳过（code 不变）
@@ -449,6 +462,7 @@ def main() -> None:
         print("\n🎉 字库构建完美落幕！幽灵 L 标志已被彻底抹除。")
     except Exception as e:
         print(f"\n❌ 字库构建失败: {e}")
+        raise
 
 if __name__ == "__main__":
     main()

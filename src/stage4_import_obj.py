@@ -19,7 +19,7 @@
     - 用户只需 PS 编辑一张 sheet.png，程序自动按 sheet_rect 切回各 cell
     - 4bpp: 子调色板范围 [palette*16+1, palette*16+15]（index 0 = 透明 = 绿幕）
     - 8bpp: 全调色板范围 [1, 255]（index 0 = 透明 = 绿幕）
-    - 共享 tile：从后往前处理 OAM（与导出渲染顺序一致），后面处理的覆盖前面
+    - 共享 tile：所有引用必须生成相同像素；不一致时拒绝写入
     - NANR/NCER/NCLR 完全只读不写（原样复制）
 """
 from __future__ import annotations
@@ -267,7 +267,8 @@ def import_obj_quartet(
     # 读 sheet.png（一张图包含所有 cell，按 sheet_rect 切回）
     sheet_img = Image.open(sheet_path).convert('RGB')
 
-    tiles_written = 0
+    pending_tiles: dict[int, list[int]] = {}
+    tile_sources: dict[int, str] = {}
 
     for cell_info in cells_info:
         width = cell_info['width']
@@ -283,14 +284,17 @@ def import_obj_quartet(
             # 尺寸不匹配，跳过
             continue
 
-        # 从后往前处理 OAM（与导出渲染顺序一致）
-        # 导出时 reversed(cell.oam) → OAM[N-1] 先画，OAM[0] 最后画
-        # 导入时 OAM[0] 先写 tile，OAM[N-1] 最后写（覆盖）
-        # 但为了与导出一致，应该从后往前处理（OAM[N-1] 先提取，OAM[0] 最后提取）
-        # 后面处理的覆盖前面的 tile 数据
+        # 从后往前处理 OAM，与导出时的合成顺序一致。所有提取结果先进入
+        # pending_tiles；同一 tile 被多处引用时必须得到完全相同的像素，
+        # 否则拒绝回写，避免靠遍历顺序静默覆盖另一处翻译图。
         for oam_info in reversed(cell_info['oam']):
             if oam_info.get('disabled', False):
                 continue
+            if oam_info.get('affine', False):
+                raise NotImplementedError(
+                    f"{stem}: cell {cell_info['cell_idx']} 含 affine OAM，"
+                    "不能无损回写旋转/缩放对象"
+                )
 
             oam_x = oam_info['x']
             oam_y = oam_info['y']
@@ -321,11 +325,25 @@ def import_obj_quartet(
                 tiles_per_row, tiles_per_col,
             )
 
-            # 写入 NCGR
-            ncgr_data = write_tiles_to_ncgr(
-                ncgr_data, tile_idxs, new_tiles, bpp,
-            )
-            tiles_written += len(new_tiles)
+            for tile_idx, new_tile in zip(tile_idxs, new_tiles):
+                previous = pending_tiles.get(tile_idx)
+                source = f"cell {cell_info['cell_idx']}"
+                if previous is not None and previous != new_tile:
+                    raise ValueError(
+                        f"{stem}: 共享 tile {tile_idx} 在 {tile_sources[tile_idx]} "
+                        f"与 {source} 中被编辑成不同内容"
+                    )
+                pending_tiles[tile_idx] = new_tile
+                tile_sources[tile_idx] = source
+
+    ordered_indices = sorted(pending_tiles)
+    ncgr_data = write_tiles_to_ncgr(
+        ncgr_data,
+        ordered_indices,
+        [pending_tiles[index] for index in ordered_indices],
+        bpp,
+    )
+    tiles_written = len(ordered_indices)
 
     # 写出文件
     out_ncgr.parent.mkdir(parents=True, exist_ok=True)
@@ -359,6 +377,7 @@ def main() -> None:
     print(f'处理 {len(quartets)} 套 OBJ...')
 
     success = 0
+    failures: list[str] = []
     for ncgr, nclr, nanr, ncer, base, stem in quartets:
         manifest_path = img_dir / f'{stem}_manifest.json'
         if not manifest_path.exists():
@@ -374,10 +393,15 @@ def main() -> None:
             print(f'   ✅ cells={stats["n_cells"]}, tiles_written={stats["tiles_written"]}')
         except Exception as e:
             print(f'   ❌ 失败: {e}')
+            failures.append(f'{stem}: {e}')
             import traceback
             traceback.print_exc()
 
     print(f'\n🎉 成功回写 {success} 套 OBJ UI')
+    if failures:
+        raise RuntimeError(
+            f"OBJ 回写失败 {len(failures)} 套：\n  - " + "\n  - ".join(failures)
+        )
 
 
 if __name__ == '__main__':

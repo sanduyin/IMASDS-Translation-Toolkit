@@ -135,12 +135,13 @@ def import_psd_to_gld(
         try:
             index = int(name[len('sprite_'):])
         except ValueError:
-            n_skipped += 1
-            continue
+            raise ValueError(f"{gld_stem}: 无效 sprite 图层名 {name!r}")
 
         if index >= len(gld.footer_entries):
-            n_skipped += 1
-            continue
+            raise IndexError(
+                f"{gld_stem}: sprite_{index} 超出 GLD 范围 "
+                f"0..{len(gld.footer_entries) - 1}"
+            )
         entry = gld.footer_entries[index]
         if entry.is_deleted:
             n_skipped += 1
@@ -152,6 +153,11 @@ def import_psd_to_gld(
 
         if png_img is not None:
             # 从用户导出的 PNG 按 PSD 图层位置 crop
+            if left < 0 or top < 0 or left + w > png_img.width or top + h > png_img.height:
+                raise ValueError(
+                    f"{gld_stem}/{name}: 图层范围 {left},{top},{w},{h} "
+                    f"超出合并 PNG {png_img.width}x{png_img.height}"
+                )
             sprite_img = png_img.crop((left, top, left + w, top + h))
         else:
             # 回退：从 PSD 图层直接提取像素（往返测试用）
@@ -163,15 +169,18 @@ def import_psd_to_gld(
 
         # 校验尺寸（用户不应改变 sprite 尺寸）
         if sprite_img.size != (entry.crop_width, entry.crop_height):
-            print(f"   ⚠️  跳过 [{gld_stem}/{name}]: 尺寸不匹配"
-                  f"（期望 {entry.crop_width}x{entry.crop_height}，"
-                  f"实际 {sprite_img.size[0]}x{sprite_img.size[1]}）")
-            n_skipped += 1
-            continue
+            raise ValueError(
+                f"{gld_stem}/{name}: 尺寸不匹配，"
+                f"期望 {entry.crop_width}x{entry.crop_height}，"
+                f"实际 {sprite_img.size[0]}x{sprite_img.size[1]}"
+            )
 
         rgba_data = sprite_img.tobytes()
         gld.inject_sprite_rgba(index, rgba_data, entry.crop_width, entry.crop_height)
         n_injected += 1
+
+    if n_injected == 0:
+        raise ValueError(f"{gld_stem}.psd 中没有可回写的 sprite 图层")
 
     output_gld_path.parent.mkdir(parents=True, exist_ok=True)
     write_gld(gld, output_gld_path)
@@ -238,10 +247,10 @@ SHEET_MODE_FOLDERS = {"AGL"}
 # AGL_CHS_PATCHED/，Stage 6 不能用原始 Extracted/AGL 覆盖它们
 # （覆盖会丢失中文字形像素 + frame 表扩容）
 LYRIC_PROTECTED_AGL_GLD = {
-    "0506_D_MEASURE_MOJI_MNG",  # 左侧候选字 AGL（frame 表已扩容到 489）
-    "0507_D_MEASURE_MOJI_MNG",  # 左侧候选字 GLD（已追加 408 个中文字形）
-    "0520_D_EPANEL_MOJI_MNG",   # 下侧题目字 AGL（frame 表已扩容到 489）
-    "0521_D_EPANEL_MOJI_MNG",   # 下侧题目字 GLD（已追加 408 个中文字形）
+    "0506_D_MEASURE_MOJI_MNG",  # 左侧候选字 AGL（按当前 SSOT 动态扩容）
+    "0507_D_MEASURE_MOJI_MNG",  # 左侧候选字 GLD（按当前 SSOT 动态扩容）
+    "0520_D_EPANEL_MOJI_MNG",   # 下侧题目字 AGL（按当前 SSOT 动态扩容）
+    "0521_D_EPANEL_MOJI_MNG",   # 下侧题目字 GLD（按当前 SSOT 动态扩容）
 }
 
 
@@ -266,9 +275,7 @@ def batch_import_images(import_folders: list[str] | None = None,
 
     for folder_name in import_folders:
         png_dir = EXTRACT_DIR.parent / "1_Extracted_Images" / folder_name
-        # AGL 模式：sprite PNG 在 sprites/ 子文件夹（split_psd_to_sprites.py 输出）
-        # 其他文件夹（TEX/TBL/BG）：sprite PNG 在根目录
-        sprite_png_dir = png_dir / "sprites" if folder_name == "AGL" else png_dir
+        sprite_png_dir = png_dir
         original_dir = EXTRACT_DIR / folder_name
         output_dir = PATCHED_DIR / f"{folder_name}_IMG_PATCHED"
         preview_dir = EXTRACT_DIR.parent / "1_Extracted_Images" / f"{folder_name}_PREVIEW"
@@ -280,7 +287,7 @@ def batch_import_images(import_folders: list[str] | None = None,
             print(f"⏭️  跳过：原始 GLD 目录不存在: {original_dir}")
             continue
 
-        is_psd_mode = False  # AGL 已改回 sprite 模式（用 split_psd_to_sprites.py 拆分）
+        is_psd_mode = folder_name in SHEET_MODE_FOLDERS
 
         if is_psd_mode:
             # PSD 模式：扫描 {stem}.psd
@@ -334,7 +341,6 @@ def batch_import_images(import_folders: list[str] | None = None,
                     total_error += 1
         else:
             # sprite 模式
-            # AGL 从 sprites/ 子目录读取，TEX/TBL/BG 从根目录读取
             if not sprite_png_dir.exists():
                 print(f"⏭️  跳过：sprite PNG 目录不存在: {sprite_png_dir}")
                 continue
@@ -447,6 +453,8 @@ def batch_import_images(import_folders: list[str] | None = None,
     print(f"   输出目录: {PATCHED_DIR}/<文件夹名>_IMG_PATCHED/")
     print(f"   请确认 config.py 的 TARGET_PACKS 已包含对应模块（如 \"TEX\"），")
     print(f"   否则 stage5_build_rom.py 打包时不会包含这些修改。")
+    if total_error:
+        raise RuntimeError(f"图像回写失败：{total_error} 个 sprite/文件出错")
 
 
 def main(preview: bool | None = None) -> None:
