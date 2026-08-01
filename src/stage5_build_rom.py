@@ -157,14 +157,14 @@ def build_nds_with_twl_rebuild() -> None:
         #   该字段位于未压缩前缀（0x0000~0x3FFF），压缩后仍然存在，可安全重写。
         #   实机 BIOS 启动解压器据此值倒序读取压缩流；若沿用原版值或清零，
         #   会从错误地址解压 → 白屏。
-        arm9_compressed = bytearray(arm9_compressed)
+        arm9_compressed_ba = bytearray(arm9_compressed)
         new_end_ptr = ARM9_RAM_BASE + compressed_size
         struct.pack_into(
-            '<I', arm9_compressed, ARM9_COMPRESSED_END_PTR_OFFSET, new_end_ptr
+            '<I', arm9_compressed_ba, ARM9_COMPRESSED_END_PTR_OFFSET, new_end_ptr
         )
         print(f"  -> ARM9 0x0FC4 = 0x{new_end_ptr:08X} (RAM base + compressed size)")
 
-        rom.arm9 = bytes(arm9_compressed)
+        rom.arm9 = bytes(arm9_compressed_ba)
         
     # 3. 【核心黑科技】越过文件树，直接篡改 FAT 底层数据！
     # Overlay 表项字段（每个 32 字节）：

@@ -28,6 +28,7 @@ import shutil
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
@@ -134,7 +135,7 @@ KNOWN_ARM9_FINAL_SHA256 = (
 )
 
 # 0507 (左侧候选字) 配置
-CFG_0507 = {
+CFG_0507: dict[str, Any] = {
     'filename': '0507_D_MEASURE_MOJI_MNG.GLD',
     'out_filename': '0507_D_MEASURE_MOJI_MNG_patched.GLD',
     'canvas_w': 16,
@@ -153,7 +154,7 @@ CFG_0507 = {
 }
 
 # 0521 (下侧题目字) 配置
-CFG_0521 = {
+CFG_0521: dict[str, Any] = {
     'filename': '0521_D_EPANEL_MOJI_MNG.GLD',
     'out_filename': '0521_D_EPANEL_MOJI_MNG_patched.GLD',
     'canvas_w': 32,
@@ -954,7 +955,7 @@ def expand_gld_chinese(ssot_csv: Path = LYRIC_SSOT_CSV,
     print(f"  加载 {len(new_chars)} 个新增汉字")
 
     gld_dir = EXTRACT_DIR / "AGL"
-    results: dict[str, dict] = {}
+    results: dict[str, dict[str, Any]] = {}
 
     for cfg in (CFG_0507, CFG_0521):
         print(f"\n{'=' * 70}")

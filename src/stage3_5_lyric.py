@@ -151,7 +151,7 @@ def main() -> None:
         return
 
 
-def _do_full_build(args) -> None:
+def _do_full_build(args: argparse.Namespace | None) -> None:
     """执行默认全流程：构建补丁 + 部署 + 导出 PSD"""
     # 默认参数（用户未传子命令时）
     xlsx = EXCEL_LYRIC

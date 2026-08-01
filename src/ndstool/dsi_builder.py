@@ -1137,7 +1137,7 @@ def _read_exact_at(handle: Any, offset: int, size: int, label: str) -> bytes:
     if offset < 0 or size < 0:
         raise DsiBuildError(f"{label} 的偏移或大小为负数")
     handle.seek(offset)
-    data = handle.read(size)
+    data: bytes = handle.read(size)
     if len(data) != size:
         raise DsiBuildError(
             f"{label} 读取不足：offset=0x{offset:X}, expected=0x{size:X}, "

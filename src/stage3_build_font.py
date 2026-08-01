@@ -17,7 +17,7 @@ try:
     import opencc
 except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "opencc"])
-    import opencc  # type: ignore
+    import opencc
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
