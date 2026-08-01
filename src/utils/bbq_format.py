@@ -3,10 +3,257 @@ from __future__ import annotations
 
 import struct
 import os
+from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from src.utils.binary_io import read_uint32, read_string_bytes
+
+
+BBQ_MAGIC = b".BBQ1.00"
+BBQ_HEADER_SIZE = 0x18
+BBQ_ENTRY_SIZE = 0x14
+BBQ_FOOTER_SIZE = 0x18
+
+
+@dataclass(frozen=True)
+class RawBbqSection:
+    """A lossless low-level BBQ section.
+
+    ``offsets`` are relative to the start of ``data``.  Keeping the section
+    payload raw is important for text injection: Types 2/3/5/6 can contain
+    game-specific structures that must not be interpreted or rewritten just
+    to replace Type 7 strings.
+    """
+
+    data_type: int
+    offsets: tuple[int, ...]
+    data: bytes
+
+
+@dataclass(frozen=True)
+class RawBbqFile:
+    datetime: int
+    sections: tuple[RawBbqSection, ...]
+    footer: tuple[int, ...]
+    trailing_data: bytes = b""
+
+
+def parse_raw_bbq(data: bytes) -> RawBbqFile:
+    """Parse and bounds-check a BBQ without decoding section payloads."""
+
+    size = len(data)
+    if size < BBQ_HEADER_SIZE:
+        raise ValueError(f"BBQ file too small: {size} < {BBQ_HEADER_SIZE}")
+    if data[:8] != BBQ_MAGIC:
+        raise ValueError(f"BBQ magic mismatch: {data[:8]!r}")
+
+    datetime_val, magic2, entries_offset, entry_count = struct.unpack_from(
+        "<IIII", data, 8
+    )
+    if magic2 != 1:
+        raise ValueError(f"BBQ magic2 mismatch: {magic2} != 1")
+    if entries_offset != BBQ_HEADER_SIZE:
+        raise ValueError(
+            f"BBQ entries_offset mismatch: {entries_offset} != {BBQ_HEADER_SIZE}"
+        )
+    if entry_count <= 0:
+        raise ValueError("BBQ contains no sections")
+
+    directory_end = entries_offset + entry_count * BBQ_ENTRY_SIZE
+    if directory_end > size:
+        raise ValueError(
+            f"BBQ section directory exceeds file: {directory_end} > {size}"
+        )
+
+    sections: list[RawBbqSection] = []
+    footer_offset = 0
+    seen_types: set[int] = set()
+    for index in range(entry_count):
+        entry_pos = entries_offset + index * BBQ_ENTRY_SIZE
+        data_type, offsets_rel, data_count, data_rel, data_size = struct.unpack_from(
+            "<IIIII", data, entry_pos
+        )
+        if data_type in seen_types:
+            raise ValueError(f"duplicate BBQ Type{data_type} section")
+        seen_types.add(data_type)
+
+        offsets_pos = entry_pos + offsets_rel
+        offsets_end = offsets_pos + data_count * 4
+        data_pos = entry_pos + data_rel
+        data_end = data_pos + data_size
+        if offsets_pos < directory_end or offsets_end > size:
+            raise ValueError(
+                f"Type{data_type} offsets out of bounds: "
+                f"0x{offsets_pos:X}..0x{offsets_end:X}"
+            )
+        if data_pos < offsets_end or data_end > size:
+            raise ValueError(
+                f"Type{data_type} data out of bounds: "
+                f"0x{data_pos:X}..0x{data_end:X}"
+            )
+
+        offsets = tuple(
+            struct.unpack_from("<I", data, offsets_pos + item * 4)[0]
+            for item in range(data_count)
+        )
+        previous = -1
+        for item, offset in enumerate(offsets):
+            if offset < previous or offset > data_size:
+                raise ValueError(
+                    f"Type{data_type} offset[{item}]={offset} is invalid "
+                    f"for data_size={data_size}"
+                )
+            previous = offset
+
+        sections.append(
+            RawBbqSection(data_type, offsets, data[data_pos:data_end])
+        )
+        if index == entry_count - 1:
+            footer_offset = data_end
+
+    footer_end = footer_offset + BBQ_FOOTER_SIZE
+    if footer_end > size:
+        raise ValueError(
+            f"BBQ footer exceeds file: 0x{footer_end:X} > 0x{size:X}"
+        )
+    footer = struct.unpack_from("<6I", data, footer_offset)
+    return RawBbqFile(
+        datetime=datetime_val,
+        sections=tuple(sections),
+        footer=tuple(footer),
+        trailing_data=data[footer_end:],
+    )
+
+
+def serialize_raw_bbq(bbq: RawBbqFile) -> bytes:
+    """Serialize a raw BBQ with correct per-section ``data_size`` values."""
+
+    if not bbq.sections:
+        raise ValueError("BBQ contains no sections")
+    if len(bbq.footer) != 6:
+        raise ValueError(f"BBQ footer must contain 6 u32 values, got {len(bbq.footer)}")
+
+    section_count = len(bbq.sections)
+    header = bytearray(struct.pack(
+        "<8sIIII", BBQ_MAGIC, bbq.datetime, 1, BBQ_HEADER_SIZE, section_count
+    ))
+    payload = bytearray()
+    seen_types: set[int] = set()
+
+    for index, section in enumerate(bbq.sections):
+        if section.data_type in seen_types:
+            raise ValueError(f"duplicate BBQ Type{section.data_type} section")
+        seen_types.add(section.data_type)
+        previous = -1
+        for item, offset in enumerate(section.offsets):
+            if offset < previous or offset > len(section.data):
+                raise ValueError(
+                    f"Type{section.data_type} offset[{item}]={offset} is invalid "
+                    f"for data_size={len(section.data)}"
+                )
+            previous = offset
+
+        offsets_rel = (section_count - index) * BBQ_ENTRY_SIZE + len(payload)
+        data_rel = offsets_rel + len(section.offsets) * 4
+        # data_size is only the data blob length.  It must not include the
+        # relative distance from the section entry to that blob.
+        data_size = len(section.data)
+        header.extend(struct.pack(
+            "<IIIII",
+            section.data_type,
+            offsets_rel,
+            len(section.offsets),
+            data_rel,
+            data_size,
+        ))
+        for offset in section.offsets:
+            payload.extend(struct.pack("<I", offset))
+        payload.extend(section.data)
+
+    output = header + payload
+    output.extend(struct.pack("<6I", *bbq.footer))
+    output.extend(bbq.trailing_data)
+    result = bytes(output)
+    # The parser is also the structural gate used by injectors.  Re-read the
+    # output before it is allowed to reach the packing stage.
+    parse_raw_bbq(result)
+    return result
+
+
+def raw_section_strings(section: RawBbqSection) -> tuple[bytes, ...]:
+    """Return NUL-free strings, allowing valid shared/duplicate pointers."""
+
+    strings: list[bytes] = []
+    for index, start in enumerate(section.offsets):
+        nul = section.data.find(b"\x00", start)
+        if nul < 0:
+            raise ValueError(
+                f"Type{section.data_type} string {index} has no terminating NUL"
+            )
+        if index + 1 < len(section.offsets):
+            next_start = section.offsets[index + 1]
+            # Equal offsets deliberately share a string.  A later distinct
+            # pointer must not begin inside the preceding string payload.
+            if next_start > start and nul >= next_start:
+                raise ValueError(
+                    f"Type{section.data_type} string {index} overlaps offset "
+                    f"{index + 1} ({next_start})"
+                )
+        strings.append(section.data[start:nul])
+    return tuple(strings)
+
+
+def replace_type7_strings(
+    data: bytes,
+    replacements: Mapping[int, bytes],
+) -> bytes:
+    """Rebuild a BBQ Type 7 pool while preserving all other data and footer.
+
+    Replacement values are encoded string payloads *without* their NUL
+    terminator.  Entry count and order are immutable; callers identify text by
+    its existing numeric index, so image/BBQ numbering cannot drift.
+    """
+
+    bbq = parse_raw_bbq(data)
+    type7_positions = [
+        index for index, section in enumerate(bbq.sections)
+        if section.data_type == 7
+    ]
+    if len(type7_positions) != 1:
+        raise ValueError(f"expected exactly one Type7 section, got {len(type7_positions)}")
+
+    section_index = type7_positions[0]
+    section = bbq.sections[section_index]
+    string_count = len(section.offsets)
+    invalid_indices = sorted(index for index in replacements if not 0 <= index < string_count)
+    if invalid_indices:
+        raise IndexError(
+            f"Type7 replacement indices out of range 0..{string_count - 1}: "
+            f"{invalid_indices}"
+        )
+
+    new_offsets: list[int] = []
+    new_pool = bytearray()
+    original_strings = raw_section_strings(section)
+    for index, original_payload in enumerate(original_strings):
+        payload = replacements.get(index, original_payload)
+        if b"\x00" in payload:
+            raise ValueError(f"Type7 replacement {index} contains an embedded NUL")
+        new_offsets.append(len(new_pool))
+        new_pool.extend(payload)
+        new_pool.append(0)
+
+    while len(new_pool) % 4:
+        new_pool.append(0)
+
+    sections = list(bbq.sections)
+    sections[section_index] = replace(
+        section,
+        offsets=tuple(new_offsets),
+        data=bytes(new_pool),
+    )
+    return serialize_raw_bbq(replace(bbq, sections=tuple(sections)))
 
 
 def parse_bbq_file(file_path: str | Path, is_scn: bool = True, skip_empty: bool = True) -> list[dict[str, Any]]:

@@ -54,7 +54,12 @@ from src.utils.gld_format import (
     FOOTER_TYPE_2, SPRITE_FORMAT_2, BIT_DEPTH, PIXELS_PER_BYTE,
     unpack_2bits_le, pack_2bits_le, bgr555_to_rgb888,
 )
-from src.utils.bbq_format import parse_bbq_file
+from src.utils.bbq_format import (
+    parse_bbq_file,
+    parse_raw_bbq,
+    raw_section_strings,
+    replace_type7_strings,
+)
 
 
 # ============================================================
@@ -267,7 +272,26 @@ def extract_chinese_chars_from_xlsx(xlsx_path: Path) -> list[str]:
     return sorted(c for c in all_chars if '\u4e00' <= c <= '\u9fff')
 
 
-def _assign_encoding(chars: list[str]) -> list[dict]:
+def _private_codes() -> list[int]:
+    codes: list[int] = []
+    code = PRIVATE_CODE_START
+    while code <= PRIVATE_CODE_END:
+        codes.append(code)
+        trail = (code & 0xFF) + 1
+        lead = code >> 8
+        if trail > 0xFC:
+            trail = 0x40
+            lead += 1
+        elif trail == 0x7F:
+            trail = 0x80
+        code = (lead << 8) | trail
+    return codes
+
+
+def _assign_encoding(
+    chars: list[str],
+    used_keys: set[int] | None = None,
+) -> list[dict]:
     """为每个汉字分配私有码位 0xF040-0xF9FC (SJIS 用户定义区 G3)
 
     设计理由：
@@ -278,24 +302,15 @@ def _assign_encoding(chars: list[str]) -> list[dict]:
     - 容量：10 个 lead byte × 188 个 trail = 1880 个码位
     """
     results = []
-    private_code = PRIVATE_CODE_START
-    for idx, ch in enumerate(chars):
-        if private_code > PRIVATE_CODE_END:
-            raise LyricPatchError(
-                f"私有码位空间不足！当前汉字 {len(chars)} 个，"
-                f"超过 0x{PRIVATE_CODE_START:04X}-0x{PRIVATE_CODE_END:04X} 容量 (1880)。\n"
-                f"请扩大 PRIVATE_CODE_END（如 0xFFFC）或减少汉字数量。"
-            )
-        key = private_code
-        # 推进私有码位 (跳过 0x7F trail)
-        trail = (private_code & 0xFF) + 1
-        lead = private_code >> 8
-        if trail > 0xFC:
-            trail = 0x40
-            lead += 1
-        elif trail == 0x7F:
-            trail = 0x80
-        private_code = (lead << 8) | trail
+    reserved = used_keys or set()
+    available = [code for code in _private_codes() if code not in reserved]
+    if len(chars) > len(available):
+        raise LyricPatchError(
+            f"私有码位空间不足！需要新增 {len(chars)} 个汉字，只剩 "
+            f"{len(available)} 个 0x{PRIVATE_CODE_START:04X}-"
+            f"0x{PRIVATE_CODE_END:04X} 码位。"
+        )
+    for ch, key in zip(chars, available):
         results.append({
             'char': ch,
             'unicode': ord(ch),
@@ -304,6 +319,98 @@ def _assign_encoding(chars: list[str]) -> list[dict]:
             'key_hex': f"0x{key:04X}",
         })
     return results
+
+
+def _merge_private_assignments(
+    chars: list[str],
+    previous: list[dict],
+) -> list[dict]:
+    """Retain every existing glyph/key and append only genuinely new chars."""
+
+    preserved = sorted((dict(item) for item in previous), key=lambda item: item['glyph_id'])
+    expected_ids = list(range(0x51, 0x51 + len(preserved)))
+    glyph_ids = [int(item['glyph_id']) for item in preserved]
+    if glyph_ids != expected_ids:
+        raise LyricPatchError(
+            "既有歌词 glyph ID 不是从 0x51 开始的连续序列，拒绝自动重排"
+        )
+    preserved_chars = [str(item['char']) for item in preserved]
+    preserved_keys = [int(item['key']) for item in preserved]
+    if len(set(preserved_chars)) != len(preserved_chars):
+        raise LyricPatchError("既有歌词 charmap 含重复汉字，拒绝自动重排")
+    if len(set(preserved_keys)) != len(preserved_keys):
+        raise LyricPatchError("既有歌词 charmap 含重复私有码位，拒绝自动重排")
+    valid_private_keys = set(_private_codes())
+    if any(key not in valid_private_keys for key in preserved_keys):
+        raise LyricPatchError("既有歌词 charmap 含超出 F040-F9FC 的私有码位")
+
+    new_chars = sorted(set(chars) - set(preserved_chars))
+    additions = _assign_encoding(new_chars, set(preserved_keys))
+    next_glyph_id = 0x51 + len(preserved)
+    for offset, item in enumerate(additions):
+        item['glyph_id'] = next_glyph_id + offset
+    return preserved + additions
+
+
+def _load_previous_private_assignments(build_dir: Path) -> list[dict]:
+    """Load the glyph prefix proven to exist in all four prior resources."""
+
+    charmap_path = build_dir / "charmap_new.csv"
+    resource_paths = [
+        build_dir / "0506_D_MEASURE_MOJI_MNG_patched.AGL",
+        build_dir / "0520_D_EPANEL_MOJI_MNG_patched.AGL",
+        build_dir / "0507_D_MEASURE_MOJI_MNG_patched.GLD",
+        build_dir / "0521_D_EPANEL_MOJI_MNG_patched.GLD",
+    ]
+    present = [path.is_file() for path in resource_paths]
+    if not charmap_path.is_file() and not any(present):
+        return []
+    if not charmap_path.is_file() or not all(present):
+        raise LyricPatchError(
+            "既有歌词编号锁不完整：charmap_new.csv 与两组 AGL/GLD 必须同时存在"
+        )
+
+    counts: list[int] = []
+    for path in resource_paths[:2]:
+        data = path.read_bytes()
+        if len(data) < AGL_HEADER_SIZE + 6 or data[:4] != b'\x00LGA':
+            raise LyricPatchError(f"既有编号锁中的 AGL 无效：{path}")
+        header_count = struct.unpack_from('<H', data, 0x0C)[0]
+        cell_count = struct.unpack_from('<H', data, AGL_HEADER_SIZE + 2)[0]
+        if header_count != cell_count:
+            raise LyricPatchError(f"既有编号锁中的 AGL frame_count 不一致：{path}")
+        counts.append(header_count)
+    for path in resource_paths[2:]:
+        gld = parse_gld(path)
+        if len(gld.footer_entries) != gld.header.footer_entry_count:
+            raise LyricPatchError(f"既有编号锁中的 GLD footer 被截断：{path}")
+        counts.append(gld.header.footer_entry_count)
+    if len(set(counts)) != 1 or counts[0] < AGL_OLD_FRAME_COUNT:
+        raise LyricPatchError(f"既有歌词 AGL/GLD frame_count 不一致：{counts}")
+    frame_count = counts[0]
+
+    with open(charmap_path, 'r', encoding='utf-8', newline='') as handle:
+        rows = list(csv.DictReader(handle))
+    previous: list[dict] = []
+    for row in rows:
+        glyph_id = int(row['glyph_id'], 16)
+        if row.get('source') != 'private' or not 0x51 <= glyph_id < frame_count:
+            continue
+        previous.append({
+            'char': row['char'],
+            'unicode': ord(row['char']),
+            'encoding': 'private',
+            'key': int(row['key_hex'], 16),
+            'key_hex': row['key_hex'],
+            'glyph_id': glyph_id,
+        })
+    expected_private_count = frame_count - AGL_OLD_FRAME_COUNT
+    if len(previous) != expected_private_count:
+        raise LyricPatchError(
+            f"既有歌词编号锁应有 {expected_private_count} 个汉字，"
+            f"charmap 中实际 {len(previous)} 个"
+        )
+    return _merge_private_assignments([], previous)
 
 
 def _build_ssot(orig_charmap: list[dict],
@@ -331,18 +438,20 @@ def _build_ssot(orig_charmap: list[dict],
         elif entry['key'] in SJIS_SYMBOLS:
             entry['char'] = SJIS_SYMBOLS[entry['key']]
 
-    # 新增汉字条目 (glyph_id 从 0x51 起)
+    # 新增汉字条目。已有 glyph_id 是不可变的美工/BBQ 合作编号；仅首次
+    # 构建或真正新增字符时从现有末尾继续追加。
     next_glyph_id = 0x51
     for ch_info in chinese_chars:
+        glyph_id = int(ch_info.get('glyph_id', next_glyph_id))
         all_entries.append({
-            'glyph_id': next_glyph_id,
+            'glyph_id': glyph_id,
             'key': ch_info['key'],
             'reserved': 0,
             'source': ch_info['encoding'],
             'char': ch_info['char'],
         })
-        ch_info['glyph_id'] = next_glyph_id
-        next_glyph_id += 1
+        ch_info['glyph_id'] = glyph_id
+        next_glyph_id = max(next_glyph_id, glyph_id + 1)
 
     # 按 key 字节序列升序排序 (memcmp 一致)
     all_entries.sort(key=lambda e: (
@@ -520,10 +629,14 @@ def build_charmap_patch(lyric_xlsx: Path = EXCEL_LYRIC,
         # 1880 容量，接近上限就告警
         print(f"  ⚠️  汉字数 ({len(chars)}) 接近私有码位上限(~1880)，请留意码位空间")
 
-    # 3. 分配私有码位
+    # 3. 锁定既有 glyph/key 编号，只给新字符追加编号
     print(f"\n[3] 分配私有码位 0x{PRIVATE_CODE_START:04X}-0x{PRIVATE_CODE_END:04X}...")
-    char_encoding = _assign_encoding(chars)
+    previous_assignments = _load_previous_private_assignments(build_dir)
+    char_encoding = _merge_private_assignments(chars, previous_assignments)
     private_count = sum(1 for c in char_encoding if c['encoding'] == 'private')
+    if previous_assignments:
+        print(f"  🔒 锁定既有 glyph/key 编号: {len(previous_assignments)} 字")
+        print(f"  新增且向后追加: {len(char_encoding) - len(previous_assignments)} 字")
     if char_encoding:
         print(f"  私有码位: {private_count} 字 "
               f"(0x{PRIVATE_CODE_START:04X}-0x{char_encoding[-1]['key']:04X})")
@@ -1369,7 +1482,7 @@ def verify_arm9(src_path: Path) -> bool:
             label = "已补丁" if state == "patched" else "待补丁"
             print(f"  [{label}] 0x{site.offset:08X}  {site.description}")
         return False
-    print("✅ 验证成功: ARM9 已包含完整的 489 字形补丁。")
+    print("✅ 验证成功: ARM9 已包含完整的歌词课四点补丁。")
     return True
 
 
@@ -1444,31 +1557,14 @@ def _inject_bbq_file(bbq_path: Path, df: pd.DataFrame,
     - 不限制译文长度（中文翻译不受原文字节槽位约束）
     - 字数 > 12 仅警告不跳过（翻译者自行把控显示效果）
     """
-    data = bytearray(bbq_path.read_bytes())
-    if data[:4] != b'\x2E\x42\x42\x51':
-        raise LyricPatchError(f"{bbq_path.name}: 魔数错误 {data[:4]!r}")
-
-    # 解析 BBQ header
-    header_size = struct.unpack_from('<I', data, 16)[0]
-    num_sec = struct.unpack_from('<I', data, 20)[0]
-
-    # 找 Type7 section
-    sec7_entry_pos = None
-    for i in range(num_sec):
-        entry_pos = header_size + i * 20
-        sec_id = struct.unpack_from('<I', data, entry_pos)[0]
-        if sec_id == 7:
-            sec7_entry_pos = entry_pos
-            break
-    if sec7_entry_pos is None:
-        raise LyricPatchError(f"{bbq_path.name}: 未找到 Type7 section")
-
-    ptr_tbl_rel, num_str, pool_rel, sec_size = struct.unpack_from('<4I', data, sec7_entry_pos + 4)
-    ptr_tbl_abs = sec7_entry_pos + ptr_tbl_rel
-    pool_abs = sec7_entry_pos + pool_rel
-
-    # 读旧指针表
-    old_pointers = list(struct.unpack_from(f'<{num_str}I', data, ptr_tbl_abs))
+    source_data = bbq_path.read_bytes()
+    raw_bbq = parse_raw_bbq(source_data)
+    type7_sections = [section for section in raw_bbq.sections if section.data_type == 7]
+    if len(type7_sections) != 1:
+        raise LyricPatchError(
+            f"{bbq_path.name}: Type7 section 数量异常 ({len(type7_sections)})"
+        )
+    num_str = len(type7_sections[0].offsets)
 
     # 从 df 构建 {index: translated_text}
     translations: dict[int, str] = {}
@@ -1481,9 +1577,7 @@ def _inject_bbq_file(bbq_path: Path, df: pd.DataFrame,
         trans = str(row['Translated_Text'])
         translations[idx] = trans
 
-    # 重建数据池
-    new_pool = bytearray()
-    new_pointers: list[int] = []
+    replacements: dict[int, bytes] = {}
     injected = 0
     skipped_nan = 0
     errors: list[str] = []
@@ -1491,22 +1585,15 @@ def _inject_bbq_file(bbq_path: Path, df: pd.DataFrame,
     details: list[dict] = []
 
     for i in range(num_str):
-        new_pointers.append(len(new_pool))
-
         if i in translations:
             trans = translations[i]
             try:
                 encoded = encode_text_private(trans, font_mapping)
             except ValueError as e:
                 errors.append(f"idx={i}: {e}")
-                # 编码失败时保留原文
-                orig_start = pool_abs + old_pointers[i]
-                orig_end = data.index(b'\x00', orig_start) + 1
-                new_pool.extend(data[orig_start:orig_end])
                 continue
 
-            new_pool.extend(encoded)
-            new_pool.append(0)  # NUL 终止符
+            replacements[i] = encoded
             injected += 1
 
             # 字数警告（>12 字仅警告不跳过）
@@ -1523,27 +1610,16 @@ def _inject_bbq_file(bbq_path: Path, df: pd.DataFrame,
             })
         else:
             skipped_nan += 1
-            # 保留原文（从旧数据池复制）
-            orig_start = pool_abs + old_pointers[i]
-            orig_end = data.index(b'\x00', orig_start) + 1
-            new_pool.extend(data[orig_start:orig_end])
 
-    # 4 字节对齐
-    while len(new_pool) % 4 != 0:
-        new_pool.append(0)
+    if errors:
+        raise LyricPatchError(
+            f"{bbq_path.name}: {len(errors)} 条译文无法编码：\n  - "
+            + "\n  - ".join(errors)
+        )
 
-    # 回写指针表
-    struct.pack_into(f'<{num_str}I', data, ptr_tbl_abs, *new_pointers)
-
-    # 覆盖数据池
-    data[pool_abs:pool_abs + len(new_pool)] = new_pool
-
-    # 更新 section directory 的 size 字段 (entry_pos+16)
-    new_sec_size = pool_rel + len(new_pool)
-    struct.pack_into('<I', data, sec7_entry_pos + 16, new_sec_size)
-
-    # 截断文件到新长度
-    del data[pool_abs + len(new_pool):]
+    # 共享的 BBQ serializer 会重建 Type7，写入正确的 data_size，并保留
+    # 原文件 24 字节 footer 及其他 section 的原始字节。
+    output_data = replace_type7_strings(source_data, replacements)
 
     # 从 df 补充原文到 details（用于报告显示）
     orig_map: dict[int, str] = {}
@@ -1556,14 +1632,14 @@ def _inject_bbq_file(bbq_path: Path, df: pd.DataFrame,
     info = {
         'filename': bbq_path.name,
         'orig_size': bbq_path.stat().st_size,
-        'new_size': len(data),
+        'new_size': len(output_data),
         'injected': injected,
         'skipped_nan': skipped_nan,
         'char_warnings': char_warnings,
         'errors': errors,
         'details': details,
     }
-    return bytes(data), info
+    return output_data, info
 
 
 def inject_bbq_chinese(lyric_xlsx: Path = EXCEL_LYRIC,
@@ -1593,6 +1669,8 @@ def inject_bbq_chinese(lyric_xlsx: Path = EXCEL_LYRIC,
 
     tbl_dir = EXTRACT_DIR / "TBL"
     all_infos: dict[str, dict] = {}
+    pending_outputs: list[tuple[Path, bytes]] = []
+    failures: list[str] = []
     total_injected = 0
     total_errors = 0
 
@@ -1600,18 +1678,25 @@ def inject_bbq_chinese(lyric_xlsx: Path = EXCEL_LYRIC,
         bbq_path = tbl_dir / bbq_name
         if not bbq_path.exists():
             print(f"  ❌ {bbq_name}: 文件不存在")
+            failures.append(f"{bbq_name}: 文件不存在")
             continue
 
         # sheet 名 = BBQ 文件名（含 .BBQ 后缀）
         if bbq_name not in xls:
-            print(f"  ⚠️ {bbq_name}: xlsx 中无对应 sheet")
+            print(f"  ❌ {bbq_name}: xlsx 中无对应 sheet")
+            failures.append(f"{bbq_name}: xlsx 中无对应 sheet")
             continue
 
         df = xls[bbq_name]
-        out_data, info = _inject_bbq_file(bbq_path, df, font_mapping)
+        try:
+            out_data, info = _inject_bbq_file(bbq_path, df, font_mapping)
+        except (ValueError, IndexError, LyricPatchError) as exc:
+            print(f"  ❌ {bbq_name}: {exc}")
+            failures.append(f"{bbq_name}: {exc}")
+            continue
 
         out_path = build_dir / bbq_name.replace('.BBQ', '_patched.BBQ')
-        out_path.write_bytes(out_data)
+        pending_outputs.append((out_path, out_data))
 
         all_infos[bbq_name] = info
         total_injected += info['injected']
@@ -1622,6 +1707,15 @@ def inject_bbq_chinese(lyric_xlsx: Path = EXCEL_LYRIC,
         print(f"  {status} {bbq_name}: 注入 {info['injected']}, "
               f"未翻译 {info['skipped_nan']}, 字数警告 {warn_count}, "
               f"错误 {len(info['errors'])}")
+
+    if failures:
+        raise LyricPatchError(
+            f"歌词 BBQ 构建失败 {len(failures)} 项；未写入任何新 BBQ：\n  - "
+            + "\n  - ".join(failures)
+        )
+
+    for out_path, out_data in pending_outputs:
+        out_path.write_bytes(out_data)
 
     print(f"\n总计: 注入 {total_injected} 条译文, {total_errors} 个错误")
 
@@ -1759,6 +1853,7 @@ def export_gld_psd_for_art(gld_patched_dir: Path = LYRIC_BUILD_DIR,
         print(f"\n处理 {gld_path.name}...")
         gld = parse_gld(gld_path)
 
+        sprite_indices: list[int] | None = None
         if only_new:
             # 过滤只保留新增汉字 (footer index >= 81, 即 glyph_id >= 0x51)
             # 通过临时设置 footer_entries 列表实现
@@ -1770,10 +1865,11 @@ def export_gld_psd_for_art(gld_patched_dir: Path = LYRIC_BUILD_DIR,
                 print(f"  ⚠️ {orig_name}: 没有新增 sprite，跳过")
                 continue
             print(f"  新增 sprite 数: {len(new_entries)}")
+            sprite_indices = [index for index, _entry in new_entries]
 
         # 导出完整 PSD
         psd_path = out_dir / orig_name.replace('.GLD', '.psd')
-        export_editable_psd(gld, psd_path)
+        export_editable_psd(gld, psd_path, sprite_indices=sprite_indices)
         print(f"  ✅ 已导出: {psd_path}")
         results[orig_name] = psd_path
 
@@ -1788,29 +1884,28 @@ def export_gld_psd_for_art(gld_patched_dir: Path = LYRIC_BUILD_DIR,
 
 def import_lyric_glyph_psd(psd_dir: Path = LYRIC_GLYPH_DIR,
                             patched_dir: Path = PATCHED_DIR) -> dict:
-    """歌词课专用 GLD 回写：从美工切好的 sprite PNG 写回已扩容 GLD
+    """歌词课专用 GLD 回写：从美工 PSD/合并 PNG 写回已扩容 GLD
 
     美工工作流：
     1. Stage 3.5 export-glyph-psd 导出扩容后的 PSD 到 AGL 图像目录
     2. 美工在 PS 中修正中文字型，导出同名 PNG（合并图）
-    3. 美工运行 split_psd_to_sprites.py 切出 {stem}_{index}.png（sprite 文件）
-       输出到 {psd_dir}/sprites/ 子目录（与 Stage 6 AGL 回写共用约定）
-    4. 本函数用 sprite 模式把这些 PNG 写回 2_Patched/AGL_CHS_PATCHED/ 的 GLD
+    3. 本函数直接读取 PSD 图层位置并从合并 PNG 裁切，写回
+       2_Patched/AGL_CHS_PATCHED/ 的已扩容 GLD
 
     与 Stage 6 (stage4_import_images) 的区别：
     - Stage 6 跳过 0506/0507/0520/0521（避免用原版 GLD 覆盖扩容版本）
     - 本函数从 2_Patched/AGL_CHS_PATCHED/ 的已扩容 GLD 读取，原位注入
-    - 两者都从 {AGL}/sprites/ 子目录读取 sprite PNG（约定一致）
+    - 本函数以 PSD 图层名 ``sprite_{index}`` 保留现有 glyph 编号
 
     Args:
-        psd_dir: AGL 图像目录（sprite PNG 在其 sprites/ 子目录，美工工作目录）
+        psd_dir: AGL 图像目录（含同名 PSD 与可选合并 PNG）
         patched_dir: 已扩容 GLD 所在目录（默认 2_Patched/AGL_CHS_PATCHED/）
 
     Returns:
         {gld_filename: (n_injected, n_skipped)} 字典
     """
     print("=" * 70)
-    print("歌词课字形回写（sprite 模式：美工切好的 PNG → 已扩容 GLD）")
+    print("歌词课字形回写（PSD 图层 + 合并 PNG → 已扩容 GLD）")
     print("=" * 70)
 
     # 已扩容 GLD 在 2_Patched/AGL_CHS_PATCHED/
@@ -1821,18 +1916,9 @@ def import_lyric_glyph_psd(psd_dir: Path = LYRIC_GLYPH_DIR,
             f"请先执行 Stage 3.5 build-patches 部署扩容 GLD"
         )
 
-    from src.stage4_import_images import get_png_index_map, import_png_to_gld
+    from src.stage4_import_images import get_psd_stems, import_psd_to_gld
 
-    # sprite PNG 在 psd_dir/sprites/ 子目录（split_psd_to_sprites.py 默认输出）
-    sprites_dir = psd_dir / "sprites"
-    if not sprites_dir.exists():
-        raise LyricPatchError(
-            f"找不到 sprite PNG 目录: {sprites_dir}\n"
-            f"美工修正 PSD 后请运行 split_psd_to_sprites.py 切出 sprite PNG"
-        )
-
-    # 扫描美工切好的 sprite PNG（{stem}_{index}.png）
-    index_map = get_png_index_map(sprites_dir)
+    psd_stems = set(get_psd_stems(psd_dir))
 
     # 歌词课 GLD 文件列表
     targets = [
@@ -1843,10 +1929,12 @@ def import_lyric_glyph_psd(psd_dir: Path = LYRIC_GLYPH_DIR,
     results: dict[str, tuple[int, int]] = {}
     total_injected = 0
     total_skipped = 0
+    pending: list[tuple[Path, Path]] = []
+    failures: list[str] = []
 
     for stem in targets:
-        if stem not in index_map:
-            print(f"  ⏭️  跳过 {stem}: 未在 {sprites_dir} 找到 sprite PNG")
+        if stem not in psd_stems:
+            print(f"  ⏭️  跳过 {stem}: 未在 {psd_dir} 找到 PSD")
             continue
 
         # 已扩容 GLD 路径
@@ -1857,25 +1945,38 @@ def import_lyric_glyph_psd(psd_dir: Path = LYRIC_GLYPH_DIR,
                 gld_path = p
                 break
         if gld_path is None:
-            print(f"  ⚠️  跳过 {stem}: 未找到已扩容 GLD")
+            failures.append(f"{stem}: 未找到已扩容 GLD")
             continue
 
-        indices = index_map[stem]
-        n_inj = 0
-        n_skp = 0
-        for index in indices:
-            png_path = sprites_dir / f"{stem}_{index}.png"
-            try:
-                w, h = import_png_to_gld(png_path, gld_path, gld_path)
-                n_inj += 1
-            except Exception as e:
-                print(f"  ❌ [{stem}_{index}]: {e}")
-                n_skp += 1
+        temp_path = gld_path.with_name(f".{gld_path.name}.importing")
+        try:
+            n_inj, n_skp = import_psd_to_gld(
+                psd_dir, stem, gld_path, temp_path
+            )
+        except Exception as exc:
+            failures.append(f"{stem}: {exc}")
+            if temp_path.exists():
+                temp_path.unlink()
+            continue
 
         results[gld_path.name] = (n_inj, n_skp)
         total_injected += n_inj
         total_skipped += n_skp
+        pending.append((temp_path, gld_path))
         print(f"  ✅ {gld_path.name}: 注入 {n_inj} sprite, 跳过 {n_skp}")
+
+    if not pending and not failures:
+        raise LyricPatchError(f"{psd_dir} 中没有歌词课 PSD 可回写")
+    if failures:
+        for temp_path, _gld_path in pending:
+            if temp_path.exists():
+                temp_path.unlink()
+        raise LyricPatchError(
+            f"歌词字形回写失败 {len(failures)} 项；原 GLD 未改动：\n  - "
+            + "\n  - ".join(failures)
+        )
+    for temp_path, gld_path in pending:
+        temp_path.replace(gld_path)
 
     print(f"\n总计: 注入 {total_injected} sprite, 跳过 {total_skipped}")
     if total_injected > 0:
@@ -1888,6 +1989,217 @@ def import_lyric_glyph_psd(psd_dir: Path = LYRIC_GLYPH_DIR,
 # ============================================================
 # Part 8: 部署到 2_Patched（供 stage5 打包）
 # ============================================================
+
+def _iter_sjis_codes(payload: bytes, label: str) -> list[int]:
+    """Split a NUL-free game string into single/double-byte SJIS codes."""
+
+    result: list[int] = []
+    index = 0
+    while index < len(payload):
+        lead = payload[index]
+        if lead <= 0x7F or 0xA1 <= lead <= 0xDF:
+            result.append(lead)
+            index += 1
+            continue
+        if index + 1 >= len(payload):
+            raise LyricPatchError(f"{label}: 末尾 SJIS lead byte 0x{lead:02X} 缺少 trail")
+        result.append((lead << 8) | payload[index + 1])
+        index += 2
+    return result
+
+
+def validate_lyric_build(build_dir: Path = LYRIC_BUILD_DIR) -> dict[str, int]:
+    """Cross-check BBQ → charmap → AGL/GLD for the current dynamic SSOT.
+
+    The successful six-song and ten-song builds had different frame counts.
+    This gate therefore derives the expected count from the generated glyph
+    IDs instead of baking either historical number into the tool.
+    """
+
+    required = [
+        "arm9_patched.bin",
+        "overlay_0006_patched.bin",
+        "y9_patched.bin",
+        "charmap_new.csv",
+        "0506_D_MEASURE_MOJI_MNG_patched.AGL",
+        "0507_D_MEASURE_MOJI_MNG_patched.GLD",
+        "0520_D_EPANEL_MOJI_MNG_patched.AGL",
+        "0521_D_EPANEL_MOJI_MNG_patched.GLD",
+        *(name.replace(".BBQ", "_patched.BBQ") for name in LYRIC_BBQ_FILES),
+    ]
+    missing = [name for name in required if not (build_dir / name).is_file()]
+    if missing:
+        raise LyricPatchError(
+            "歌词构建产物不完整，禁止部署：\n  - " + "\n  - ".join(missing)
+        )
+
+    charmap_rows: list[dict[str, str]] = []
+    with open(build_dir / "charmap_new.csv", "r", encoding="utf-8", newline="") as handle:
+        charmap_rows.extend(csv.DictReader(handle))
+    if not charmap_rows:
+        raise LyricPatchError("charmap_new.csv 为空")
+
+    glyph_ids = [int(row["glyph_id"], 16) for row in charmap_rows]
+    charmap_keys = {int(row["key_hex"], 16) for row in charmap_rows}
+    expected_frames = max(glyph_ids) + 1
+
+    agl_counts: list[int] = []
+    for name in (
+        "0506_D_MEASURE_MOJI_MNG_patched.AGL",
+        "0520_D_EPANEL_MOJI_MNG_patched.AGL",
+    ):
+        data = (build_dir / name).read_bytes()
+        if len(data) < 0x30 or data[:4] != b"\x00LGA":
+            raise LyricPatchError(f"{name}: AGL 头无效")
+        header_count = struct.unpack_from("<H", data, 0x0C)[0]
+        cell_count = struct.unpack_from("<H", data, AGL_HEADER_SIZE + 2)[0]
+        if header_count != cell_count:
+            raise LyricPatchError(
+                f"{name}: header frame_count={header_count} != cell={cell_count}"
+            )
+        agl_counts.append(header_count)
+
+    gld_counts: list[int] = []
+    for name in (
+        "0507_D_MEASURE_MOJI_MNG_patched.GLD",
+        "0521_D_EPANEL_MOJI_MNG_patched.GLD",
+    ):
+        gld = parse_gld(build_dir / name)
+        if len(gld.footer_entries) != gld.header.footer_entry_count:
+            raise LyricPatchError(
+                f"{name}: GLD footer 被截断，header={gld.header.footer_entry_count}, "
+                f"parsed={len(gld.footer_entries)}"
+            )
+        gld_counts.append(gld.header.footer_entry_count)
+
+    resource_counts = agl_counts + gld_counts
+    if any(count != expected_frames for count in resource_counts):
+        raise LyricPatchError(
+            "歌词字形数量不一致："
+            f"charmap max glyph + 1={expected_frames}, AGL/GLD={resource_counts}"
+        )
+
+    unknown_codes: list[str] = []
+    checked_strings = 0
+    for bbq_name in LYRIC_BBQ_FILES:
+        patched_name = bbq_name.replace(".BBQ", "_patched.BBQ")
+        bbq = parse_raw_bbq((build_dir / patched_name).read_bytes())
+        type7 = next((section for section in bbq.sections if section.data_type == 7), None)
+        if type7 is None:
+            raise LyricPatchError(f"{patched_name}: 缺少 Type7 section")
+        for index, payload in enumerate(raw_section_strings(type7)):
+            checked_strings += 1
+            for code in _iter_sjis_codes(
+                payload, f"{patched_name} Type7[{index}]"
+            ):
+                if code > 0xFF and code not in charmap_keys:
+                    unknown_codes.append(
+                        f"{patched_name}[{index}]=0x{code:04X}"
+                    )
+    if unknown_codes:
+        preview = "\n  - ".join(unknown_codes[:20])
+        suffix = f"\n  ... 另有 {len(unknown_codes) - 20} 项" if len(unknown_codes) > 20 else ""
+        raise LyricPatchError(
+            "歌词 BBQ 使用了 charmap 中不存在的双字节编码：\n  - "
+            + preview + suffix
+        )
+
+    try:
+        arm9_states = inspect_arm9((build_dir / "arm9_patched.bin").read_bytes())
+    except Arm9PatchError as exc:
+        raise LyricPatchError(f"ARM9 补丁门禁失败: {exc}") from exc
+    if any(state != "patched" for _, state in arm9_states):
+        raise LyricPatchError("arm9_patched.bin 尚未包含完整四点补丁")
+
+    print(
+        "✅ 歌词资源交叉校验通过："
+        f"{expected_frames} frames，{checked_strings} 条 BBQ 字符串"
+    )
+    return {
+        "frame_count": expected_frames,
+        "charmap_entries": len(charmap_rows),
+        "bbq_strings": checked_strings,
+    }
+
+
+def validate_deployed_lyric_patches(
+    build_dir: Path = LYRIC_BUILD_DIR,
+    patched_dir: Path = PATCHED_DIR,
+) -> dict[str, int]:
+    """Validate the exact lyric resources Stage 5 is about to pack.
+
+    GLD pixel payloads may differ after the artist imports corrected glyphs, so
+    those files are structurally checked against the dynamic frame count.  The
+    charmap carrier, y9 table, AGL metadata and BBQ files must still match the
+    successfully validated Stage 3.5 build byte-for-byte.
+    """
+
+    report = validate_lyric_build(build_dir)
+    expected_frames = report["frame_count"]
+    prg_dir = patched_dir / "PRG_CHS_PATCHED"
+    agl_dir = patched_dir / "AGL_CHS_PATCHED"
+    tbl_dir = patched_dir / "TBL_CHS_PATCHED"
+    errors: list[str] = []
+
+    arm9_path = prg_dir / "arm9.bin"
+    if not arm9_path.is_file():
+        errors.append(f"缺少 {arm9_path}")
+
+    exact_pairs = [
+        (build_dir / "overlay_0006_patched.bin", prg_dir / "overlay_0006.bin"),
+        (build_dir / "y9_patched.bin", prg_dir / "y9.bin"),
+        (
+            build_dir / "0506_D_MEASURE_MOJI_MNG_patched.AGL",
+            agl_dir / "0506_D_MEASURE_MOJI_MNG.AGL",
+        ),
+        (
+            build_dir / "0520_D_EPANEL_MOJI_MNG_patched.AGL",
+            agl_dir / "0520_D_EPANEL_MOJI_MNG.AGL",
+        ),
+    ]
+    exact_pairs.extend(
+        (
+            build_dir / name.replace(".BBQ", "_patched.BBQ"),
+            tbl_dir / name,
+        )
+        for name in LYRIC_BBQ_FILES
+    )
+    for built, deployed in exact_pairs:
+        if not deployed.is_file():
+            errors.append(f"缺少 {deployed}")
+        elif deployed.read_bytes() != built.read_bytes():
+            errors.append(f"部署文件不是当前 Stage 3.5 产物：{deployed}")
+
+    for name in (
+        "0507_D_MEASURE_MOJI_MNG.GLD",
+        "0521_D_EPANEL_MOJI_MNG.GLD",
+    ):
+        path = agl_dir / name
+        if not path.is_file():
+            errors.append(f"缺少 {path}")
+            continue
+        try:
+            gld = parse_gld(path)
+        except Exception as exc:
+            errors.append(f"{path}: GLD 解析失败: {exc}")
+            continue
+        if (
+            gld.header.footer_entry_count != expected_frames
+            or len(gld.footer_entries) != expected_frames
+        ):
+            errors.append(
+                f"{path}: glyph 数应为 {expected_frames}，"
+                f"header={gld.header.footer_entry_count}, "
+                f"parsed={len(gld.footer_entries)}"
+            )
+
+    if errors:
+        raise LyricPatchError(
+            "最终歌词资源门禁失败，禁止 Stage 5 打包：\n  - "
+            + "\n  - ".join(errors)
+        )
+    print("✅ Stage 5 歌词资源门禁通过（编号、BBQ、charmap、AGL/GLD 一致）")
+    return report
 
 def deploy_lyric_patches_to_patched(build_dir: Path = LYRIC_BUILD_DIR,
                                     patched_dir: Path = PATCHED_DIR) -> dict:
@@ -1909,6 +2221,10 @@ def deploy_lyric_patches_to_patched(build_dir: Path = LYRIC_BUILD_DIR,
     print("=" * 70)
     print("部署歌词课补丁到 2_Patched/")
     print("=" * 70)
+
+    # Deployment is all-or-nothing.  A missing BBQ/AGL/GLD must never be
+    # silently mixed with an older build.
+    validate_lyric_build(build_dir)
 
     prg_dst = patched_dir / "PRG_CHS_PATCHED"
     agl_dst = patched_dir / "AGL_CHS_PATCHED"
@@ -1939,9 +2255,6 @@ def deploy_lyric_patches_to_patched(build_dir: Path = LYRIC_BUILD_DIR,
     for src_name, dst_dir, dst_name in deploy_map:
         src_path = build_dir / src_name
         dst_path = dst_dir / dst_name
-        if not src_path.exists():
-            print(f"  ⚠️ 跳过 {src_name}: 不存在")
-            continue
         shutil.copy2(src_path, dst_path)
         deployed[str(dst_path)] = str(src_path)
         print(f"  ✅ {src_name} → {dst_path}")
@@ -2032,6 +2345,8 @@ def _cli_main() -> int:
             font_mapping_path=args.build_dir / "font_mapping_lesvoice.json",
             build_dir=args.build_dir,
         )
+
+        validate_lyric_build(args.build_dir)
 
         if args.deploy:
             deploy_lyric_patches_to_patched(

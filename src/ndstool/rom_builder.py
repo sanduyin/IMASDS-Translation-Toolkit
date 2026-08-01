@@ -20,7 +20,7 @@ import io
 import struct
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Literal
 
 from .header import NDSHeader, parse_header, build_header, HEADER_SIZE
 from .fnt_fat import FAT, FNT, parse_fat, parse_fnt, build_fnt, FATEntry, FNTDirNode, FNTFileNode
@@ -30,6 +30,8 @@ from .overlay import (
     build_overlay_table,
 )
 from ..utils.blz import blz_decompress, blz_compress
+
+OverlayProcessor = Literal["arm9", "arm7"]
 
 # ----------------------------------------------------------------------
 # 常量
@@ -146,8 +148,6 @@ class RomImage:
             for entry in ovl_table:
                 ov_state = self._load_overlay(entry)
                 self.arm9_overlays.append(ov_state)
-        self._overlays_dirty: dict[int, bool] = {ov.overlay_id: False for ov in self.arm9_overlays}
-
         # ARM7 Overlay 表（本项目为空，仅保留接口）
         self.arm7_overlays: list[OverlayState] = []
         if self.header.arm7_overlay_size > 0:
@@ -156,6 +156,12 @@ class RomImage:
             )
             for entry in ovl7_table:
                 self.arm7_overlays.append(self._load_overlay(entry))
+        self._overlays_dirty: dict[tuple[OverlayProcessor, int], bool] = {
+            ("arm9", ov.overlay_id): False for ov in self.arm9_overlays
+        }
+        self._overlays_dirty.update({
+            ("arm7", ov.overlay_id): False for ov in self.arm7_overlays
+        })
 
         # 普通文件修改缓冲：file_id -> new_data
         self._file_overrides: dict[int, bytes] = {}
@@ -247,29 +253,49 @@ class RomImage:
         self._arm7_original = bytes(data)
         self._arm7_dirty = True
 
-    def get_overlay(self, overlay_id: int) -> bytes:
-        """获取解压后的 Overlay 数据。"""
-        for ov in self.arm9_overlays:
-            if ov.overlay_id == overlay_id:
-                return ov.decompressed
-        for ov in self.arm7_overlays:
-            if ov.overlay_id == overlay_id:
-                return ov.decompressed
-        raise KeyError(f"Overlay {overlay_id} 不存在")
+    def _resolve_overlay(
+        self,
+        overlay_id: int,
+        processor: OverlayProcessor | None,
+    ) -> tuple[OverlayProcessor, OverlayState]:
+        pools: list[tuple[OverlayProcessor, list[OverlayState]]]
+        pools = [("arm9", self.arm9_overlays), ("arm7", self.arm7_overlays)]
+        matches = [
+            (kind, overlay)
+            for kind, overlays in pools
+            if processor is None or kind == processor
+            for overlay in overlays
+            if overlay.overlay_id == overlay_id
+        ]
+        if not matches:
+            scope = f" ({processor})" if processor is not None else ""
+            raise KeyError(f"Overlay {overlay_id}{scope} 不存在")
+        if len(matches) > 1:
+            raise ValueError(
+                f"Overlay ID {overlay_id} 同时存在于 ARM9/ARM7；"
+                "请显式传 processor='arm9' 或 'arm7'"
+            )
+        return matches[0]
 
-    def set_overlay(self, overlay_id: int, data: bytes | bytearray) -> None:
+    def get_overlay(
+        self,
+        overlay_id: int,
+        processor: OverlayProcessor | None = None,
+    ) -> bytes:
+        """获取解压后的 Overlay；ID 冲突时必须指定处理器。"""
+        _processor, overlay = self._resolve_overlay(overlay_id, processor)
+        return overlay.decompressed
+
+    def set_overlay(
+        self,
+        overlay_id: int,
+        data: bytes | bytearray,
+        processor: OverlayProcessor | None = None,
+    ) -> None:
         """更新解压后的 Overlay 数据。保存时会自动 BLZ 压缩。"""
-        for ov in self.arm9_overlays:
-            if ov.overlay_id == overlay_id:
-                ov.decompressed = bytes(data)
-                self._overlays_dirty[overlay_id] = True
-                return
-        for ov in self.arm7_overlays:
-            if ov.overlay_id == overlay_id:
-                ov.decompressed = bytes(data)
-                self._overlays_dirty[overlay_id] = True
-                return
-        raise KeyError(f"Overlay {overlay_id} 不存在")
+        resolved_processor, overlay = self._resolve_overlay(overlay_id, processor)
+        overlay.decompressed = bytes(data)
+        self._overlays_dirty[(resolved_processor, overlay_id)] = True
 
     def get_file_by_id(self, file_id: int) -> bytes:
         """按 file_id 读取文件原始字节（如果已被 override，返回新数据）。"""
@@ -343,9 +369,9 @@ class RomImage:
             out = self._rewrite_arm9(out)
 
         # ---------- 2. Overlays ----------
-        for ov_id, dirty in self._overlays_dirty.items():
+        for (processor, ov_id), dirty in self._overlays_dirty.items():
             if dirty:
-                out = self._rewrite_overlay(out, ov_id)
+                out = self._rewrite_overlay(out, processor, ov_id)
 
         # ---------- 3. 普通文件 ----------
         for file_id, new_data in self._file_overrides.items():
@@ -384,13 +410,15 @@ class RomImage:
             self._arm9_decompressed_original = self._arm9_decompressed
             self._arm9_dirty = False
         for ov in self.arm9_overlays:
-            if self._overlays_dirty.get(ov.overlay_id, False):
+            arm9_key: tuple[OverlayProcessor, int] = ("arm9", ov.overlay_id)
+            if self._overlays_dirty.get(arm9_key, False):
                 ov.decompressed_original = ov.decompressed
-                self._overlays_dirty[ov.overlay_id] = False
+                self._overlays_dirty[arm9_key] = False
         for ov in self.arm7_overlays:
-            if self._overlays_dirty.get(ov.overlay_id, False):
+            arm7_key: tuple[OverlayProcessor, int] = ("arm7", ov.overlay_id)
+            if self._overlays_dirty.get(arm7_key, False):
                 ov.decompressed_original = ov.decompressed
-                self._overlays_dirty[ov.overlay_id] = False
+                self._overlays_dirty[arm7_key] = False
         self._file_overrides.clear()
 
         return bytes(out)
@@ -476,25 +504,18 @@ class RomImage:
         self.header.arm9_size = (compressed_size + 3) & ~3
         return out
 
-    def _rewrite_overlay(self, out: bytearray, ov_id: int) -> bytearray:
+    def _rewrite_overlay(
+        self,
+        out: bytearray,
+        processor: OverlayProcessor,
+        ov_id: int,
+    ) -> bytearray:
         """就地重写 Overlay：BLZ 压缩 → 写回 FAT 指向的位置 → 更新 overlay table + FAT。
 
         优化：若解压后数据与原版相同，直接复用原版数据，不做任何操作。
         """
-        ov_state: Optional[OverlayState] = None
-        is_arm7 = False
-        for ov in self.arm9_overlays:
-            if ov.overlay_id == ov_id:
-                ov_state = ov
-                break
-        if ov_state is None:
-            for ov in self.arm7_overlays:
-                if ov.overlay_id == ov_id:
-                    ov_state = ov
-                    is_arm7 = True
-                    break
-        if ov_state is None:
-            raise KeyError(f"Overlay {ov_id} 不存在")
+        _processor, ov_state = self._resolve_overlay(ov_id, processor)
+        is_arm7 = processor == "arm7"
 
         # 优化：数据未实际修改 → 复用原版数据（已在 out 中），不做任何操作
         if ov_state.decompressed == ov_state.decompressed_original:

@@ -381,20 +381,23 @@ def read_translation_table(
             # 与 parse_bbq_file 的 Index 字段一致（注入器依赖此约定）。
             # 前提：CSV 中同一 Filename 的行必须连续（_export_csv 已保证）。
             trans_db: dict[str, dict[int, str]] = {}
+            row_positions: dict[str, int] = {}
             for row in rows:
                 fname = row["Filename"].strip()
                 if not fname:
                     continue
                 if fname not in trans_db:
                     trans_db[fname] = {}
-                # 组内索引 = 该文件已收集的行数
-                idx = len(trans_db[fname])
+                # 组内索引必须包含未翻译行；否则跳过一个空译文会使后续
+                # 编号整体前移，写到错误的 Type7 字符串。
+                idx = row_positions.get(fname, 0)
+                row_positions[fname] = idx + 1
                 trans_str = row.get("Translated_Text", "")
-                # 空译文或 EMPTY 标记 → 空字符串（注入时回退到原文）
-                if trans_str in ("", *EMPTY_MARKERS_LOCAL):
-                    final_text = ""
-                else:
-                    final_text = trans_str
+                # 空译文表示回退原文，不能把它作为空字符串写进 Type7。
+                # 显式 EMPTY 标记仍表示“有意注入空字符串”。
+                if trans_str == "":
+                    continue
+                final_text = "" if trans_str in EMPTY_MARKERS_LOCAL else trans_str
                 trans_db[fname][idx] = final_text
             return trans_db
     else:

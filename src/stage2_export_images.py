@@ -31,6 +31,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from collections.abc import Sequence
 
 from PIL import Image, ImageDraw
 
@@ -110,6 +111,7 @@ def export_editable_psd(
     gld: GldFile,
     output_path: Path,
     max_width: int = AGL_SHEET_MAX_WIDTH,
+    sprite_indices: Sequence[int] | None = None,
 ) -> int | None:
     """生成 AGL 可编辑 PSD：每个 sprite 一个图层，透明背景，按编号顺序排列。
 
@@ -121,10 +123,12 @@ def export_editable_psd(
     """
     from psd_tools import PSDImage
 
-    # 收集所有未删除 sprite，按 index 升序
+    # 收集所有未删除 sprite，按 index 升序。歌词课美工导出可传入
+    # 动态新增 glyph 的索引集合，避免 only_new 名义上过滤、实际仍导出全部。
+    selected = set(sprite_indices) if sprite_indices is not None else None
     sprites: list[tuple[int, int, int]] = []
     for i, entry in enumerate(gld.footer_entries):
-        if entry.is_deleted:
+        if entry.is_deleted or (selected is not None and i not in selected):
             continue
         sprites.append((i, entry.crop_width, entry.crop_height))
 

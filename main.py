@@ -2,6 +2,9 @@
 import sys
 import argparse
 import os
+from contextlib import contextmanager
+from collections.abc import Callable, Iterator
+from typing import Any
 from config import BASE_DIR
 
 # 引入各个阶段的主函数
@@ -18,6 +21,23 @@ from src.stage4_import_images import main as run_stage4_images
 from src.stage4_import_bg import main as run_stage4_bg       # <--- 导入 BG 回写
 from src.stage4_import_obj import main as run_stage4_obj     # <--- 导入 OBJ 回写
 from src.stage5_build_rom import main as run_stage5
+
+
+@contextmanager
+def isolated_stage_argv() -> Iterator[None]:
+    """Prevent the top-level command from being parsed again by a Stage CLI."""
+
+    original = sys.argv
+    sys.argv = [original[0]]
+    try:
+        yield
+    finally:
+        sys.argv = original
+
+
+def invoke_stage(stage: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+    with isolated_stage_argv():
+        return stage(*args, **kwargs)
 
 def print_menu():
     print("=" * 60)
@@ -42,37 +62,37 @@ def interactive_mode():
         choice = input("请输入你想执行的步骤序号 (0-9): ").strip()
 
         if choice == '1':
-            run_stage1()
+            invoke_stage(run_stage1)
         elif choice == '2':
-            run_stage2_text()
-            run_stage2_arm9()
+            invoke_stage(run_stage2_text)
+            invoke_stage(run_stage2_arm9)
         elif choice == '3':
-            run_stage2_images()
-            run_stage2_bg()         # <--- 同时导出 BG
-            run_stage2_obj()        # <--- 同时导出 OBJ UI
+            invoke_stage(run_stage2_images)
+            invoke_stage(run_stage2_bg)         # <--- 同时导出 BG
+            invoke_stage(run_stage2_obj)        # <--- 同时导出 OBJ UI
         elif choice == '4':
-            run_stage3()
+            invoke_stage(run_stage3)
         elif choice == '5':
-            run_stage3_5()
+            invoke_stage(run_stage3_5)
         elif choice == '6':
-            run_stage4_text()
+            invoke_stage(run_stage4_text)
         elif choice == '7':
             # 询问是否生成调色板匹配预览
             want_preview = input("  是否生成调色板匹配预览图? (y/N): ").strip().lower() == 'y'
-            run_stage4_images(preview=want_preview)
-            run_stage4_bg()         # <--- 同时回写 BG
-            run_stage4_obj()        # <--- 同时回写 OBJ UI
+            invoke_stage(run_stage4_images, preview=want_preview)
+            invoke_stage(run_stage4_bg)         # <--- 同时回写 BG
+            invoke_stage(run_stage4_obj)        # <--- 同时回写 OBJ UI
         elif choice == '8':
-            run_stage5()
+            invoke_stage(run_stage5)
         elif choice == '9':
             print("\n🚀 启动一键自动化构建流水线...")
-            run_stage3()
-            run_stage3_5()
-            run_stage4_text()
-            run_stage4_images()
-            run_stage4_bg()         # <--- 一键打包也包含 BG 回写
-            run_stage4_obj()        # <--- 一键打包也包含 OBJ 回写
-            run_stage5()
+            invoke_stage(run_stage3)
+            invoke_stage(run_stage3_5)
+            invoke_stage(run_stage4_text)
+            invoke_stage(run_stage4_images)
+            invoke_stage(run_stage4_bg)         # <--- 一键打包也包含 BG 回写
+            invoke_stage(run_stage4_obj)        # <--- 一键打包也包含 OBJ 回写
+            invoke_stage(run_stage5)
         elif choice == '0':
             print("再见！祝汉化顺利！")
             break
@@ -89,34 +109,34 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'unpack':
-        run_stage1()
+        invoke_stage(run_stage1)
     elif args.command == 'export':
-        run_stage2_text()
-        run_stage2_arm9()
+        invoke_stage(run_stage2_text)
+        invoke_stage(run_stage2_arm9)
     elif args.command == 'export-images':
-        run_stage2_images()
-        run_stage2_bg()
-        run_stage2_obj()
+        invoke_stage(run_stage2_images)
+        invoke_stage(run_stage2_bg)
+        invoke_stage(run_stage2_obj)
     elif args.command == 'font':
-        run_stage3()
+        invoke_stage(run_stage3)
     elif args.command == 'lyric':
-        run_stage3_5()
+        invoke_stage(run_stage3_5)
     elif args.command == 'inject':
-        run_stage4_text()
+        invoke_stage(run_stage4_text)
     elif args.command == 'import-images':
-        run_stage4_images(preview=args.preview)
-        run_stage4_bg()
-        run_stage4_obj()
+        invoke_stage(run_stage4_images, preview=args.preview)
+        invoke_stage(run_stage4_bg)
+        invoke_stage(run_stage4_obj)
     elif args.command == 'build':
-        run_stage5()
+        invoke_stage(run_stage5)
     elif args.command == 'all':
-        run_stage3()
-        run_stage3_5()
-        run_stage4_text()
-        run_stage4_images()
-        run_stage4_bg()
-        run_stage4_obj()
-        run_stage5()
+        invoke_stage(run_stage3)
+        invoke_stage(run_stage3_5)
+        invoke_stage(run_stage4_text)
+        invoke_stage(run_stage4_images)
+        invoke_stage(run_stage4_bg)
+        invoke_stage(run_stage4_obj)
+        invoke_stage(run_stage5)
     else:
         interactive_mode()
 

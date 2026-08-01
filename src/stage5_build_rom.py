@@ -5,27 +5,23 @@ import os
 import sys
 import struct
 import shutil
-import subprocess
+import re
+from pathlib import Path
+from collections.abc import Sequence
 
-try:
-    import ndspy.rom
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "ndspy"])
-    import ndspy.rom
-
-try:
-    from Crypto.Cipher import AES as _AES_DEPENDENCY_CHECK  # noqa: F401
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pycryptodome"])
+import ndspy.rom
+from Crypto.Cipher import AES as _AES_DEPENDENCY_CHECK  # noqa: F401
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
     ORIGINAL_DIR, EXTRACT_DIR, PATCHED_DIR, REPACK_STAGING, BUILD_DIR,
-    FILE_PACKS, TARGET_PACKS, ORIGINAL_ROM, OUTPUT_ROM
+    FILE_PACKS, TARGET_PACKS, ORIGINAL_ROM, OUTPUT_ROM, LYRIC_BUILD_DIR,
 )
-from src.utils.binary_io import read_uint32, nlzss_compress
 from src.utils.blz import blz_compress_overlay, blz_compress_arm9
 from src.utils.imasds_arm9_patch import patch_arm9_bytes, PatchError
+from src.utils.lesvoice import validate_deployed_lyric_patches
+from src.packez.ezp_pack import extract_pack, build_pack
+from src.packez.ezt_parser import read_idx
 from src.ndstool.dsi_builder import (
     DsiBuildError,
     rebuild_dsi_rom,
@@ -36,6 +32,156 @@ from src.ndstool.dsi_builder import (
 ARM9_RAM_BASE = 0x02004000
 # ARM9 压缩数据结束指针的文件内偏移（位于未压缩前缀中，可在压缩后重写）
 ARM9_COMPRESSED_END_PTR_OFFSET = 0x0FC4
+
+_INDEXED_FILENAME = re.compile(r"^(\d{4})_")
+_PATCH_DIR_SUFFIXES = ("_CHS_PATCHED", "_IMG_PATCHED")
+
+
+def _indexed_files(root: Path) -> dict[int, Path]:
+    """Return entry-number → file, rejecting ambiguous duplicate numbers."""
+
+    result: dict[int, Path] = {}
+    if not root.exists():
+        return result
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        match = _INDEXED_FILENAME.match(path.name)
+        if match is None:
+            continue
+        index = int(match.group(1))
+        previous = result.get(index)
+        if previous is not None:
+            raise RuntimeError(
+                f"entry {index:04d} 在 {root} 中重复：{previous} / {path}"
+            )
+        result[index] = path
+    return result
+
+
+def _entry_basename(path: Path) -> str:
+    match = _INDEXED_FILENAME.match(path.name)
+    if match is None:
+        raise ValueError(f"文件缺少四位 entry 编号：{path}")
+    return path.name[match.end():]
+
+
+def _collect_replacements(
+    originals: dict[int, Path],
+    patched_dirs: Sequence[Path],
+) -> dict[int, Path]:
+    """Resolve patches without renumbering existing translation assets.
+
+    Canonical PackEZ indices include an outer ``*_BEGIN`` entry, while older
+    Stage 1 output (and existing translation work) numbers the following file
+    as zero.  An exact stored basename plus either the canonical number or that
+    historical one-entry offset is required.  This prevents a legacy ``0022``
+    patch from being written to raw entry 22 when its matching file is entry 23.
+    """
+
+    originals_by_name: dict[str, list[int]] = {}
+    for index, path in originals.items():
+        originals_by_name.setdefault(_entry_basename(path), []).append(index)
+
+    replacements: dict[int, Path] = {}
+    for patched_dir in patched_dirs:
+        resolved_in_dir: dict[int, Path] = {}
+        for patch_index, patch_path in _indexed_files(patched_dir).items():
+            basename = _entry_basename(patch_path)
+            candidates = originals_by_name.get(basename, [])
+            compatible = [
+                index for index in candidates
+                if patch_index == index or patch_index == index - 1
+            ]
+            if len(compatible) != 1:
+                candidate_text = (
+                    ", ".join(f"{index:04d}" for index in candidates)
+                    if candidates else "无同名 entry"
+                )
+                raise RuntimeError(
+                    f"无法安全定位补丁 {patch_path.name}：原包候选 {candidate_text}；"
+                    "要求文件名一致且编号为原始编号或既有的 -1 编号"
+                )
+            actual_index = compatible[0]
+            previous = resolved_in_dir.get(actual_index)
+            if previous is not None:
+                raise RuntimeError(
+                    f"两个补丁指向同一原始 entry {actual_index:04d}："
+                    f"{previous} / {patch_path}"
+                )
+            resolved_in_dir[actual_index] = patch_path
+
+        # Earlier suffixes have priority, matching the historical pipeline:
+        # CHS text/font patches override generic image patches for one entry.
+        for index, path in resolved_in_dir.items():
+            replacements.setdefault(index, path)
+    return replacements
+
+
+def repack_archive(
+    original_ezt: Path,
+    original_ezp: Path,
+    patched_dirs: Sequence[Path],
+    output_ezt: Path,
+    output_ezp: Path,
+    work_dir: Path,
+) -> int:
+    """Rebuild one PackEZ archive without changing entry numbers or names.
+
+    The original archive is first extracted with the canonical parser.  Patch
+    files are matched exclusively by their existing four-digit entry prefix;
+    the original ``.index`` remains authoritative for order and stored names.
+    """
+
+    if not original_ezt.is_file() or not original_ezp.is_file():
+        raise FileNotFoundError(
+            f"PackEZ 原包不完整：{original_ezt} / {original_ezp}"
+        )
+
+    if work_dir.exists():
+        shutil.rmtree(work_dir)
+    verify_dir = work_dir.with_name(f"{work_dir.name}.verify")
+    if verify_dir.exists():
+        shutil.rmtree(verify_dir)
+
+    try:
+        extract_pack(original_ezt, original_ezp, work_dir)
+        originals = _indexed_files(work_dir)
+
+        replacements = _collect_replacements(originals, patched_dirs)
+
+        for index, patch_path in replacements.items():
+            shutil.copy2(patch_path, originals[index])
+
+        output_ezt.parent.mkdir(parents=True, exist_ok=True)
+        output_ezp.parent.mkdir(parents=True, exist_ok=True)
+        build_pack(work_dir, output_ezt, output_ezp)
+
+        original_header, original_entries = read_idx(original_ezt.read_bytes())
+        rebuilt_header, rebuilt_entries = read_idx(output_ezt.read_bytes())
+        if rebuilt_header.something1 != original_header.something1:
+            raise RuntimeError("PackEZ something1 在重建后发生变化")
+        if len(rebuilt_entries) != len(original_entries):
+            raise RuntimeError(
+                f"PackEZ entry 数变化：{len(original_entries)} -> {len(rebuilt_entries)}"
+            )
+
+        # Read the rebuilt archive back and verify every intended replacement.
+        # This catches compression/alignment mistakes before a ROM is written.
+        extract_pack(output_ezt, output_ezp, verify_dir)
+        verified = _indexed_files(verify_dir)
+        if set(verified) != set(originals):
+            raise RuntimeError("PackEZ 回读后的 entry 编号集合发生变化")
+        for index, patch_path in replacements.items():
+            if verified[index].read_bytes() != patch_path.read_bytes():
+                raise RuntimeError(f"PackEZ entry {index:04d} 回读与补丁数据不一致")
+
+        return len(replacements)
+    finally:
+        if work_dir.exists():
+            shutil.rmtree(work_dir)
+        if verify_dir.exists():
+            shutil.rmtree(verify_dir)
 
 def repack_data_archives() -> None:
     print("📦 开始重构建核心数据包 (BIN/IDX)...")
@@ -49,67 +195,21 @@ def repack_data_archives() -> None:
         orig_idx, orig_bin = orig_data_dir / ezt_name, orig_data_dir / ezp_name
         out_idx, out_bin = REPACK_STAGING / ezt_name, REPACK_STAGING / ezp_name
         
-        if not orig_idx.exists(): continue
+        if not orig_idx.exists() or not orig_bin.exists():
+            raise FileNotFoundError(f"缺少原始 PackEZ：{orig_idx} / {orig_bin}")
         print(f"  -> 处理 {ezp_name} ({sub_dir})...")
-
-        with open(orig_idx, 'rb') as f_idx, open(orig_bin, 'rb') as f_bin, \
-             open(out_idx, 'wb') as w_idx, open(out_bin, 'wb') as w_bin:
-            
-            h_size = struct.unpack('<H', f_idx.read(12)[10:12])[0]
-            f_idx.seek(0x0C)
-            file_count = read_uint32(f_idx)
-            idx_data_start = h_size + 6
-            
-            f_idx.seek(0)
-            w_idx.write(f_idx.read(idx_data_start))
-            
-            f_idx.seek(idx_data_start)
-            w_bin.write(f_bin.read(read_uint32(f_idx)))
-            current_bin_offset = w_bin.tell()
-            
-            f_bin.seek(0x0C)
-            old_name_table_offset = read_uint32(f_bin)
-
-            mod_count = 0
-            
-            for i in range(file_count):
-                f_idx.seek(idx_data_start + i * 12)
-                curr_off, old_size_raw, name_ptr = read_uint32(f_idx), read_uint32(f_idx), read_uint32(f_idx)
-                
-                target_file = None
-                for suffix in["_CHS_PATCHED", "_IMG_PATCHED"]:
-                    patched_dir = PATCHED_DIR / f"{sub_dir}{suffix}"
-                    if patched_dir.exists():
-                        for f in os.listdir(patched_dir):
-                            if f.startswith(f"{i:04d}_"):
-                                target_file = patched_dir / f
-                                break
-                    if target_file: break
-                
-                if target_file and target_file.exists():
-                    with open(target_file, 'rb') as tf: new_data = tf.read()
-                    final_data = nlzss_compress(new_data)
-                    final_size_flag = len(new_data) | 0x10000000
-                    mod_count += 1
-                else:
-                    phys_len = (read_uint32(f_idx) if i < file_count - 1 else old_name_table_offset) - curr_off
-                    f_bin.seek(curr_off)
-                    final_data = f_bin.read(phys_len)
-                    final_size_flag = old_size_raw
-
-                w_bin.write(final_data)
-                w_idx.write(struct.pack('<I', current_bin_offset))
-                w_idx.write(struct.pack('<I', final_size_flag))
-                w_idx.write(struct.pack('<I', name_ptr))
-                current_bin_offset = w_bin.tell()
-                
-            new_name_tbl_off = w_bin.tell()
-            f_bin.seek(old_name_table_offset)
-            w_bin.write(f_bin.read())
-            
-            w_bin.seek(0x0C)
-            w_bin.write(struct.pack('<I', new_name_tbl_off))
-            
+        patched_dirs = [
+            PATCHED_DIR / f"{sub_dir}{suffix}"
+            for suffix in _PATCH_DIR_SUFFIXES
+        ]
+        mod_count = repack_archive(
+            orig_idx,
+            orig_bin,
+            patched_dirs,
+            out_idx,
+            out_bin,
+            REPACK_STAGING / f".{sub_dir}_source",
+        )
         print(f"     ✅ 写入完毕，压缩替换了 {mod_count} 个汉化文件。")
 
 def build_nds_with_twl_rebuild() -> None:
@@ -260,6 +360,8 @@ def main() -> None:
     print(" THE iDOLM@STER Dearly Stars - 纯 Python 终极构建")
     print("=" * 50)
     
+    validate_deployed_lyric_patches(LYRIC_BUILD_DIR, PATCHED_DIR)
+
     if REPACK_STAGING.exists(): shutil.rmtree(REPACK_STAGING)
     REPACK_STAGING.mkdir(parents=True, exist_ok=True)
     
