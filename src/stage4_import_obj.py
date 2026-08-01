@@ -30,7 +30,7 @@ import shutil
 import struct
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from PIL import Image
 
@@ -107,7 +107,7 @@ def extract_oam_pixels(
             cx = canvas_x + px
             cy = canvas_y + py
             if 0 <= cx < img_w and 0 <= cy < img_h:
-                row.append(cell_img.getpixel((cx, cy)))
+                row.append(cast(tuple[int, int, int], cell_img.getpixel((cx, cy))))
             else:
                 row.append(GREEN_SCREEN)
         pixels.append(row)

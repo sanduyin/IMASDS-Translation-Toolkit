@@ -157,6 +157,7 @@ def render_cell_to_rgb(
     # 创建 RGB 画布，初始填充绿幕
     img = Image.new('RGB', (width, height), GREEN_SCREEN)
     canvas = img.load()
+    assert canvas is not None
 
     # OAM 从后往前渲染（索引小的最后渲染，覆盖上层）
     for oam in reversed(cell.oam):

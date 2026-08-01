@@ -329,10 +329,11 @@ def build_font_mapping(fmt: str = "xlsx", incremental: bool = True) -> dict[str,
 def get_pixel_width(img: Image.Image) -> int:
     width, height = img.size
     pixels = img.load()
+    assert pixels is not None
     for x in range(width - 1, -1, -1):
         for y in range(height):
-            if pixels[x, y] > 0: return x + 1
-    return 0 
+            if int(pixels[x, y]) > 0: return x + 1
+    return 0
 
 def render_glyph_1bpp(char: str, font: Any, code: int, spec: dict[str, Any]) -> tuple[bytearray, int, int]:
     img = Image.new('1', (spec['cell_width'], spec['cell_height']), 0)
@@ -352,10 +353,13 @@ def render_glyph_1bpp(char: str, font: Any, code: int, spec: dict[str, Any]) -> 
         advance = spec['cjk_advance']
         if is_space: glyph_w, advance = spec['space_w'], spec['cjk_advance']
 
-    pixels, bytes_data, buffer, bit_count = img.load(), bytearray(), 0, 0
+    _pixels = img.load()
+    assert _pixels is not None
+    pixels = _pixels
+    bytes_data, buffer, bit_count = bytearray(), 0, 0
     for y in range(spec['cell_height']):
         for x in range(spec['cell_width']):
-            buffer |= ((1 if pixels[x, y] > 0 else 0) << (7 - bit_count))
+            buffer |= ((1 if int(pixels[x, y]) > 0 else 0) << (7 - bit_count))
             bit_count += 1
             if bit_count == 8:
                 bytes_data.append(buffer)

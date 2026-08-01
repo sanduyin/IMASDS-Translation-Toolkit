@@ -71,9 +71,9 @@ def import_png_to_gld(png_path: Path, original_gld_path: Path,
         raise ValueError(f"sprite [{index}] 已标记为 deleted，无法注入")
 
     with Image.open(png_path) as img:
-        img = img.convert('RGBA')
-        width, height = img.size
-        rgba_data = img.tobytes()
+        rgba_img: Image.Image = img.convert('RGBA')
+        width, height = rgba_img.size
+        rgba_data = rgba_img.tobytes()
 
     if width != entry.crop_width or height != entry.crop_height:
         raise ValueError(
@@ -393,8 +393,8 @@ def batch_import_images(import_folders: list[str] | None = None,
 
                     png_path = sprite_png_dir / f"{gld_stem}_{index}.png"
                     try:
-                        with Image.open(png_path) as img:
-                            img = img.convert('RGBA')
+                        with Image.open(png_path) as opened_img:
+                            img: Image.Image = opened_img.convert('RGBA')
                             width, height = img.size
 
                         if width != entry.crop_width or height != entry.crop_height:

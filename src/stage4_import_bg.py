@@ -51,9 +51,9 @@ def read_png_rgb(png_path: Path) -> tuple[int, int, bytes]:
     32bpp RGBA 模式会丢弃 alpha 通道。
     """
     with Image.open(png_path) as img:
-        img = img.convert('RGB')
-        width, height = img.size
-        rgb_data = img.tobytes()
+        rgb_img: Image.Image = img.convert('RGB')
+        width, height = rgb_img.size
+        rgb_data = rgb_img.tobytes()
     return width, height, rgb_data
 
 def read_bmp_rgb(bmp_path: Path) -> tuple[int, int, bytes]:
