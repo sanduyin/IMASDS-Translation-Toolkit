@@ -28,6 +28,7 @@ This project stands on the shoulders of giants. Special thanks to:
 *   [ndspy](https://github.com/RoadrunnerWMC/ndspy) by RoadrunnerWMC for the excellent BLZ decompression engine.
 *   [OpenCC](https://github.com/BYVoid/OpenCC) by BYVoid for the flawless CJK mapping capabilities.
 *   [NitroPaint](https://github.com/Garhoogin/NitroPaint) by Garhoogin — an invaluable DS graphics editor whose source code guided our NCER/OBJ implementation.
+*   [dearlystarsDS_tool](https://github.com/Harphemaen/dearlystarsDS_tool) by harmaP —— Thanks to the meticulous and in-depth research on the AGL/GLD format, the possibility of translating UI images of the DS unique engine into Chinese has become feasible.
 *   [dearlystars_tool](https://github.com/faraplay/dearlystars_tool) by Faraplay — the reference builder whose DSi-enhanced reconstruction pipeline (digest tables, HMAC, modcrypt, TWL header) made the real-hardware DSi boot of this localization possible. This project is deeply grateful for its open documentation of the complete DSi cryptographic chain.
 
 ### AI-Generated Code Notice
@@ -61,7 +62,8 @@ This project is for educational and technical research purposes only. The reposi
 *   [ndstool](https://github.com/Relys/ndstool) (DarkFader / Relys) 提供 NDS 文件系统基础工具。
 *   [ndspy](https://github.com/RoadrunnerWMC/ndspy) (RoadrunnerWMC) 提供完善的底层解压缩引擎。
 *   [OpenCC](https://github.com/BYVoid/OpenCC) (BYVoid) 提供完美的简繁日汉字映射技术。
-*   [NitroPaint](https://github.com/Garhoogin/NitroPaint) (Garhoogin) —— 优秀的 DS 图像编辑器，其源代码指导了我们的 NCER/OBJ 实现。
+*   [NitroPaint](https://github.com/Garhoogin/NitroPaint) (Garhoogin) —— 优秀的 DS 图像编辑器，其源代码指导了 NCER/OBJ 实现。
+*   [dearlystarsDS_tool](https://github.com/Harphemaen/dearlystarsDS_tool) (harmaP) —— 感谢harmaP对AGL/GLD格式的细致、深入研究，才有了对DS独有引擎格式UI汉化的可能性。
 *   [dearlystars_tool](https://github.com/faraplay/dearlystars_tool) —— 参考构建器，其 DSi 增强区重建流程（digest 摘要表、HMAC、modcrypt、TWL Header）使本汉化版在 DSi 实机上成功启动成为可能。本项目对其完整公开 DSi 密码学链路的文档深表感谢。
 
 ### AI 生成代码声明
