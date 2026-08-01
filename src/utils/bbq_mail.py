@@ -2,7 +2,7 @@
 """
 邮件 BBQ 文件专用解析与重建（faraplay 兼容 5 列 ML CSV 格式）。
 
-faraplay v0.5.2 的邮件处理逻辑（参考 reference/dearlystars_tool/.../bbq.rs）：
+faraplay v0.5.2 的邮件处理逻辑（参考 dearlystars_tool (Rust) bbq.rs）：
 - 邮件 BBQ 文件命名约定：`XXXX_ML_*.BBQ`（前 5 字符为索引，第 6 字符起为 "ML_"）
 - 每个 BBQ 含 4 个 section：
     Type2 = 元数据 [0, 65536, 0, 1, 248, 1, 0]（248 = Type5 字节数）
@@ -21,7 +21,7 @@ faraplay ML CSV 格式（5 列）：
     XXXX_ML_*.BBQ,"行1\\n行2\\n...","译文1\\n译文2\\n...","回信1\\n回信2\\n...","回信译文1\\n..."
 
 约定：
-- 邮件正文 / 回信正文均最多 30 行，超过截断并告警
+- 邮件正文 / 回信正文均最多 30 行，超过报错（ValueError）
 - 每行 Shift-JIS 字节数 ≤ 32，超过告警（不强制截断，保留原文）
 - 字符串池去重：相同文本复用同一索引（faraplay get_index 语义）
 """
@@ -219,8 +219,12 @@ def _sj_len(text: str, char_map: dict[str, int] | None = None) -> int:
         return len(text_to_bytes(text, char_map)) - 1
     try:
         return len(text.encode("cp932"))
-    except UnicodeEncodeError:
-        return len(text.encode("utf-8"))
+    except UnicodeEncodeError as e:
+        bad_char = text[e.start:e.end]
+        raise ValueError(
+            f"无法用 cp932 编码文本：{text!r}，"
+            f"缺失字符 {bad_char!r} (U+{ord(bad_char):04X})"
+        ) from e
 
 
 def _get_index(strings: list[str], text: str) -> int:
@@ -242,10 +246,19 @@ def _build_type5_bytes(
 
     strings 池会被原地修改：strings[0] 必须是 ""（占位），新行通过 _get_index 添加。
     """
+    if len(mail_lines1) > MAIL_MAX_LINES:
+        raise ValueError(
+            f"邮件正文行数超过上限：{len(mail_lines1)} > {MAIL_MAX_LINES}"
+        )
+    if len(mail_lines2) > MAIL_MAX_LINES:
+        raise ValueError(
+            f"回信正文行数超过上限：{len(mail_lines2)} > {MAIL_MAX_LINES}"
+        )
+
     lines1_count = len(mail_lines1)
     lines2_count = len(mail_lines2)
 
-    # resize 到 30 行（不足补空字符串，超过截断）
+    # 补齐到 30 行（不足补空字符串；超过上限已在上方报错）
     mail_lines1_resized = mail_lines1[:MAIL_MAX_LINES] + [""] * (MAIL_MAX_LINES - len(mail_lines1))
     mail_lines2_resized = mail_lines2[:MAIL_MAX_LINES] + [""] * (MAIL_MAX_LINES - len(mail_lines2))
 
@@ -295,8 +308,12 @@ def _build_type7_bytes(
         else:
             try:
                 encoded = s.encode("cp932")
-            except UnicodeEncodeError:
-                encoded = s.encode("utf-8")
+            except UnicodeEncodeError as e:
+                bad_char = s[e.start:e.end]
+                raise ValueError(
+                    f"无法用 cp932 编码字符串：{s!r}，"
+                    f"缺失字符 {bad_char!r} (U+{ord(bad_char):04X})"
+                ) from e
             data.extend(encoded)
             data.append(0)  # NUL terminator
 
@@ -365,6 +382,135 @@ def _serialize_bbq(
     return bytes(header)
 
 
+def validate_mail_bbq(data: bytes) -> None:
+    """验证 BBQ 文件结构完整性。
+
+    检查项：
+    - 魔数、header、section 目录在文件边界内
+    - Type2/5/6/7 各 section 的相对偏移与数据在文件边界内
+    - Type5 数据恰好 248 字节（62 个 u32）
+    - Type5 indices[0] 与 indices[31] <= 30
+    - Type5 所有字符串索引 < Type7 字符串数
+    - Type7 偏移单调递增、在边界内、每个字符串以 NUL 结尾
+
+    任何检查失败时抛出 ValueError。
+    """
+    n = len(data)
+
+    # 1. header 边界与魔数
+    if n < BBQ_HEADER_SIZE:
+        raise ValueError(f"BBQ 文件过小：{n} < {BBQ_HEADER_SIZE}")
+    if data[:8] != BBQ_HEADER_MAGIC:
+        raise ValueError(f"BBQ 魔数错误：{data[:8]!r}")
+    magic2 = struct.unpack_from("<I", data, 12)[0]
+    if magic2 != 1:
+        raise ValueError(f"BBQ magic2 != 1: {magic2}")
+    entries_offset = struct.unpack_from("<I", data, 16)[0]
+    entry_count = struct.unpack_from("<I", data, 20)[0]
+
+    # 2. section 目录在文件边界内
+    dir_end = entries_offset + entry_count * BBQ_ENTRY_SIZE
+    if entries_offset < BBQ_HEADER_SIZE or dir_end > n:
+        raise ValueError(
+            f"BBQ section 目录越界：entries_offset={entries_offset}, "
+            f"entry_count={entry_count}, dir_end={dir_end}, file_size={n}"
+        )
+
+    # 3. 解析每个 entry，校验相对偏移与数据在文件边界内
+    sections: dict[int, dict[str, Any]] = {}
+    for i in range(entry_count):
+        entry_pos = entries_offset + i * BBQ_ENTRY_SIZE
+        data_type, offsets_off, data_count, data_off, data_size = struct.unpack_from(
+            "<IIIII", data, entry_pos
+        )
+        offsets_abs = entry_pos + offsets_off
+        data_abs = entry_pos + data_off
+        offsets_end = offsets_abs + data_count * 4
+        data_end = data_abs + data_size
+        if offsets_end > n:
+            raise ValueError(
+                f"Type{data_type} offsets 越界：offsets_abs={offsets_abs}, "
+                f"data_count={data_count}, offsets_end={offsets_end}, file_size={n}"
+            )
+        if data_end > n:
+            raise ValueError(
+                f"Type{data_type} data 越界：data_abs={data_abs}, "
+                f"data_size={data_size}, data_end={data_end}, file_size={n}"
+            )
+        offsets = [
+            struct.unpack_from("<I", data, offsets_abs + j * 4)[0]
+            for j in range(data_count)
+        ]
+        sections[data_type] = {
+            "offsets": offsets,
+            "data": data[data_abs:data_abs + data_size],
+        }
+
+    # 4. Type5 数据恰好 248 字节
+    if 5 not in sections:
+        raise ValueError("BBQ 缺少 Type5 section")
+    type5 = sections[5]
+    if len(type5["data"]) != TYPE5_TOTAL_BYTES:
+        raise ValueError(
+            f"Type5 数据长度错误：{len(type5['data'])} != {TYPE5_TOTAL_BYTES}"
+        )
+    indices = _read_type5_indices(type5)
+    if len(indices) != TYPE5_TOTAL_U32:
+        raise ValueError(
+            f"Type5 u32 数量错误：{len(indices)} != {TYPE5_TOTAL_U32}"
+        )
+
+    # 5. indices[0] 与 indices[31] <= MAIL_MAX_LINES
+    if indices[0] > MAIL_MAX_LINES:
+        raise ValueError(
+            f"Type5 indices[0] 超过上限：{indices[0]} > {MAIL_MAX_LINES}"
+        )
+    if indices[31] > MAIL_MAX_LINES:
+        raise ValueError(
+            f"Type5 indices[31] 超过上限：{indices[31]} > {MAIL_MAX_LINES}"
+        )
+
+    # 6. Type7 字符串池校验
+    if 7 not in sections:
+        raise ValueError("BBQ 缺少 Type7 section")
+    type7 = sections[7]
+    type7_offsets = type7["offsets"]
+    type7_raw = type7["data"]
+    type7_size = len(type7_raw)
+    str_count = len(type7_offsets)
+
+    # Type7 偏移单调递增、在边界内、每个字符串以 NUL 结尾
+    prev = -1
+    for k, off in enumerate(type7_offsets):
+        next_off = type7_offsets[k + 1] if k + 1 < str_count else type7_size
+        if off <= prev:
+            raise ValueError(
+                f"Type7 offsets 非单调递增：index={k}, offset={off}, prev={prev}"
+            )
+        if off >= type7_size:
+            raise ValueError(
+                f"Type7 offset 越界：index={k}, offset={off}, data_size={type7_size}"
+            )
+        nul_pos = type7_raw.find(b"\x00", off, next_off)
+        if nul_pos == -1:
+            raise ValueError(
+                f"Type7 字符串缺少 NUL 终止符：index={k}, offset={off}, "
+                f"next_offset={next_off}"
+            )
+        prev = off
+
+    # 7. Type5 所有字符串索引 < Type7 字符串数
+    #    indices[0] 与 indices[31] 为行数计数，非字符串索引，跳过
+    for i, idx in enumerate(indices):
+        if i == 0 or i == 31:
+            continue
+        if idx >= str_count:
+            raise ValueError(
+                f"Type5 字符串索引越界：indices[{i}]={idx} "
+                f">= Type7 字符串数={str_count}"
+            )
+
+
 def rebuild_mail_bbq(
     src_path: str | Path,
     dst_path: str | Path,
@@ -394,14 +540,6 @@ def rebuild_mail_bbq(
     mail_lines1 = mail1.split("\n") if mail1 else []
     mail_lines2 = mail2.split("\n") if mail2 else []
 
-    # 行数截断告警
-    if len(mail_lines1) > MAIL_MAX_LINES:
-        print(f"  ⚠️ 邮件正文超过 {MAIL_MAX_LINES} 行（{len(mail_lines1)} 行），将截断")
-        mail_lines1 = mail_lines1[:MAIL_MAX_LINES]
-    if len(mail_lines2) > MAIL_MAX_LINES:
-        print(f"  ⚠️ 回信正文超过 {MAIL_MAX_LINES} 行（{len(mail_lines2)} 行），将截断")
-        mail_lines2 = mail_lines2[:MAIL_MAX_LINES]
-
     # 构建 strings 池（索引 0 必须是空字符串占位）
     strings: list[str] = [""]
 
@@ -424,6 +562,11 @@ def rebuild_mail_bbq(
     ]
 
     out_bytes = _serialize_bbq(datetime_val, sections, footer)
+
+    # 结构校验：重新解析输出并检查完整性
+    # （Type5 长度/索引、字符串索引范围、Type7 偏移单调/NUL 终止符）
+    validate_mail_bbq(out_bytes)
+
     Path(dst_path).write_bytes(out_bytes)
 
 

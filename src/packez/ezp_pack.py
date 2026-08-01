@@ -2,7 +2,7 @@
 """
 EZP (BIN) 数据封包：解包与重建。
 
-参考实现：reference/dearlystars_tool/dearlystars/src/ez.rs (extract_bin / rebuild_bin)
+参考实现：dearlystars_tool (Rust) ez.rs (extract_bin / rebuild_bin)
 
 关键行为：
     - 目录用 _BEGIN/_START (开始) 与 _END (结束) 标记，二者 entry 的 decompressed_size 必须为 0

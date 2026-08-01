@@ -2,7 +2,7 @@
 """
 ARM9 Overlay Table 解析与重建。
 
-参考实现：reference/dearlystars_tool/ndstool/src/overlay.rs
+参考实现：dearlystars_tool (Rust) ndstool/overlay.rs
 
 每条 Overlay 表项 32 字节 (0x20)，结构如下：
     0x00  id                u32  Overlay ID

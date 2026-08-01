@@ -22,7 +22,7 @@ PNG → GLD 图像回写工具。
   · 透明像素（alpha < 128）回写时会标记为调色板中的透明色。
   · 未修改的 sprite 保持原样。
 
-参考实现：reference/dearlystars_tool/dearlystars/src/gld.rs (inject_png)
+参考实现：dearlystars_tool (Rust) gld.rs (inject_png)
 """
 
 from __future__ import annotations
@@ -226,11 +226,23 @@ def get_psd_stems(png_dir: Path) -> list[str]:
     return stems
 
 
-# 需处理的图像文件夹
-IMPORT_FOLDERS = ["TEX", "TBL", "AGL", "BG"]
+# 需处理的图像文件夹（GLD 格式 sprite）
+# 注意：BG 使用 NCGR/NCLR/NSCR 格式，由独立的 stage4_import_bg.py 处理，
+#       不能放在这里（否则会用 .GLD 扩展名查找，找不到文件）
+IMPORT_FOLDERS = ["TEX", "TBL", "AGL"]
 
 # 使用 sheet 模式的文件夹（其他用 sprite 模式）
 SHEET_MODE_FOLDERS = {"AGL"}
+
+# 歌词课资产保护名单：Stage 3.5 已将扩容后的 AGL/GLD 部署到
+# AGL_CHS_PATCHED/，Stage 6 不能用原始 Extracted/AGL 覆盖它们
+# （覆盖会丢失中文字形像素 + frame 表扩容）
+LYRIC_PROTECTED_AGL_GLD = {
+    "0506_D_MEASURE_MOJI_MNG",  # 左侧候选字 AGL（frame 表已扩容到 489）
+    "0507_D_MEASURE_MOJI_MNG",  # 左侧候选字 GLD（已追加 408 个中文字形）
+    "0520_D_EPANEL_MOJI_MNG",   # 下侧题目字 AGL（frame 表已扩容到 489）
+    "0521_D_EPANEL_MOJI_MNG",   # 下侧题目字 GLD（已追加 408 个中文字形）
+}
 
 
 def batch_import_images(import_folders: list[str] | None = None,
@@ -254,6 +266,9 @@ def batch_import_images(import_folders: list[str] | None = None,
 
     for folder_name in import_folders:
         png_dir = EXTRACT_DIR.parent / "1_Extracted_Images" / folder_name
+        # AGL 模式：sprite PNG 在 sprites/ 子文件夹（split_psd_to_sprites.py 输出）
+        # 其他文件夹（TEX/TBL/BG）：sprite PNG 在根目录
+        sprite_png_dir = png_dir / "sprites" if folder_name == "AGL" else png_dir
         original_dir = EXTRACT_DIR / folder_name
         output_dir = PATCHED_DIR / f"{folder_name}_IMG_PATCHED"
         preview_dir = EXTRACT_DIR.parent / "1_Extracted_Images" / f"{folder_name}_PREVIEW"
@@ -281,6 +296,11 @@ def batch_import_images(import_folders: list[str] | None = None,
                   + ("（含预览）" if generate_preview else ""))
 
             for gld_stem in psd_stems:
+                # 歌词课资产保护：跳过 Stage 3.5 已扩容的 AGL/GLD
+                if gld_stem in LYRIC_PROTECTED_AGL_GLD:
+                    print(f"   🔒 跳过 Stage 3.5 保护资产: {gld_stem}.GLD")
+                    continue
+
                 gld_path = None
                 for ext in ['.GLD', '.gld']:
                     candidate = original_dir / (gld_stem + ext)
@@ -314,9 +334,15 @@ def batch_import_images(import_folders: list[str] | None = None,
                     total_error += 1
         else:
             # sprite 模式
-            index_map = get_png_index_map(png_dir)
+            # AGL 从 sprites/ 子目录读取，TEX/TBL/BG 从根目录读取
+            if not sprite_png_dir.exists():
+                print(f"⏭️  跳过：sprite PNG 目录不存在: {sprite_png_dir}")
+                continue
+            index_map = get_png_index_map(sprite_png_dir)
             if not index_map:
-                print(f"⏭️  {folder_name}: 没有找到可回写的 PNG sprite，跳过。")
+                print(f"⏭️  {folder_name}: 没有找到可回写的 PNG sprite，跳过。"
+                      + (f"（请确认 sprite PNG 在 {sprite_png_dir.name}/ 子目录）"
+                         if folder_name == "AGL" else ""))
                 continue
 
             if generate_preview:
@@ -326,6 +352,12 @@ def batch_import_images(import_folders: list[str] | None = None,
                   + ("（含预览）" if generate_preview else ""))
 
             for gld_stem, indices in index_map.items():
+                # 歌词课资产保护：跳过 Stage 3.5 已扩容的 AGL/GLD
+                if gld_stem in LYRIC_PROTECTED_AGL_GLD:
+                    print(f"   🔒 跳过 Stage 3.5 保护资产: {gld_stem} ({len(indices)} sprite)")
+                    total_skip += len(indices)
+                    continue
+
                 gld_path = None
                 for ext in ['.GLD', '.gld']:
                     candidate = original_dir / (gld_stem + ext)
@@ -359,7 +391,7 @@ def batch_import_images(import_folders: list[str] | None = None,
                         total_skip += 1
                         continue
 
-                    png_path = png_dir / f"{gld_stem}_{index}.png"
+                    png_path = sprite_png_dir / f"{gld_stem}_{index}.png"
                     try:
                         with Image.open(png_path) as img:
                             img = img.convert('RGBA')

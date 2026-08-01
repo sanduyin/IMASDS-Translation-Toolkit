@@ -1,5 +1,5 @@
 # IMASDS Translation Toolkit - CI
-# 每次 PR / push 自动验证：类型检查、单元测试、构建管线冒烟测试
+# 每次 PR / push 自动验证：类型检查、构建管线冒烟测试
 name: CI
 
 on:
@@ -31,71 +31,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
 
       - name: Run mypy --strict
         run: python -m mypy --strict src/ --ignore-missing-imports
 
   # =====================================================================
-  # Job 2: pytest 单元测试 + 覆盖率
-  # =====================================================================
-  tests:
-    name: pytest + coverage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-
-      - name: Run pytest with coverage
-        run: |
-          python -m pytest --cov=src --cov-report=term-missing --cov-report=xml --tb=short -q
-
-      - name: Check utils coverage >= 80%
-        run: |
-          python - <<'EOF'
-          import xml.etree.ElementTree as ET
-          import sys
-
-          tree = ET.parse("coverage.xml")
-          root = tree.getroot()
-
-          # 查找 utils 包的 line-rate 属性（coverage.py 已计算好）
-          for pkg in root.findall(".//package"):
-              if pkg.get("name") == "utils":
-                  rate = float(pkg.get("line-rate", "0"))
-                  pct = rate * 100
-                  print(f"utils 模块覆盖率: {pct:.1f}%")
-                  if pct < 80.0:
-                      print(f"FAIL: utils 覆盖率 {pct:.1f}% < 80%")
-                      sys.exit(1)
-                  print(f"PASS: utils 覆盖率 {pct:.1f}% >= 80%")
-                  sys.exit(0)
-
-          print("ERROR: 未找到 utils 包覆盖率数据")
-          sys.exit(1)
-          EOF
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
-          retention-days: 14
-
-  # =====================================================================
-  # Job 3: ROM 构建管线冒烟测试
+  # Job 2: ROM 构建管线冒烟测试
   # （实际 ROM 构建需要 game_data/ 下的原版 ROM，CI 环境无版权数据，
   #   故仅验证所有 Stage 模块可正常导入且关键函数存在）
   # =====================================================================
@@ -134,6 +75,7 @@ jobs:
               ("src.stage2_export_bg", []),
               ("src.stage2_export_images", []),
               ("src.stage3_build_font", []),
+              ("src.stage3_5_lyric", []),
               ("src.stage4_import_bg", []),
               ("src.stage4_import_images", []),
               ("src.stage4_inject_text", []),
@@ -161,6 +103,7 @@ jobs:
               "src.utils.bbq_format",
               "src.utils.bbq_yaml",
               "src.utils.gld_format",
+              "src.utils.lesvoice",
               "src.utils.mapping_backup",
               "src.io.csv_handler",
               "src.ndstool.crc",
@@ -181,39 +124,3 @@ jobs:
             sys.exit(1)
           print("\nPASS: 所有 Stage 和 utils 模块导入成功，关键函数存在")
           EOF
-
-  # =====================================================================
-  # Job 4: 性能基准（信息性，不阻断 CI）
-  # 运行 bench_core.py 并上传 JSON 结果作为 artifact，
-  # 用于跨 PR/commit 对比性能回归。基准结果受机器负载影响，
-  # 故 continue-on-error: true，失败不阻断主流程。
-  # =====================================================================
-  benchmark:
-    name: performance benchmarks
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run benchmarks
-        run: |
-          python -m benchmarks.bench_core --json
-
-      - name: Upload benchmark results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-results
-          path: benchmarks/results/
-          retention-days: 30

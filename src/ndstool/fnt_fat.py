@@ -2,8 +2,8 @@
 """
 NDS ROM FNT (文件名表) 与 FAT (文件分配表) 的解析与重建。
 
-参考实现：reference/dearlystars_tool/ndstool/src/rom_source.rs (read_fat)
-        reference/dearlystars_tool/ndstool/src/rom_source/rom_tree_node.rs (read_fnt_dir)
+参考实现：dearlystars_tool (Rust) ndstool/rom_source.rs (read_fat)
+        dearlystars_tool (Rust) ndstool/rom_source/rom_tree_node.rs (read_fnt_dir)
 
 ## FNT 结构
 

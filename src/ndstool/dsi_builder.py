@@ -1,13 +1,14 @@
 # src/ndstool/dsi_builder.py
 """
 DSi (TWL) 扩展：DsiExtraFields 解析/生成、digest (HMAC-SHA1)、
-modcrypt (AES-128 CTR)、ARM9 secure area 自定义块密码加解密。
+modcrypt (AES-128 CTR)、ARM9 secure area 自定义块密码加解密，以及从
+已重建 NTR 区生成完整可启动 TWL 区。
 
 参考实现：
-    reference/dearlystars_tool/ndstool/src/header.rs       (DsiExtraFields 结构)
-    reference/dearlystars_tool/ndstool/src/digest.rs        (HMAC-SHA1)
-    reference/dearlystars_tool/ndstool/src/modcrypt.rs      (AES-CTR)
-    reference/dearlystars_tool/ndstool/src/key_encryption.rs (ARM9 secure area)
+    dearlystars_tool (Rust) ndstool/header.rs       (DsiExtraFields 结构)
+    dearlystars_tool (Rust) ndstool/digest.rs        (HMAC-SHA1)
+    dearlystars_tool (Rust) ndstool/modcrypt.rs      (AES-CTR)
+    dearlystars_tool (Rust) ndstool/key_encryption.rs (ARM9 secure area)
 
 依赖：pycryptodome (AES-128 ECB)
 """
@@ -16,17 +17,32 @@ from __future__ import annotations
 import struct
 import hmac
 import hashlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
-from Crypto.Cipher import AES
+try:
+    from Crypto.Cipher import AES
+except ImportError:  # 只解析 Header 时不应被可选 AES 依赖阻断
+    AES = None  # type: ignore[assignment]
+
+from .crc import crc16_header
+from .header import HEADER_SIZE as NDS_HEADER_SIZE, NDSHeader
 
 # ======================================================================
 # 常量
 # ======================================================================
 
 DSI_EXTRA_FIELDS_SIZE: int = 0xE80
-"""DsiExtraFields 结构体总长（紧跟 NDS Header 0x200 之后）。"""
+"""DsiExtraFields 长度；位于 ROM 绝对偏移 0x180~0xFFF。"""
+
+DSI_EXTRA_FIELDS_OFFSET: int = 0x180
+TWL_HEADER_SIZE: int = 0x1000
+ROM_HEADER_SIZE: int = 0x4000
+SECTOR_ALIGNMENT: int = 0x400
+BLOCK_SECTORCOUNT: int = 0x20
+FILE_ALIGNMENT: int = 0x200
+DSI_ALIGNMENT: int = 0x100000
 
 MASK32: int = 0xFFFFFFFF
 """u32 位掩码，用于模拟 Rust u32 wrapping 算术。"""
@@ -63,7 +79,7 @@ SECURE_AREA_MAGIC: int = 0xE7FFDEFF
 """secure area 解密态起始 u32 magic（连续 2 个）。"""
 
 # ENCR_DATA 查找表 (0x1048 字节 = 0x412 个 u32)
-# 从 reference/dearlystars_tool/ndstool/src/key_encryption.rs 提取
+# 从 dearlystars_tool (Rust) ndstool/key_encryption.rs 提取
 _ENCR_DATA_HEX = (
     "99d5205f5744f5b96e19a4d99e6a5a94d8aef1eb4175e23a9382d03233ee31d5"
     "cc57619a3706a21b793972f555aef6be5f1b69fbe59df1e9ce2cd9a15e3205e6"
@@ -213,10 +229,10 @@ _MODCRYPT_ROTATE: int = 42
 @dataclass
 class DsiExtraFields:
     """
-    DSi 扩展头部字段 (0xE80 字节，紧跟 NDS Header 0x200 之后)。
+    DSi 扩展头部字段（0xE80 字节，ROM 绝对偏移 0x180~0xFFF）。
 
     字段布局严格对齐 Rust 的 DsiExtraFields 结构体
-    (reference/dearlystars_tool/ndstool/src/header.rs)。
+    (dearlystars_tool (Rust) ndstool/header.rs)。
     """
 
     # 0x000 - MBK 设置
@@ -329,7 +345,7 @@ class DsiExtraFields:
 
     @classmethod
     def parse(cls, data: bytes | bytearray) -> "DsiExtraFields":
-        """从字节数组解析 DsiExtraFields。data 应从 ROM 偏移 0x200 开始。"""
+        """解析 DsiExtraFields；``data[0]`` 必须对应 ROM 绝对偏移 0x180。"""
         if len(data) < DSI_EXTRA_FIELDS_SIZE:
             raise ValueError(
                 f"DsiExtraFields 数据过短：{len(data)} < 0x{DSI_EXTRA_FIELDS_SIZE:X}"
@@ -491,6 +507,11 @@ def sha1_hmac(data: bytes | bytearray, position: int, size: int) -> bytes:
     Returns:
         20 字节 HMAC-SHA1 摘要
     """
+    if position < 0 or size < 0 or position > len(data) or size > len(data) - position:
+        raise ValueError(
+            f"HMAC 范围越界：offset=0x{position:X}, size=0x{size:X}, "
+            f"data=0x{len(data):X}"
+        )
     h = hmac.new(HMAC_SHA1_KEY, data[position : position + size], hashlib.sha1)
     return h.digest()
 
@@ -557,6 +578,10 @@ def aes_ctr(data: bytearray, key: int, iv: int) -> None:
     """
     if len(data) % 16 != 0:
         raise ValueError("数据长度必须是 16 的倍数")
+    if AES is None:
+        raise RuntimeError(
+            "缺少 pycryptodome；请先运行 `python -m pip install pycryptodome`"
+        )
 
     blocks_count = len(data) // 16
     key_bytes = key.to_bytes(16, "big")
@@ -586,35 +611,44 @@ def modcrypt(
     dsi_header: DsiExtraFields,
 ) -> None:
     """
-    对 modcrypt1 区域执行 AES-CTR 加解密 (就地修改 rom_data)。
+    对 modcrypt1 / modcrypt2 区域执行 AES-CTR 加解密（就地修改）。
 
-    对应 Rust: modcrypt(stream, header, dsi_header)
-    注意：Rust 实现仅处理 modcrypt1，不处理 modcrypt2。
+    modcrypt 是对称运算；对密文调用即解密，对明文调用即加密。faraplay
+    0.5.2 的写入端只处理 modcrypt1，但读取端会处理两区；这里完整支持两区，
+    以免未来 ARM7i 加密标题被静默破坏。
 
     Args:
         rom_data: 完整 ROM 数据 (就地修改)
         gamecode: 4 字节 gamecode
         dsi_header: DsiExtraFields 实例
     """
-    if dsi_header.modcrypt1_size == 0:
+    if dsi_header.modcrypt1_size == 0 and dsi_header.modcrypt2_size == 0:
         return
 
-    key, iv1, _iv2 = get_key_ivs(
+    key, iv1, iv2 = get_key_ivs(
         gamecode,
         dsi_header.hmac_arm9,
         dsi_header.hmac_arm7,
         dsi_header.hmac_arm9i,
     )
 
-    start = dsi_header.modcrypt1_start
-    size = dsi_header.modcrypt1_size
-    # 确保 size 是 16 的倍数
-    if size % 16 != 0:
-        raise ValueError(f"modcrypt1_size ({size}) 不是 16 的倍数")
+    for name, start, size, iv in (
+        ("modcrypt1", dsi_header.modcrypt1_start, dsi_header.modcrypt1_size, iv1),
+        ("modcrypt2", dsi_header.modcrypt2_start, dsi_header.modcrypt2_size, iv2),
+    ):
+        if size == 0:
+            continue
+        if size % 16 != 0:
+            raise ValueError(f"{name}_size ({size}) 不是 16 的倍数")
+        if start < 0 or start > len(rom_data) or size > len(rom_data) - start:
+            raise ValueError(
+                f"{name} 越界：offset=0x{start:X}, size=0x{size:X}, "
+                f"ROM=0x{len(rom_data):X}"
+            )
 
-    buffer = bytearray(rom_data[start : start + size])
-    aes_ctr(buffer, key, iv1)
-    rom_data[start : start + size] = buffer
+        buffer = bytearray(rom_data[start : start + size])
+        aes_ctr(buffer, key, iv)
+        rom_data[start : start + size] = buffer
 
 
 # ======================================================================
@@ -906,6 +940,23 @@ def write_digests(
     """
     digest_sector_size = dsi_header.digest_sector_size
     block_sectorcount = dsi_header.digest_block_sectorcount
+    if digest_sector_size <= 0 or block_sectorcount <= 0:
+        raise ValueError("digest_sector_size 与 digest_block_sectorcount 必须大于 0")
+    for name, start, size in (
+        ("digest_ntr", dsi_header.digest_ntr_start, dsi_header.digest_ntr_size),
+        ("digest_twl", dsi_header.digest_twl_start, dsi_header.digest_twl_size),
+        ("sector_hashtable", dsi_header.sector_hashtable_start, dsi_header.sector_hashtable_size),
+        ("block_hashtable", dsi_header.block_hashtable_start, dsi_header.block_hashtable_size),
+    ):
+        if start < 0 or size < 0 or start > len(rom_data) or size > len(rom_data) - start:
+            raise ValueError(
+                f"{name} 越界：offset=0x{start:X}, size=0x{size:X}, "
+                f"ROM=0x{len(rom_data):X}"
+            )
+    if dsi_header.digest_ntr_size % digest_sector_size:
+        raise ValueError("digest_ntr_size 不是 digest_sector_size 的整数倍")
+    if dsi_header.digest_twl_size % digest_sector_size:
+        raise ValueError("digest_twl_size 不是 digest_sector_size 的整数倍")
 
     # ---- sector digests ----
     sector_hashes = bytearray()
@@ -926,10 +977,15 @@ def write_digests(
     ):
         sector_hashes.extend(sha1_hmac(rom_data, position, digest_sector_size))
 
-    rom_data[
-        dsi_header.sector_hashtable_start : dsi_header.sector_hashtable_start
-        + len(sector_hashes)
-    ] = sector_hashes
+    if len(sector_hashes) > dsi_header.sector_hashtable_size:
+        raise ValueError(
+            f"sector digest 超出预留表：0x{len(sector_hashes):X} > "
+            f"0x{dsi_header.sector_hashtable_size:X}"
+        )
+    sector_start = dsi_header.sector_hashtable_start
+    sector_end = sector_start + dsi_header.sector_hashtable_size
+    rom_data[sector_start:sector_end] = b"\x00" * dsi_header.sector_hashtable_size
+    rom_data[sector_start : sector_start + len(sector_hashes)] = sector_hashes
 
     # ---- block digests ----
     block_hashes = bytearray()
@@ -941,10 +997,15 @@ def write_digests(
     ):
         block_hashes.extend(sha1_hmac(rom_data, position, block_size))
 
-    rom_data[
-        dsi_header.block_hashtable_start : dsi_header.block_hashtable_start
-        + len(block_hashes)
-    ] = block_hashes
+    if len(block_hashes) > dsi_header.block_hashtable_size:
+        raise ValueError(
+            f"block digest 超出预留表：0x{len(block_hashes):X} > "
+            f"0x{dsi_header.block_hashtable_size:X}"
+        )
+    block_start = dsi_header.block_hashtable_start
+    block_end = block_start + dsi_header.block_hashtable_size
+    rom_data[block_start:block_end] = b"\x00" * dsi_header.block_hashtable_size
+    rom_data[block_start : block_start + len(block_hashes)] = block_hashes
 
 
 def write_hashes(
@@ -970,6 +1031,14 @@ def write_hashes(
         banner_offset: Banner ROM 偏移
         dsi_header: DsiExtraFields 实例 (hmac_* 字段会被更新)
     """
+    arm9_no_secure_start = 0x8000
+    arm9_no_secure_size = arm9_size - (arm9_no_secure_start - arm9_rom_offset)
+    if arm9_no_secure_size < 0:
+        raise ValueError(
+            f"ARM9 太短，无法计算 no-secure HMAC：offset=0x{arm9_rom_offset:X}, "
+            f"size=0x{arm9_size:X}"
+        )
+
     dsi_header.hmac_arm9 = sha1_hmac(rom_data, arm9_rom_offset, arm9_size)
     dsi_header.hmac_arm7 = sha1_hmac(rom_data, arm7_rom_offset, arm7_size)
     dsi_header.hmac_digest_master = sha1_hmac(
@@ -988,8 +1057,527 @@ def write_hashes(
     )
     dsi_header.hmac_arm9_no_secure = sha1_hmac(
         rom_data,
-        0x8000,
-        arm9_size - (0x8000 - arm9_rom_offset),
+        arm9_no_secure_start,
+        arm9_no_secure_size,
     )
     # RSA 签名填充 (faraplay 行为)
     dsi_header.rsa_signature = b"\xAA" * 0x80
+
+
+# ======================================================================
+# 完整 DSi/TWL 重建
+# ======================================================================
+
+
+class DsiBuildError(RuntimeError):
+    """输入 ROM 或重建布局不满足 DSi 构建契约。"""
+
+
+@dataclass
+class OriginalDsiState:
+    """从未修改原版 ROM 读取并解密出的 DSi 构建输入。"""
+
+    header: NDSHeader
+    dsi_header: DsiExtraFields
+    arm9i_plain: bytes
+    arm7i_plain: bytes
+    arm9i_has_footer: bool
+    physical_rom_size: int
+
+
+@dataclass
+class DsiBuildReport:
+    """构建完成后可打印/序列化的非版权结构信息。"""
+
+    application_end_offset: int
+    dsi9_rom_offset: int
+    dsi9_size: int
+    dsi7_rom_offset: int
+    dsi7_size: int
+    digest_ntr_size: int
+    digest_twl_size: int
+    sector_hashtable_start: int
+    sector_hashtable_size: int
+    block_hashtable_start: int
+    block_hashtable_size: int
+    modcrypt1_start: int
+    modcrypt1_size: int
+    modcrypt2_start: int
+    modcrypt2_size: int
+    total_rom_size: int
+    physical_rom_size: int
+    secure_area_crc: int
+    header_crc: int
+
+
+def align_up(value: int, alignment: int) -> int:
+    """返回不小于 value 的最小 alignment 倍数。"""
+    if alignment <= 0 or alignment & (alignment - 1):
+        raise ValueError("alignment 必须是 2 的幂")
+    return (value + alignment - 1) & -alignment
+
+
+def _pad_to_alignment(data: bytearray, alignment: int, fill: int = 0xFF) -> int:
+    target = align_up(len(data), alignment)
+    if target > len(data):
+        data.extend(bytes((fill & 0xFF,)) * (target - len(data)))
+    return target
+
+
+def _pad_to_position(data: bytearray, position: int, fill: int = 0xFF) -> None:
+    if position < len(data):
+        raise DsiBuildError(
+            f"不能向后回退填充：当前位置 0x{len(data):X}，目标 0x{position:X}"
+        )
+    if position > len(data):
+        data.extend(bytes((fill & 0xFF,)) * (position - len(data)))
+
+
+def _read_exact_at(handle: Any, offset: int, size: int, label: str) -> bytes:
+    if offset < 0 or size < 0:
+        raise DsiBuildError(f"{label} 的偏移或大小为负数")
+    handle.seek(offset)
+    data = handle.read(size)
+    if len(data) != size:
+        raise DsiBuildError(
+            f"{label} 读取不足：offset=0x{offset:X}, expected=0x{size:X}, "
+            f"actual=0x{len(data):X}"
+        )
+    return data
+
+
+def _crypt_module_region(
+    module: bytes,
+    module_rom_offset: int,
+    crypt_start: int,
+    crypt_size: int,
+    key: int,
+    iv: int,
+    label: str,
+) -> bytes:
+    """在独立 ARM9i/ARM7i 缓冲区内执行一个绝对 ROM modcrypt 范围。"""
+    if crypt_size == 0:
+        return module
+    relative = crypt_start - module_rom_offset
+    if relative < 0 or relative > len(module) or crypt_size > len(module) - relative:
+        raise DsiBuildError(
+            f"{label} 不完全位于模块内：module=0x{module_rom_offset:X}+0x{len(module):X}, "
+            f"crypt=0x{crypt_start:X}+0x{crypt_size:X}"
+        )
+    if crypt_size % 16:
+        raise DsiBuildError(f"{label} 大小 0x{crypt_size:X} 不是 AES block 的整数倍")
+    result = bytearray(module)
+    region = bytearray(result[relative : relative + crypt_size])
+    aes_ctr(region, key, iv)
+    result[relative : relative + crypt_size] = region
+    return bytes(result)
+
+
+def load_original_dsi_state(original_rom_path: str | Path) -> OriginalDsiState:
+    """
+    从用户自己的原版 ROM 读取 Header，并把 ARM9i/ARM7i 解成明文。
+
+    只读取 Header 与两个 DSi CPU 模块，不把整张 256 MiB ROM 再复制到内存。
+    """
+    path = Path(original_rom_path)
+    physical_size = path.stat().st_size
+    with path.open("rb") as handle:
+        header_blob = _read_exact_at(handle, 0, TWL_HEADER_SIZE, "TWL Header")
+        header = NDSHeader.parse(header_blob[:NDS_HEADER_SIZE])
+        if not header.is_dsi:
+            raise DsiBuildError(
+                f"原版 ROM unitcode={header.unitcode}，不是 DSi 增强标题"
+            )
+        dsi_header = DsiExtraFields.parse(
+            header_blob[
+                DSI_EXTRA_FIELDS_OFFSET : DSI_EXTRA_FIELDS_OFFSET + DSI_EXTRA_FIELDS_SIZE
+            ]
+        )
+
+        for label, offset, size in (
+            ("ARM9i", dsi_header.dsi9_rom_offset, dsi_header.dsi9_size),
+            ("ARM7i", dsi_header.dsi7_rom_offset, dsi_header.dsi7_size),
+        ):
+            if offset <= 0 or size <= 0 or offset > physical_size or size > physical_size - offset:
+                raise DsiBuildError(
+                    f"原版 {label} 范围无效：offset=0x{offset:X}, size=0x{size:X}, "
+                    f"ROM=0x{physical_size:X}"
+                )
+
+        arm9i_has_footer = False
+        footer_probe_offset = dsi_header.dsi9_rom_offset + dsi_header.dsi9_size
+        if footer_probe_offset + 4 <= physical_size:
+            footer_magic = _read_exact_at(handle, footer_probe_offset, 4, "ARM9i footer probe")
+            arm9i_has_footer = footer_magic == b"\x21\x06\xC0\xDE"
+
+        arm9i_read_size = dsi_header.dsi9_size + (0x0C if arm9i_has_footer else 0)
+        arm9i = _read_exact_at(
+            handle, dsi_header.dsi9_rom_offset, arm9i_read_size, "ARM9i"
+        )
+        arm7i = _read_exact_at(
+            handle, dsi_header.dsi7_rom_offset, dsi_header.dsi7_size, "ARM7i"
+        )
+
+    if header.dsi_flags & 0x02:
+        key, iv1, iv2 = get_key_ivs(
+            header.gamecode,
+            dsi_header.hmac_arm9,
+            dsi_header.hmac_arm7,
+            dsi_header.hmac_arm9i,
+        )
+        arm9i = _crypt_module_region(
+            arm9i,
+            dsi_header.dsi9_rom_offset,
+            dsi_header.modcrypt1_start,
+            dsi_header.modcrypt1_size,
+            key,
+            iv1,
+            "modcrypt1/ARM9i",
+        )
+        arm7i = _crypt_module_region(
+            arm7i,
+            dsi_header.dsi7_rom_offset,
+            dsi_header.modcrypt2_start,
+            dsi_header.modcrypt2_size,
+            key,
+            iv2,
+            "modcrypt2/ARM7i",
+        )
+
+    return OriginalDsiState(
+        header=header,
+        dsi_header=dsi_header,
+        arm9i_plain=arm9i,
+        arm7i_plain=arm7i,
+        arm9i_has_footer=arm9i_has_footer,
+        physical_rom_size=physical_size,
+    )
+
+
+def _relocate_modcrypt(
+    old_module_start: int,
+    old_crypt_start: int,
+    crypt_size: int,
+    new_module_start: int,
+    new_module_size: int,
+    label: str,
+) -> int:
+    if crypt_size == 0:
+        return 0
+    relative = old_crypt_start - old_module_start
+    if relative < 0 or relative > new_module_size or crypt_size > new_module_size - relative:
+        raise DsiBuildError(
+            f"{label} 无法随模块重定位：relative=0x{relative:X}, "
+            f"size=0x{crypt_size:X}, module_size=0x{new_module_size:X}"
+        )
+    return new_module_start + relative
+
+
+def rebuild_dsi_rom(
+    ntr_rom_data: bytes | bytearray,
+    original_rom_path: str | Path,
+) -> tuple[bytes, DsiBuildReport]:
+    """
+    把 ndspy 生成的有效 NTR 内容扩展为完整 DSi/TWL ROM。
+
+    运算顺序与 faraplay/dearlystars_tool 0.5.2 一致：预留 digest 表 → 写入
+    明文 ARM9i/ARM7i → 临时加密 Secure Area → 生成两级 digest 与 HMAC →
+    恢复最终解密态 Secure Area → 用新 HMAC 重新 modcrypt → 写回 0x1000
+    字节 TWL Header。
+    """
+    state = load_original_dsi_state(original_rom_path)
+    out = bytearray(ntr_rom_data)
+    if len(out) < ROM_HEADER_SIZE:
+        raise DsiBuildError(
+            f"NTR 构建结果过短：0x{len(out):X} < 0x{ROM_HEADER_SIZE:X}"
+        )
+
+    header = NDSHeader.parse(out[:NDS_HEADER_SIZE])
+    dsi_header = state.dsi_header
+    old_dsi9_rom_offset = dsi_header.dsi9_rom_offset
+    old_dsi7_rom_offset = dsi_header.dsi7_rom_offset
+    old_modcrypt1_start = dsi_header.modcrypt1_start
+    old_modcrypt1_size = dsi_header.modcrypt1_size
+    old_modcrypt2_start = dsi_header.modcrypt2_start
+    old_modcrypt2_size = dsi_header.modcrypt2_size
+    if header.gamecode != state.header.gamecode:
+        raise DsiBuildError(
+            f"Game Code 不一致：NTR={header.gamecode!r}, 原版={state.header.gamecode!r}"
+        )
+    if not header.is_dsi:
+        raise DsiBuildError("ndspy 输出丢失了 DSi unitcode")
+    if header.arm9_rom_offset != 0x4000:
+        raise DsiBuildError(
+            f"本项目要求 ARM9 位于 0x4000，实际为 0x{header.arm9_rom_offset:X}"
+        )
+    for label, offset, size in (
+        ("ARM9", header.arm9_rom_offset, header.arm9_size),
+        ("ARM7", header.arm7_rom_offset, header.arm7_size),
+        ("Banner", header.banner_offset, dsi_header.banner_size),
+    ):
+        if offset < 0 or size < 0 or offset > len(out) or size > len(out) - offset:
+            raise DsiBuildError(
+                f"NTR {label} 范围越界：offset=0x{offset:X}, size=0x{size:X}, "
+                f"NTR=0x{len(out):X}"
+            )
+
+    # ndspy 输出的末尾就是最后一个有效文件。先对齐，再紧跟两张摘要表。
+    _pad_to_alignment(out, SECTOR_ALIGNMENT, 0xFF)
+    dsi_header.digest_sector_size = SECTOR_ALIGNMENT
+    dsi_header.digest_block_sectorcount = BLOCK_SECTORCOUNT
+    dsi_header.digest_ntr_start = 0x4000
+    dsi_header.digest_ntr_size = len(out) - dsi_header.digest_ntr_start
+
+    arm9i_size = align_up(len(state.arm9i_plain), 4)
+    arm7i_size = align_up(len(state.arm7i_plain), 4)
+    dsi_header.digest_twl_size = (
+        align_up(arm9i_size, SECTOR_ALIGNMENT)
+        + align_up(arm7i_size, SECTOR_ALIGNMENT)
+    )
+
+    dsi_header.sector_hashtable_start = _pad_to_alignment(
+        out, SECTOR_ALIGNMENT, 0xFF
+    )
+    sectors_count = (
+        dsi_header.digest_ntr_size + dsi_header.digest_twl_size
+    ) // dsi_header.digest_sector_size
+    sectors_count_padded = align_up(sectors_count, BLOCK_SECTORCOUNT)
+    dsi_header.sector_hashtable_size = sectors_count_padded * HASH_SIZE
+    out.extend(b"\x00" * dsi_header.sector_hashtable_size)
+
+    dsi_header.block_hashtable_start = _pad_to_alignment(
+        out, SECTOR_ALIGNMENT, 0xFF
+    )
+    dsi_header.block_hashtable_size = (
+        dsi_header.sector_hashtable_size // dsi_header.digest_block_sectorcount
+    )
+    out.extend(b"\x00" * dsi_header.block_hashtable_size)
+    _pad_to_alignment(out, FILE_ALIGNMENT, 0xFF)
+
+    header.application_end_offset = len(out)
+    header.rom_header_size = ROM_HEADER_SIZE
+
+    # faraplay 会复制新 ARM9 的 0x8000 sector 三次后再放置 ARM9i。
+    junk_data = bytes(out[0x8000:0x9000])
+    if len(junk_data) != 0x1000:
+        raise DsiBuildError("无法读取用于 TWL 区的 0x8000 junk sector")
+    _pad_to_alignment(out, DSI_ALIGNMENT, 0xFF)
+    out.extend(junk_data * 3)
+
+    dsi_header.dsi9_rom_offset = _pad_to_alignment(out, SECTOR_ALIGNMENT, 0xFF)
+    out.extend(state.arm9i_plain)
+    _pad_to_position(out, dsi_header.dsi9_rom_offset + arm9i_size, 0xFF)
+    dsi_header.dsi9_size = arm9i_size
+
+    dsi_header.dsi7_rom_offset = _pad_to_alignment(out, SECTOR_ALIGNMENT, 0xFF)
+    out.extend(state.arm7i_plain)
+    _pad_to_position(out, dsi_header.dsi7_rom_offset + arm7i_size, 0xFF)
+    dsi_header.dsi7_size = arm7i_size
+    dsi_header.digest_twl_start = dsi_header.dsi9_rom_offset
+
+    _pad_to_alignment(out, SECTOR_ALIGNMENT, 0xFF)
+    dsi_header.total_rom_size = len(out)
+
+    # 保留原版 modcrypt 在各模块内的相对范围，并随新模块位置重定位。
+    dsi_header.modcrypt1_start = _relocate_modcrypt(
+        old_dsi9_rom_offset,
+        old_modcrypt1_start,
+        old_modcrypt1_size,
+        dsi_header.dsi9_rom_offset,
+        dsi_header.dsi9_size,
+        "modcrypt1",
+    )
+    dsi_header.modcrypt2_start = _relocate_modcrypt(
+        old_dsi7_rom_offset,
+        old_modcrypt2_start,
+        old_modcrypt2_size,
+        dsi_header.dsi7_rom_offset,
+        dsi_header.dsi7_size,
+        "modcrypt2",
+    )
+
+    ntr_region_units = align_up(
+        header.application_end_offset, DSI_ALIGNMENT
+    ) >> 19
+    if ntr_region_units > 0xFFFF:
+        raise DsiBuildError("DSi NTR/TWL region 单位溢出 u16")
+    header.dsi_ntr_rom_region_end = ntr_region_units
+    header.dsi_twl_rom_region_start = ntr_region_units
+
+    minimum_capacity = 1 << max(17, (dsi_header.total_rom_size - 1).bit_length())
+    original_capacity = 1 << (state.header.devicecap + 17)
+    physical_target = max(minimum_capacity, original_capacity, state.physical_rom_size)
+    if physical_target & (physical_target - 1):
+        physical_target = 1 << physical_target.bit_length()
+    header.devicecap = physical_target.bit_length() - 18
+    _pad_to_position(out, physical_target, 0xFF)
+
+    # HMAC/digest 的规范视图是：Secure Area 加密、ARM9i/ARM7i 明文。
+    secure_was_plain = encrypt_secure_area(out, header.gamecode)
+    if not secure_was_plain:
+        # 输入若已加密，也必须能按本作 gamecode 正确解密；稍后统一恢复明文。
+        probe = bytes(out[0x4000:0x8000])
+        try:
+            decrypt_arm9(int.from_bytes(header.gamecode, "little"), probe)
+        except ValueError as exc:
+            raise DsiBuildError("ARM9 Secure Area 既非已知明文，也不是有效密文") from exc
+
+    write_digests(out, dsi_header)
+    write_hashes(
+        out,
+        header.arm9_rom_offset,
+        header.arm9_size,
+        header.arm7_rom_offset,
+        header.arm7_size,
+        header.banner_offset,
+        dsi_header,
+    )
+
+    # 最终 ROM 延续当前已通过 NTR 实机测试的解密 Secure Area 状态。
+    decrypt_secure_area(out, header.gamecode)
+    header.secure_area_crc = crc16_header(bytes(out[0x4000:0x8000]))
+
+    if header.dsi_flags & 0x02:
+        modcrypt(out, header.gamecode, dsi_header)
+    elif dsi_header.modcrypt1_size or dsi_header.modcrypt2_size:
+        raise DsiBuildError("Header 未启用 modcrypt，但 modcrypt 区域大小非零")
+
+    header_bytes = header.build(update_crc=True)
+    out[0:NDS_HEADER_SIZE] = header_bytes
+    out[
+        DSI_EXTRA_FIELDS_OFFSET : DSI_EXTRA_FIELDS_OFFSET + DSI_EXTRA_FIELDS_SIZE
+    ] = dsi_header.build()
+
+    report = DsiBuildReport(
+        application_end_offset=header.application_end_offset,
+        dsi9_rom_offset=dsi_header.dsi9_rom_offset,
+        dsi9_size=dsi_header.dsi9_size,
+        dsi7_rom_offset=dsi_header.dsi7_rom_offset,
+        dsi7_size=dsi_header.dsi7_size,
+        digest_ntr_size=dsi_header.digest_ntr_size,
+        digest_twl_size=dsi_header.digest_twl_size,
+        sector_hashtable_start=dsi_header.sector_hashtable_start,
+        sector_hashtable_size=dsi_header.sector_hashtable_size,
+        block_hashtable_start=dsi_header.block_hashtable_start,
+        block_hashtable_size=dsi_header.block_hashtable_size,
+        modcrypt1_start=dsi_header.modcrypt1_start,
+        modcrypt1_size=dsi_header.modcrypt1_size,
+        modcrypt2_start=dsi_header.modcrypt2_start,
+        modcrypt2_size=dsi_header.modcrypt2_size,
+        total_rom_size=dsi_header.total_rom_size,
+        physical_rom_size=len(out),
+        secure_area_crc=header.secure_area_crc,
+        header_crc=header.header_crc,
+    )
+    return bytes(out), report
+
+
+def verify_dsi_integrity(rom_data: bytes | bytearray) -> dict[str, Any]:
+    """
+    重新构造 DSi 规范哈希视图，验证两级 digest、全部 HMAC 与 modcrypt。
+
+    返回的字典只含布尔值、大小和 SHA-256，不导出游戏内容。
+    """
+    rom = bytes(rom_data)
+    if len(rom) < TWL_HEADER_SIZE:
+        raise DsiBuildError("ROM 短于 0x1000 字节 TWL Header")
+    header = NDSHeader.parse(rom[:NDS_HEADER_SIZE])
+    if not header.is_dsi:
+        raise DsiBuildError("不是 DSi 增强 ROM")
+    dsi_header = DsiExtraFields.parse(
+        rom[
+            DSI_EXTRA_FIELDS_OFFSET : DSI_EXTRA_FIELDS_OFFSET + DSI_EXTRA_FIELDS_SIZE
+        ]
+    )
+
+    canonical = bytearray(rom)
+    if header.dsi_flags & 0x02:
+        modcrypt(canonical, header.gamecode, dsi_header)
+
+    arm9i_plain = bytes(
+        canonical[
+            dsi_header.dsi9_rom_offset : dsi_header.dsi9_rom_offset + dsi_header.dsi9_size
+        ]
+    )
+    arm7i_plain = bytes(
+        canonical[
+            dsi_header.dsi7_rom_offset : dsi_header.dsi7_rom_offset + dsi_header.dsi7_size
+        ]
+    )
+    final_secure_plain = (
+        len(rom) >= 0x8000
+        and struct.unpack_from("<Q", rom, 0x4000)[0] == 0xE7FFDEFFE7FFDEFF
+    )
+    if final_secure_plain:
+        encrypt_secure_area(canonical, header.gamecode)
+
+    stored_sector = bytes(
+        rom[
+            dsi_header.sector_hashtable_start :
+            dsi_header.sector_hashtable_start + dsi_header.sector_hashtable_size
+        ]
+    )
+    stored_block = bytes(
+        rom[
+            dsi_header.block_hashtable_start :
+            dsi_header.block_hashtable_start + dsi_header.block_hashtable_size
+        ]
+    )
+    stored_hmacs = {
+        "arm9": dsi_header.hmac_arm9,
+        "arm7": dsi_header.hmac_arm7,
+        "digest_master": dsi_header.hmac_digest_master,
+        "icon_title": dsi_header.hmac_icon_title,
+        "arm9i": dsi_header.hmac_arm9i,
+        "arm7i": dsi_header.hmac_arm7i,
+        "arm9_no_secure": dsi_header.hmac_arm9_no_secure,
+    }
+
+    write_digests(canonical, dsi_header)
+    expected_sector = bytes(
+        canonical[
+            dsi_header.sector_hashtable_start :
+            dsi_header.sector_hashtable_start + dsi_header.sector_hashtable_size
+        ]
+    )
+    expected_block = bytes(
+        canonical[
+            dsi_header.block_hashtable_start :
+            dsi_header.block_hashtable_start + dsi_header.block_hashtable_size
+        ]
+    )
+    write_hashes(
+        canonical,
+        header.arm9_rom_offset,
+        header.arm9_size,
+        header.arm7_rom_offset,
+        header.arm7_size,
+        header.banner_offset,
+        dsi_header,
+    )
+    expected_hmacs = {
+        "arm9": dsi_header.hmac_arm9,
+        "arm7": dsi_header.hmac_arm7,
+        "digest_master": dsi_header.hmac_digest_master,
+        "icon_title": dsi_header.hmac_icon_title,
+        "arm9i": dsi_header.hmac_arm9i,
+        "arm7i": dsi_header.hmac_arm7i,
+        "arm9_no_secure": dsi_header.hmac_arm9_no_secure,
+    }
+    hmac_ok = {
+        name: hmac.compare_digest(stored_hmacs[name], expected_hmacs[name])
+        for name in stored_hmacs
+    }
+    sector_ok = hmac.compare_digest(stored_sector, expected_sector)
+    block_ok = hmac.compare_digest(stored_block, expected_block)
+    return {
+        "secure_area_final_decrypted": final_secure_plain,
+        "sector_hashtable_ok": sector_ok,
+        "block_hashtable_ok": block_ok,
+        "hmac_ok": hmac_ok,
+        "all_ok": final_secure_plain and sector_ok and block_ok and all(hmac_ok.values()),
+        "arm9i_plain_size": len(arm9i_plain),
+        "arm9i_plain_sha256": hashlib.sha256(arm9i_plain).hexdigest(),
+        "arm7i_plain_size": len(arm7i_plain),
+        "arm7i_plain_sha256": hashlib.sha256(arm7i_plain).hexdigest(),
+    }

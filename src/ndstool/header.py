@@ -1,13 +1,14 @@
 # src/ndstool/header.py
 """
-NDS ROM Header (0x200 字节) 解析与生成。
+NDS ROM 基础 Header（0x180 字节）解析与生成。
 
-参考实现：reference/dearlystars_tool/ndstool/src/header.rs
+参考实现：dearlystars_tool (Rust) ndstool/header.rs
 
-字段布局严格对齐 Rust 的 DsHeader 结构体，并在末尾追加 0x80 字节的
-debug/reserved 区以保留完整的 0x200 字节 Header。
+字段布局严格对齐 Rust 的 ``DsHeader`` 结构体。DSi ROM 从绝对偏移
+``0x180`` 起紧接 ``DsiExtraFields``（0xE80 字节），两者共同组成
+0x1000 字节的 TWL Header；因此绝不能把 0x180~0x1FF 当成 NTR 保留区。
 
-DSi 增强字段 (DsiExtraFields) 见 dsi_builder.py。
+DSi 增强字段见 :mod:`dsi_builder`。
 """
 from __future__ import annotations
 
@@ -17,8 +18,8 @@ from typing import Any
 
 from .crc import crc16_header, crc16_logo, verify_header_crc
 
-HEADER_SIZE = 0x200
-"""NDS Header 标准长度（NTR 模式）。"""
+HEADER_SIZE = 0x180
+"""``DsHeader`` 的精确长度；DSi 扩展从 ROM 绝对偏移 0x180 开始。"""
 
 TITLE_LEN = 0x0C
 GAMECODE_LEN = 0x04
@@ -33,7 +34,7 @@ DEBUG_ZERO_LEN = 0x10
 @dataclass
 class NDSHeader:
     """
-    NDS ROM Header (0x200 字节，NTR 模式)。
+    NDS ROM 基础 Header（0x180 字节）。
 
     字段命名与偏移严格对齐 faraplay/ndstool 的 DsHeader 结构体。
     所有数值字段使用 int，字节数组字段使用 bytes（不可变）或 bytearray（可变）。
@@ -103,9 +104,6 @@ class NDSHeader:
     offset_0x16c: int = 0                               # 0x16C  Unknown (offset 0x16C)
     zero: bytes = b"\x00" * DEBUG_ZERO_LEN              # 0x170  Zero padding (16B)
 
-    # 0x180 - 0x1FF：保留区（不在 Rust 结构体中，但 NDS Header 总长 0x200）
-    debug_reserved: bytes = b"\x00" * (HEADER_SIZE - 0x180)  # 0x180  Debug Reserved (0x80B)
-
     def __post_init__(self) -> None:
         """构造后校验所有字节数组字段的长度。"""
         self._validate_bytes("title", TITLE_LEN)
@@ -116,11 +114,6 @@ class NDSHeader:
         self._validate_bytes("reserved_b", RESERVED_B_LEN)
         self._validate_bytes("logo", LOGO_LEN)
         self._validate_bytes("zero", DEBUG_ZERO_LEN)
-        expected_debug = HEADER_SIZE - 0x180
-        if len(self.debug_reserved) != expected_debug:
-            raise ValueError(
-                f"debug_reserved 长度错误：期望 {expected_debug}，实际 {len(self.debug_reserved)}"
-            )
 
     def _validate_bytes(self, name: str, expected_len: int) -> None:
         v = getattr(self, name)
@@ -140,7 +133,7 @@ class NDSHeader:
             raise ValueError(
                 f"Header 数据过短：{len(data)} < 0x{HEADER_SIZE:X}"
             )
-        # 仅消费前 0x200 字节
+        # 仅消费基础 Header；0x180 起属于 DSiExtraFields。
         d = bytes(data[:HEADER_SIZE])
         return cls(
             title=d[0x000:0x00C],
@@ -193,12 +186,11 @@ class NDSHeader:
             debug_ram_address=struct.unpack_from("<I", d, 0x168)[0],
             offset_0x16c=struct.unpack_from("<I", d, 0x16C)[0],
             zero=d[0x170:0x180],
-            debug_reserved=d[0x180:HEADER_SIZE],
         )
 
     def build(self, update_crc: bool = True) -> bytes:
         """
-        将 Header 序列化为 0x200 字节 bytes。
+        将基础 Header 序列化为 0x180 字节 bytes。
 
         Args:
             update_crc: 是否在序列化前重新计算 logo_crc (0x15C) 与 header_crc (0x15E)。
@@ -217,7 +209,7 @@ class NDSHeader:
         return self._build_no_crc()
 
     def _build_no_crc(self) -> bytes:
-        """内部：序列化 0x200 字节，但不重新计算 CRC。"""
+        """内部：序列化 0x180 字节，但不重新计算 CRC。"""
         out = bytearray(HEADER_SIZE)
         out[0x000:0x00C] = self.title
         out[0x00C:0x010] = self.gamecode
@@ -269,7 +261,6 @@ class NDSHeader:
         struct.pack_into("<I", out, 0x168, self.debug_ram_address & 0xFFFFFFFF)
         struct.pack_into("<I", out, 0x16C, self.offset_0x16c & 0xFFFFFFFF)
         out[0x170:0x180] = self.zero
-        out[0x180:HEADER_SIZE] = self.debug_reserved
         return bytes(out)
 
     # ------------------------------------------------------------------
@@ -339,5 +330,5 @@ def parse_header(data: bytes | bytearray) -> NDSHeader:
 
 
 def build_header(header: NDSHeader, update_crc: bool = True) -> bytes:
-    """便捷函数：将 NDSHeader 序列化为 0x200 字节 bytes。"""
+    """便捷函数：将 NDSHeader 序列化为 0x180 字节 bytes。"""
     return header.build(update_crc=update_crc)

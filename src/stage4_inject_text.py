@@ -17,7 +17,7 @@ from config import (
     EXTRACT_DIR, PATCHED_DIR,
     EXCEL_SCN, EXCEL_TBL, EXCEL_ARM9,
     CSV_SCN_DIR, CSV_TBL_DIR, CSV_ARM9_FILE,
-    MAPPING_FILE, EMPTY_MARKERS
+    MAPPING_FILE, EMPTY_MARKERS,
 )
 from src.utils.text_encoder import load_mapping, text_to_bytes
 from src.io.csv_handler import (
@@ -32,22 +32,22 @@ from src.utils.bbq_mail import rebuild_mail_bbq
 def rebuild_bbq_file(src_path: str | Path, dst_path: str | Path,
                      translations: dict[int, str], char_map: dict[str, int]) -> None:
     shutil.copy2(src_path, dst_path)
-    
-    if not translations: 
+
+    if not translations:
         return
 
     with open(dst_path, 'rb+') as f:
         f.seek(0, 2)
         if f.tell() < 32: return
         f.seek(0)
-        
-        if f.read(4) != b'\x2E\x42\x42\x51': 
+
+        if f.read(4) != b'\x2E\x42\x42\x51':
             return
 
         f.seek(16)
         header_size = struct.unpack('<I', f.read(4))[0]
         num_sec = struct.unpack('<I', f.read(4))[0]
-        
+
         f.seek(header_size)
         sec7_info = None
         for i in range(num_sec):
@@ -58,26 +58,26 @@ def rebuild_bbq_file(src_path: str | Path, dst_path: str | Path,
                 vals = struct.unpack('<4I', f.read(16))
                 sec7_info = {'entry_pos': entry_pos, 'values': vals}
                 break
-        
-        if not sec7_info: return 
+
+        if not sec7_info: return
 
         entry_pos = sec7_info['entry_pos']
         ptr_tbl_rel = sec7_info['values'][0]
         num_str = sec7_info['values'][1]
         pool_rel = sec7_info['values'][2]
-        
+
         ptr_tbl_abs = entry_pos + ptr_tbl_rel
         pool_abs = entry_pos + pool_rel
-        
+
         f.seek(ptr_tbl_abs)
         old_pointers = list(struct.unpack(f'<{num_str}I', f.read(num_str * 4)))
 
         new_pool_data = bytearray()
         new_pointers =[]
-        
+
         for i in range(num_str):
-            new_pointers.append(len(new_pool_data)) 
-            
+            new_pointers.append(len(new_pool_data))
+
             if i in translations:
                 # text_to_bytes 已经自带 \x00
                 new_pool_data.extend(text_to_bytes(translations[i], char_map))
@@ -89,24 +89,20 @@ def rebuild_bbq_file(src_path: str | Path, dst_path: str | Path,
                     raw.extend(b)
                     if b == b'\x00': break
                 new_pool_data.extend(raw)
-        
-        while len(new_pool_data) % 4 != 0: 
+
+        while len(new_pool_data) % 4 != 0:
             new_pool_data.append(0)
 
-        # =======================================================
-        # 【核心优化：原地顶替与精准截断】
-        # =======================================================
         # 1. 回写最新的指针表
         f.seek(ptr_tbl_abs)
         for p in new_pointers:
             f.write(struct.pack('<I', p))
-            
-        # 2. 定位到原始的日文文本池起始地址，直接覆盖！
+
+        # 2. 定位到原始的日文文本池起始地址，直接覆盖
         f.seek(pool_abs)
         f.write(new_pool_data)
-        
-        # 3. 截断文件：把后面多余的（或者之前残留的）旧数据统统砍掉！
-        # 这一刀下去，文件彻底瘦身，再长的文本也不会导致冗余体积。
+
+        # 3. 截断文件
         f.truncate()
 
 def process_bbq_directory(translation_path: str | Path, input_subfolder: str,
@@ -212,6 +208,11 @@ def process_bbq_directory(translation_path: str | Path, input_subfolder: str,
     for root, _, files in os.walk(src_dir):
         for file in files:
             if file.lower().endswith(('.bin', '.bbq')):
+                # 跳过歌词课 BBQ：已由 Stage 3.5 (lesvoice.inject_bbq_chinese)
+                # 注入并部署到 TBL_CHS_PATCHED/，此处不覆盖
+                if "LESVOICETABLE" in file.upper():
+                    continue
+
                 src_path = os.path.join(root, file)
                 dst_path = os.path.join(dst_dir, file)
 
@@ -221,11 +222,10 @@ def process_bbq_directory(translation_path: str | Path, input_subfolder: str,
                         mail1, mail2, mail_translated, reply_translated = mail_db[file]
                         if not mail_translated and not reply_translated:
                             # 未翻译：直接复制原文件，保留原始 Shift-JIS 字节
-                            # （避免 char_map 重映射改变未翻译文本的字节）
                             shutil.copy2(src_path, dst_path)
                         else:
                             # 有翻译：用 rebuild_mail_bbq 重建 Type2/5/6/7
-                            # 传 char_map 用 text_to_bytes 编码，支持中文译文
+                            # 邮件使用普通 font_mapping.json，不使用歌词私有码
                             rebuild_mail_bbq(src_path, dst_path, mail1, mail2, char_map)
                         success_count += 1
                     else:
@@ -247,9 +247,14 @@ def process_arm9_overlays(translation_path: str | Path, char_map: dict[str, int]
     """
     注入 ARM9/Overlay 文本。支持 xlsx 和 csv 两种格式。
 
+    Max_Bytes 契约（参见 02_MAX_BYTES_CONTRACT.md）：
+      Max_Bytes 是从 Text_Offset 开始的整个可写槽位字节数，包含结尾 NUL。
+      注入时清空范围严格为 Max_Bytes，不能再 +1。
+      写入前必须验证原槽位在第一个 NUL 之后只有 0x00。
+
     Args:
         translation_path: xlsx 文件路径 或 csv 文件路径
-        char_map:         字符映射表
+        char_map:         字符映射表（普通 font_mapping.json）
     """
     from pathlib import Path
 
@@ -290,13 +295,23 @@ def process_arm9_overlays(translation_path: str | Path, char_map: dict[str, int]
         print("  ⚠️ 警告: 未找到 Extracted/ARM9 目录。")
         return
 
+    # Stage 3.5 已部署 overlay_0006 和 y9 到 PRG_CHS_PATCHED/
+    # Stage 4 不能从原始 Extracted/ARM9 覆盖它们
+    # arm9.bin 不受保护：Stage 4 从原始 ARM9 复制并注入文本，
+    # Stage 5 负责应用四点歌词补丁
+    LYRIC_PROTECTED_FILES = {"overlay_0006.bin", "y9.bin"}
+
     for fname in os.listdir(src_arm9_dir):
         name_lower = fname.lower()
-        if name_lower == 'arm9.bin' or (name_lower.startswith('overlay') and name_lower.endswith('.bin')):
+        if name_lower == 'arm9.bin' or (name_lower.startswith('overlay') and name_lower.endswith('.bin')) or name_lower == 'y9.bin':
+            if name_lower in LYRIC_PROTECTED_FILES and (dst_dir / fname).exists():
+                print(f"  🔒 保留 Stage 3.5 补丁: {fname} (不覆盖)")
+                continue
             shutil.copy2(src_arm9_dir / fname, dst_dir / fname)
 
     total_success = 0
     total_overflow = 0
+    total_rejected = 0
 
     for filename, group_items in grouped.items():
         dst_path = dst_dir / filename
@@ -310,69 +325,113 @@ def process_arm9_overlays(translation_path: str | Path, char_map: dict[str, int]
         else:
             rows_list = group_items
 
-        with open(dst_path, 'rb+') as f:
-            for row in rows_list:
+        # ===========================================================
+        # 原子写入：先在内存中收集所有修改，全部验证通过后再写盘
+        # 任一行失败时，不留下半汉化文件
+        # ===========================================================
+        source_data = bytearray(dst_path.read_bytes())
+        patched_data = bytearray(source_data)  # 内存副本
+        file_success = 0
+        file_failures: list[str] = []
+
+        # 记录已使用的偏移区间，检测重叠
+        used_ranges: list[tuple[int, int]] = []
+
+        for row in rows_list:
+            try:
+                offset_str = str(row.get('Text_Offset', ''))
+                offset = int(offset_str, 16)
+
+                # Max_Bytes = 整个可写槽位字节数（包含 NUL）
+                max_bytes_raw = row.get('Max_Bytes', '')
                 try:
-                    offset_str = str(row.get('Text_Offset', ''))
-                    offset = int(offset_str, 16)
-
-                    # P2-6: 使用 CSV/xlsx 的 Max_Bytes 列作为可用空间（与 faraplay 一致）
-                    # Max_Bytes = 原文字符串长度（不含 NUL 终止符），由 stage2_export_arm9 导出
-                    max_bytes_raw = row.get('Max_Bytes', '')
-                    try:
-                        max_bytes = int(max_bytes_raw)
-                    except (ValueError, TypeError):
-                        # Max_Bytes 缺失或无效（如旧 xlsx），回退到扫描二进制获取原文字符串长度
-                        f.seek(offset)
-                        scan_len = 0
-                        while True:
-                            b = f.read(1)
-                            if b == b'\x00' or b == b'':
-                                break
-                            scan_len += 1
-                        max_bytes = scan_len
-
-                    if max_bytes <= 0:
+                    max_bytes = int(max_bytes_raw)
+                except (ValueError, TypeError):
+                    # Max_Bytes 缺失或无效：扫描二进制获取 NUL 前的长度
+                    # 这代表旧格式（不含 NUL），需要 +1 得到槽位大小
+                    nul_pos = source_data.find(b'\x00', offset)
+                    if nul_pos < 0:
+                        file_failures.append(f"  0x{offset:X}: Max_Bytes 缺失且找不到 NUL")
                         continue
+                    payload_len = nul_pos - offset
+                    max_bytes = payload_len + 1  # 包含 NUL
 
-                    trans_text = str(row.get('Translated_Text', ''))
-                    if not trans_text.strip():
+                if max_bytes <= 0:
+                    continue
+
+                # 边界检查
+                if offset < 0 or offset + max_bytes > len(source_data):
+                    file_failures.append(f"  0x{offset:X}: 槽位越界 (offset+{max_bytes} > {len(source_data)})")
+                    continue
+
+                # 区间重叠检查
+                new_range = (offset, offset + max_bytes)
+                for prev_start, prev_end in used_ranges:
+                    if offset < prev_end and prev_start < offset + max_bytes:
+                        file_failures.append(f"  0x{offset:X}: 槽位与 0x{prev_start:X} 重叠")
                         continue
+                used_ranges.append(new_range)
 
-                    # text_to_bytes 返回的字节流已含 NUL 终止符
-                    new_bytes = text_to_bytes(trans_text, char_map)
+                # 预检：原槽位在第一个 NUL 之后必须全是 0x00
+                original_span = bytes(source_data[offset:offset + max_bytes])
+                nul_index = original_span.find(b'\x00')
+                if nul_index < 0:
+                    # 槽位内没有 NUL → 可能是旧格式 Max_Bytes 不含 NUL
+                    # 检查下一个字节是否是 NUL
+                    if offset + max_bytes < len(source_data) and source_data[offset + max_bytes] == 0:
+                        file_failures.append(
+                            f"  0x{offset:X}: Max_Bytes={max_bytes} 不含 NUL（旧格式），"
+                            f"请重新导出或迁移表格")
+                    else:
+                        file_failures.append(f"  0x{offset:X}: 槽位内没有 NUL")
+                    continue
+                if any(original_span[nul_index + 1:]):
+                    file_failures.append(
+                        f"  0x{offset:X}: 第一个 NUL 后存在非零数据，"
+                        f"Max_Bytes={max_bytes} 会覆盖相邻结构")
+                    continue
 
-                    # 溢出检查：译文+NUL 必须容纳在 ROM 中原文所占空间内
-                    # Max_Bytes = 原文字符串长度（不含 NUL 终止符）
-                    # ROM 中原文占 max_bytes + 1 字节（含 NUL），即可用空间 = max_bytes + 1
-                    # text_to_bytes 返回值已含 NUL，故判断 len(new_bytes) > max_bytes + 1
-                    # 旧代码用 len(new_bytes) > max_bytes，导致译文与原文等长时误报溢出
-                    # （例如 "作詞：？？？"→"作词：？？？" 原文 12B+NUL，译文也 12B+NUL，
-                    #   旧判断 13 > 12 = True 错误跳过，正确判断 13 > 13 = False 允许注入）
-                    if len(new_bytes) > max_bytes + 1:
-                        print(f"  ⚠️[溢出跳过] {filename} @ {offset_str}")
-                        print(f"     原文: {row.get('Original_Text', '')}")
-                        print(f"     译文: {trans_text}")
-                        print(f"     ❌ 译文所需 {len(new_bytes)} 字节 > 可用空间 {max_bytes + 1} 字节\n")
-                        total_overflow += 1
-                        continue
+                trans_text = str(row.get('Translated_Text', ''))
+                if not trans_text.strip():
+                    continue
 
-                    # 先清空再写入（与 faraplay arm9overlay.rs 一致）：
-                    # 1. 写入 max_bytes+1 个 0（含 NUL 位置），确保旧数据完全清除
-                    # 2. 再写入译文字节（含 NUL），剩余位置保持为 0
-                    f.seek(offset)
-                    f.write(b'\x00' * (max_bytes + 1))
-                    f.seek(offset)
-                    f.write(new_bytes)
+                # text_to_bytes 返回的字节流已含 NUL 终止符
+                new_bytes = text_to_bytes(trans_text, char_map)
 
-                    total_success += 1
+                # 溢出检查：译文（含 NUL）必须 <= Max_Bytes
+                if len(new_bytes) > max_bytes:
+                    print(f"  ⚠️[溢出跳过] {filename} @ {offset_str}")
+                    print(f"     原文: {row.get('Original_Text', '')}")
+                    print(f"     译文: {trans_text}")
+                    print(f"     ❌ 译文所需 {len(new_bytes)} 字节 > 可用空间 {max_bytes} 字节\n")
+                    total_overflow += 1
+                    continue
 
-                except Exception as e:
-                    print(f"  [错误] 注入偏移 {row.get('Text_Offset')} 时失败: {e}")
+                # 在内存副本中写入：译文 + 零填充
+                replacement = new_bytes + b'\x00' * (max_bytes - len(new_bytes))
+                patched_data[offset:offset + max_bytes] = replacement
+                file_success += 1
+
+            except Exception as e:
+                file_failures.append(f"  0x{row.get('Text_Offset', '?')}: {e}")
+
+        # 如果有任何失败，不写入该文件
+        if file_failures:
+            print(f"  ❌ {filename} 有 {len(file_failures)} 行验证失败，跳过整个文件：")
+            for msg in file_failures:
+                print(msg)
+            total_rejected += len(file_failures)
+            continue
+
+        # 全部验证通过，写入内存副本
+        dst_path.write_bytes(bytes(patched_data))
+        total_success += file_success
 
     print(f"  ✅ ARM9 注入完成。成功: {total_success} 条。")
     if total_overflow > 0:
         print(f"  🚨 注意: 仍有 {total_overflow} 条文本由于确实过长被跳过。")
+    if total_rejected > 0:
+        print(f"  🚫 有 {total_rejected} 行因槽位验证失败被拒绝（未写入任何文件）。")
 
 # ===================================================================
 #  主流程入口
@@ -404,11 +463,16 @@ def main() -> None:
         tbl_path = EXCEL_TBL
         arm9_path = EXCEL_ARM9
 
+    # 所有文本统一使用 font_mapping.json（普通 NFTR 映射）
+    # ARM9、存档、邮件、LETTER 都走 Overlay 4/5 + LC10/LC12 NFTR 字体
+    # 只有 LESVOICETABLE 歌词课 Sprite 文本才使用 font_mapping_lesvoice.json（由 Stage 3.5 处理）
     process_bbq_directory(scn_path, "SCN", "SCN_CHS_PATCHED", char_map)
     process_bbq_directory(tbl_path, "TBL", "TBL_CHS_PATCHED", char_map)
     process_arm9_overlays(arm9_path, char_map)
 
     print("\n🎉 Stage 4 注入阶段全部完成！")
+    print("  📜 SCN/TBL/ARM9：统一使用 font_mapping.json (NFTR)")
+
 
 if __name__ == "__main__":
     main()

@@ -3,9 +3,9 @@
 CSV 翻译表读写引擎，兼容 faraplay v0.5.2 列格式。
 
 参考实现：
-    - reference/dearlystars_tool/dearlystars/src/csv.rs (RFC 4180 解析)
-    - reference/dearlystars_tool/dearlystars/src/bbq.rs (BBQ CSV 列格式)
-    - reference/dearlystars_tool/dearlystars/src/arm9overlay.rs (ARM9 CSV 列格式)
+    - dearlystars_tool (Rust) csv.rs (RFC 4180 解析)
+    - dearlystars_tool (Rust) bbq.rs (BBQ CSV 列格式)
+    - dearlystars_tool (Rust) arm9overlay.rs (ARM9 CSV 列格式)
 
 ## CSV 列格式
 

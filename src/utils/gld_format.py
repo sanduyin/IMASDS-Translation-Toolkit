@@ -2,7 +2,7 @@
 """
 GLD 图像封包格式的完整解析与重建引擎。
 
-参考实现：reference/dearlystars_tool/dearlystars/src/gld.rs
+参考实现：dearlystars_tool (Rust) gld.rs
 
 ## GLD 文件结构
 

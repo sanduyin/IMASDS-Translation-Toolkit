@@ -1,6 +1,6 @@
 """NCER (Cell Resource) 解析与 OAM 解码工具。
 
-参考实现：reference/NitroPaint/NitroPaint/ncer.c (CellReadNcer)
+参考实现：NitroPaint (C) ncer.c (CellReadNcer)
 GBATEK: https://problemkaputt.de/gbatek.htm#ds2dnitrocellresourcencer
 
 NCER 文件结构（NDS Nitro 标准容器）：

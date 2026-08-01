@@ -7,6 +7,8 @@ import struct
 from pathlib import Path
 from typing import cast
 
+from PIL import Image
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import EXTRACT_DIR, PATCHED_DIR
 from src.stage2_export_bg import parse_nds_container, parse_ncgr, parse_nclr, parse_nscr, find_bg_triplets
@@ -40,6 +42,19 @@ def read_bmp_bpp(bmp_path: Path) -> int:
         f.seek(0x1C)
         bpp = struct.unpack('<H', f.read(2))[0]
     return int(bpp)
+
+def read_png_rgb(png_path: Path) -> tuple[int, int, bytes]:
+    """读取 PNG 文件，返回 (width, height, rgb_data)。
+
+    rgb_data 每像素 3 字节 (R, G, B)，按行从上到下排列。
+    支持 RGB / RGBA / 索引色 PNG，统一转换为 RGB 输出。
+    32bpp RGBA 模式会丢弃 alpha 通道。
+    """
+    with Image.open(png_path) as img:
+        img = img.convert('RGB')
+        width, height = img.size
+        rgb_data = img.tobytes()
+    return width, height, rgb_data
 
 def read_bmp_rgb(bmp_path: Path) -> tuple[int, int, bytes]:
     """读取 24bpp 或 32bpp RGB BMP，返回 (width, height, rgb_data)。
@@ -299,7 +314,7 @@ def rebuild_nds_container(original_data: bytes, section_magic_list: list[str], n
     return bytes(result)
 
 def import_bg_triplet(
-    bmp_path: Path,
+    img_path: Path,
     ncgr_path: Path,
     nclr_path: Path,
     nscr_path: Path,
@@ -309,26 +324,23 @@ def import_bg_triplet(
 ) -> None:
     nclr_data, ncgr_data, nscr_data = nclr_path.read_bytes(), ncgr_path.read_bytes(), nscr_path.read_bytes()
     tiles_original, bpp, _, _ = parse_ncgr(ncgr_data)
-    # P3-3 修复：使用 NSCR 的 map_w_tiles/map_h_tiles，而非 BMP 宽度//8
+    # P3-3 修复：使用 NSCR 的 map_w_tiles/map_h_tiles，而非图像宽度//8
     entries, map_w_tiles, map_h_tiles, _, _ = parse_nscr(nscr_data)
 
-    # 选项 B：根据 BMP 位深度分派
-    #   - 8bpp：原逻辑，用 BMP 自带调色板覆盖 NCLR
-    #   - 24/32bpp RGB：用原 NCLR 调色板做最近色匹配生成索引，NCLR 保持不变
-    #     （PS 编辑 RGB BMP 时只能改像素，调色板由原 NCLR 决定）
-    #   - 4bpp RGB：用 extract_tiles_from_bmp_rgb 在子调色板内匹配（避免全局匹配
-    #     选错子调色板导致 & 0x0F 截断后 raw_idx 错误）
-    #   - 8bpp RGB：用 rgb_to_indexed 全局匹配（8bpp 无子调色板，全局匹配正确）
-    bmp_bpp = read_bmp_bpp(bmp_path)
-    if bmp_bpp == 8:
-        width, height, pixel_data, raw_palette = read_bmp_8bpp(bmp_path)
-        nds_palette: bytes | None = bmp_palette_to_nds(raw_palette)
-        new_tiles = extract_tiles_from_bmp(pixel_data, width, height, entries,
-                                           map_w_tiles, map_h_tiles, len(tiles_original), bpp)
-    elif bmp_bpp in (24, 32):
-        width, height, rgb_data = read_bmp_rgb(bmp_path)
+    # 根据图像格式分派：
+    #   PNG（RGB）：用原 NCLR 调色板做最近色匹配生成索引，NCLR 保持不变
+    #     （PS 编辑 PNG 时只能改像素，调色板由原 NCLR 决定）
+    #     - 4bpp：用 extract_tiles_from_bmp_rgb 在子调色板内匹配
+    #     - 8bpp：用 rgb_to_indexed 全局匹配
+    #   BMP（向后兼容）：根据位深度分派
+    #     - 8bpp：用 BMP 自带调色板覆盖 NCLR
+    #     - 24/32bpp RGB：同 PNG 的 RGB 路径
+    is_png = img_path.suffix.lower() == '.png'
+
+    if is_png:
+        width, height, rgb_data = read_png_rgb(img_path)
         palette_rgb = parse_nclr(nclr_data)  # RGB888 列表（与 NDS 硬件 <<3 行为一致）
-        nds_palette = None  # RGB 模式保留原始 NCLR 调色板
+        nds_palette: bytes | None = None  # RGB 模式保留原始 NCLR 调色板
         if bpp == 4:
             # 4bpp：子调色板内匹配，避免跨子调色板的颜色冲突
             new_tiles = extract_tiles_from_bmp_rgb(rgb_data, width, height, entries,
@@ -340,7 +352,27 @@ def import_bg_triplet(
             new_tiles = extract_tiles_from_bmp(pixel_data, width, height, entries,
                                                map_w_tiles, map_h_tiles, len(tiles_original), bpp)
     else:
-        raise ValueError(f"不支持的 BMP 位深度: {bmp_bpp}（仅支持 8/24/32 bpp）")
+        # BMP 向后兼容路径
+        bmp_bpp = read_bmp_bpp(img_path)
+        if bmp_bpp == 8:
+            width, height, pixel_data, raw_palette = read_bmp_8bpp(img_path)
+            nds_palette = bmp_palette_to_nds(raw_palette)
+            new_tiles = extract_tiles_from_bmp(pixel_data, width, height, entries,
+                                               map_w_tiles, map_h_tiles, len(tiles_original), bpp)
+        elif bmp_bpp in (24, 32):
+            width, height, rgb_data = read_bmp_rgb(img_path)
+            palette_rgb = parse_nclr(nclr_data)
+            nds_palette = None
+            if bpp == 4:
+                new_tiles = extract_tiles_from_bmp_rgb(rgb_data, width, height, entries,
+                                                        map_w_tiles, map_h_tiles,
+                                                        len(tiles_original), palette_rgb)
+            else:
+                pixel_data = rgb_to_indexed(rgb_data, width * height, palette_rgb)
+                new_tiles = extract_tiles_from_bmp(pixel_data, width, height, entries,
+                                                   map_w_tiles, map_h_tiles, len(tiles_original), bpp)
+        else:
+            raise ValueError(f"不支持的 BMP 位深度: {bmp_bpp}（仅支持 8/24/32 bpp）")
 
     new_tiles_data = encode_tiles(new_tiles, bpp)
 
@@ -388,26 +420,34 @@ def main() -> None:
     print("=" * 50)
     print(" NDS 背景图 (BG) 无损逆向回写工具")
     print("=" * 50)
-    
+
     img_dir = EXTRACT_DIR.parent / "1_Extracted_Images" / "BG"
     orig_dir = EXTRACT_DIR / "BG"
     out_dir = PATCHED_DIR / "BG_CHS_PATCHED"
-    
+
     if not img_dir.exists(): return
 
     out_dir.mkdir(parents=True, exist_ok=True)
     triplets = find_bg_triplets(orig_dir)
-    
+
     success = 0
     for ncgr, nclr, nscr, base, stem in triplets:
+        # 优先查找 PNG（新格式），回退到 BMP（向后兼容）
+        png_path = img_dir / f"{stem}.png"
         bmp_path = img_dir / f"{stem}.bmp"
-        if not bmp_path.exists(): continue
+        if png_path.exists():
+            img_path = png_path
+        elif bmp_path.exists():
+            img_path = bmp_path
+        else:
+            continue
         print(f"📥 正在回写: {stem} ...")
         try:
-            import_bg_triplet(bmp_path, ncgr, nclr, nscr, out_dir / ncgr.name, out_dir / nclr.name, out_dir / nscr.name)
+            import_bg_triplet(img_path, ncgr, nclr, nscr,
+                              out_dir / ncgr.name, out_dir / nclr.name, out_dir / nscr.name)
             success += 1
         except Exception as e: print(f"  ❌ 失败: {e}")
-            
+
     print(f"\n🎉 成功回写了 {success} 组背景图到 Patched 目录！")
 
 if __name__ == "__main__":

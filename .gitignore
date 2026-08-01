@@ -6,14 +6,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# 忽略测试覆盖率报告
-.coverage
-coverage.xml
-htmlcov/
-
-# 忽略性能基准结果（每次运行生成，不入库）
-benchmarks/results/
-
 # 忽略系统自动生成的缩略图缓存等
 .DS_Store
 Thumbs.db
@@ -31,3 +23,18 @@ _diag_*.out
 _diag_*.txt
 _scout_*.txt
 _tmp_verify/
+_tmp_*.py
+
+# 忽略源码备份文件
+*.bak_pre_blz
+*.bak_20260731_*
+
+# 忽略开发交接包（用户提供的参考资料，不入库）
+agent_guide/
+IMASDS_Agent_Development_Guide*.zip
+IMASDS_RealHardware_Boot_Guide*/
+IMASDS_Toolchain_DSi_TWL_Fix*/
+IMASDS_Toolchain_DSi_TWL_Fix*.zip
+
+# 忽略审计输出
+final_rom_audit.json

@@ -2,7 +2,7 @@
 """
 BBQ 文件格式的无损 YAML 互转引擎。
 
-参考实现：reference/dearlystars_tool/dearlystars/src/bbq.rs (+ byte_convert.rs, yaml_convert.rs)
+参考实现：dearlystars_tool (Rust) bbq.rs (+ byte_convert.rs, yaml_convert.rs)
 
 ## BBQ 文件结构
 

@@ -6,6 +6,8 @@ import sys
 import struct
 from pathlib import Path
 
+from PIL import Image
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import EXTRACT_DIR
 
@@ -131,7 +133,11 @@ def parse_nscr(nscr_data: bytes) -> tuple[list[tuple[int, bool, bool, int]], int
 
 def compose_bg_image(tiles: list[list[int]], bpp: int, palette_colors: list[tuple[int, int, int]],
                      map_entries: list[tuple[int, bool, bool, int]],
-                     map_w_tiles: int, map_h_tiles: int) -> tuple[bytes, bytes]:
+                     map_w_tiles: int, map_h_tiles: int) -> tuple[bytes, list[tuple[int, int, int]]]:
+    """合成 BG 图像，返回 (8bpp 索引像素, RGB 调色板列表)。
+
+    像素数据每字节为调色板索引；调色板为 RGB888 列表（与 NDS 硬件 <<3 行为一致）。
+    """
     width, height = map_w_tiles * 8, map_h_tiles * 8
     pixels = bytearray(width * height)
 
@@ -156,39 +162,30 @@ def compose_bg_image(tiles: list[list[int]], bpp: int, palette_colors: list[tupl
                     dst_x, dst_y = col * 8 + px, row * 8 + py
                     pixels[dst_y * width + dst_x] = final_idx
 
-    bmp_palette = bytearray()
-    for (r, g, b) in palette_colors[:256]:
-        bmp_palette.extend(struct.pack('BBBB', b, g, r, 0))
-    while len(bmp_palette) < 1024:
-        bmp_palette.extend(b'\x00\x00\x00\x00')
+    return bytes(pixels), palette_colors[:256]
 
-    return bytes(pixels), bytes(bmp_palette)
+def write_png_rgb(filepath: Path, width: int, height: int,
+                  pixel_data: bytes, palette_colors: list[tuple[int, int, int]]) -> None:
+    """将 8bpp 索引像素 + RGB 调色板写成 RGB PNG。
 
-def write_bmp_8bpp(filepath: Path, width: int, height: int, pixel_data: bytes, palette_data: bytes) -> None:
-    row_padding = (4 - (width % 4)) % 4
-    bmp_row_size = width + row_padding
-    image_data_size = bmp_row_size * height
-    total_size = 54 + 1024 + image_data_size
-
-    with open(filepath, 'wb') as out:
-        out.write(b'BM')
-        out.write(struct.pack('<I', total_size))
-        out.write(b'\x00\x00\x00\x00')
-        out.write(struct.pack('<I', 54 + 1024))
-        out.write(struct.pack('<I', 40))
-        out.write(struct.pack('<i', width))
-        out.write(struct.pack('<i', height))
-        out.write(struct.pack('<H', 1))
-        out.write(struct.pack('<H', 8))
-        out.write(struct.pack('<I', 0))
-        out.write(struct.pack('<I', image_data_size))
-        out.write(struct.pack('<I', 0) * 4)
-        out.write(palette_data)
-        padding = b'\x00' * row_padding
-        for row in range(height - 1, -1, -1):
-            start = row * width
-            out.write(pixel_data[start:start + width])
-            out.write(padding)
+    Args:
+        filepath: 输出 .png 路径
+        width, height: 图像尺寸
+        pixel_data: 8bpp 索引像素数据（每像素 1 字节 = 调色板索引）
+        palette_colors: RGB888 调色板列表（与 NDS 硬件 <<3 行为一致）
+    """
+    # 索引像素 → RGB 像素
+    rgb_data = bytearray(width * height * 3)
+    for i, idx in enumerate(pixel_data):
+        if idx < len(palette_colors):
+            r, g, b = palette_colors[idx]
+        else:
+            r, g, b = 0, 0, 0
+        rgb_data[i*3] = r
+        rgb_data[i*3+1] = g
+        rgb_data[i*3+2] = b
+    img = Image.frombytes('RGB', (width, height), bytes(rgb_data))
+    img.save(filepath, 'PNG')
 
 def find_bg_triplets(input_dir: Path) -> list[tuple[Path, Path, Path, str, str]]:
     def strip_prefix(stem: str) -> str:
@@ -218,8 +215,8 @@ def main() -> None:
             palette_colors = parse_nclr(nclr_data)
             tiles, bpp, _, _ = parse_ncgr(ncgr_data)
             entries, map_w, map_h, w_px, h_px = parse_nscr(nscr_data)
-            pixel_data, bmp_palette = compose_bg_image(tiles, bpp, palette_colors, entries, map_w, map_h)
-            write_bmp_8bpp(output_dir / f"{stem}.bmp", w_px, h_px, pixel_data, bmp_palette)
+            pixel_data, palette = compose_bg_image(tiles, bpp, palette_colors, entries, map_w, map_h)
+            write_png_rgb(output_dir / f"{stem}.png", w_px, h_px, pixel_data, palette)
         except Exception as e: print(f"   ❌ {stem}: {e}")
     print(f"   ✅ BG 导出完毕。")
 

@@ -122,7 +122,10 @@ def scan_prg_file(file_path: Path, filename: str, base_addr: int) -> list[dict[s
                 'Text_Offset': f"0x{start_offset:X}",
                 'RAM_Address': f"0x{(base_addr + start_offset):08X}",
                 'Pointer_Locs': "", # 程序段文本通常靠基址计算，这里留空以适应格式
-                'Max_Bytes': len(raw_bytes),
+                # Max_Bytes 契约：包含 NUL 终止符的整个可写槽位字节数。
+                # 旧导出器只写 len(raw_bytes)（不含 NUL），导致 stage4_inject_text
+                # 注入时若按槽位容量清空，会多清 1 字节破坏相邻结构数据。
+                'Max_Bytes': len(raw_bytes) + 1,
                 'Index': len(entries),
                 'Type': "程序硬编码"
             })

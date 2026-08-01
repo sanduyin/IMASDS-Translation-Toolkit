@@ -2,7 +2,7 @@
 """
 BLZ (Backward LZ77) 压缩/解压算法。
 
-参考实现：reference/dearlystars_tool/ndstool/src/blz.rs
+参考实现：dearlystars_tool (Rust) ndstool/blz.rs
 
 BLZ 是 NDS 用于 ARM9/Overlay 的 LZ77 变体：
     - 数据从尾部向头部反向压缩

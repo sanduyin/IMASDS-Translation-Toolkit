@@ -1,0 +1,1617 @@
+译文中使用 SJIS 区编码(非私有码位)的汉字 (1614 个):
+这些汉字在 overlay6 charmap 表中找不到对应条目, 会导致渲染失败!
+
+一	U+4E00	主编码=0x88EA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF040(private区)
+丁	U+4E01	主编码=0x929A(SJIS区)	歌词charmap中是否有字符=False	
+七	U+4E03	主编码=0x8EB5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF041(private区)
+万	U+4E07	主编码=0xE4DD(SJIS区)	歌词charmap中是否有字符=False	
+三	U+4E09	主编码=0x8E4F(SJIS区)	歌词charmap中是否有字符=False	
+上	U+4E0A	主编码=0x8FE3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF042(private区)
+下	U+4E0B	主编码=0x89BA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF043(private区)
+不	U+4E0D	主编码=0x9573(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF044(private区)
+与	U+4E0E	主编码=0xE46F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF045(private区)
+专	U+4E13	主编码=0x9B93(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF046(private区)
+且	U+4E14	主编码=0x8A8E(SJIS区)	歌词charmap中是否有字符=False	
+世	U+4E16	主编码=0x90A2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF047(private区)
+业	U+4E1A	主编码=0x8BC6(SJIS区)	歌词charmap中是否有字符=False	
+丛	U+4E1B	主编码=0x9170(SJIS区)	歌词charmap中是否有字符=False	
+东	U+4E1C	主编码=0x938C(SJIS区)	歌词charmap中是否有字符=False	
+丝	U+4E1D	主编码=0xE34E(SJIS区)	歌词charmap中是否有字符=False	
+两	U+4E24	主编码=0x995F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF048(private区)
+严	U+4E25	主编码=0x9A8E(SJIS区)	歌词charmap中是否有字符=False	
+丧	U+4E27	主编码=0x9172(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF049(private区)
+个	U+4E2A	主编码=0x98A2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF04A(private区)
+中	U+4E2D	主编码=0x9286(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF04B(private区)
+临	U+4E34	主编码=0x97D5(SJIS区)	歌词charmap中是否有字符=False	
+丸	U+4E38	主编码=0x8ADB(SJIS区)	歌词charmap中是否有字符=False	
+为	U+4E3A	主编码=0xE0A8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF04C(private区)
+主	U+4E3B	主编码=0x8EE5(SJIS区)	歌词charmap中是否有字符=False	
+丽	U+4E3D	主编码=0x97ED(SJIS区)	歌词charmap中是否有字符=False	
+举	U+4E3E	主编码=0x9DA8(SJIS区)	歌词charmap中是否有字符=False	
+久	U+4E45	主编码=0x8B76(SJIS区)	歌词charmap中是否有字符=False	
+么	U+4E48	主编码=0x9BF5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF04D(private区)
+义	U+4E49	主编码=0x8B60(SJIS区)	歌词charmap中是否有字符=False	
+之	U+4E4B	主编码=0x9456(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF04E(private区)
+乎	U+4E4E	主编码=0x8CC1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF04F(private区)
+乐	U+4E50	主编码=0x8A79(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF050(private区)
+也	U+4E5F	主编码=0x96E7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF051(private区)
+习	U+4E60	主编码=0x8F4B(SJIS区)	歌词charmap中是否有字符=False	
+书	U+4E66	主编码=0x8F91(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF052(private区)
+买	U+4E70	主编码=0x9483(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF053(private区)
+乱	U+4E71	主编码=0x98AA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF054(private区)
+了	U+4E86	主编码=0x97B9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF055(private区)
+争	U+4E89	主编码=0xE0A5(SJIS区)	歌词charmap中是否有字符=False	
+事	U+4E8B	主编码=0x8E96(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF056(private区)
+二	U+4E8C	主编码=0x93F1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF057(private区)
+于	U+4E8E	主编码=0x98B0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF058(private区)
+云	U+4E91	主编码=0x895F(SJIS区)	歌词charmap中是否有字符=False	
+互	U+4E92	主编码=0x8CDD(SJIS区)	歌词charmap中是否有字符=False	
+五	U+4E94	主编码=0x8CDC(SJIS区)	歌词charmap中是否有字符=False	
+井	U+4E95	主编码=0x88E4(SJIS区)	歌词charmap中是否有字符=False	
+亚	U+4E9A	主编码=0x98B1(SJIS区)	歌词charmap中是否有字符=False	
+些	U+4E9B	主编码=0x8DB1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF059(private区)
+交	U+4EA4	主编码=0x8CF0(SJIS区)	歌词charmap中是否有字符=False	
+亦	U+4EA6	主编码=0x9692(SJIS区)	歌词charmap中是否有字符=False	
+享	U+4EAB	主编码=0x8B9D(SJIS区)	歌词charmap中是否有字符=False	
+京	U+4EAC	主编码=0x8B9E(SJIS区)	歌词charmap中是否有字符=False	
+亮	U+4EAE	主编码=0x97BA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF05A(private区)
+亲	U+4EB2	主编码=0x9065(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF05B(private区)
+人	U+4EBA	主编码=0x906C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF05C(private区)
+什	U+4EC0	主编码=0x8F59(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF05D(private区)
+仅	U+4EC5	主编码=0x8BCD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF05E(private区)
+仆	U+4EC6	主编码=0x966C(SJIS区)	歌词charmap中是否有字符=False	
+今	U+4ECA	主编码=0x8DA1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF05F(private区)
+介	U+4ECB	主编码=0x89EE(SJIS区)	歌词charmap中是否有字符=False	
+仍	U+4ECD	主编码=0x98B9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF060(private区)
+从	U+4ECE	主编码=0x9C6E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF061(private区)
+仓	U+4ED3	主编码=0x9171(SJIS区)	歌词charmap中是否有字符=False	
+他	U+4ED6	主编码=0x91BC(SJIS区)	歌词charmap中是否有字符=False	
+仙	U+4ED9	主编码=0x90E5(SJIS区)	歌词charmap中是否有字符=False	
+代	U+4EE3	主编码=0x91E3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF062(private区)
+令	U+4EE4	主编码=0x97DF(SJIS区)	歌词charmap中是否有字符=False	
+以	U+4EE5	主编码=0x88C8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF063(private区)
+仪	U+4EEA	主编码=0x8B56(SJIS区)	歌词charmap中是否有字符=False	
+们	U+4EEC	主编码=0x98EC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF064(private区)
+件	U+4EF6	主编码=0x8C8F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF065(private区)
+价	U+4EF7	主编码=0x994A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF066(private区)
+任	U+4EFB	主编码=0x9443(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF067(private区)
+份	U+4EFD	主编码=0xEA7E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF068(private区)
+仿	U+4EFF	主编码=0xEA96(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF069(private区)
+伊	U+4F0A	主编码=0x88C9(SJIS区)	歌词charmap中是否有字符=False	
+伐	U+4F10	主编码=0x94B0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF06A(private区)
+休	U+4F11	主编码=0x8B78(SJIS区)	歌词charmap中是否有字符=False	
+众	U+4F17	主编码=0x8F4F(SJIS区)	歌词charmap中是否有字符=False	
+优	U+4F18	主编码=0x9744(SJIS区)	歌词charmap中是否有字符=False	
+伙	U+4F19	主编码=0x9AEC(SJIS区)	歌词charmap中是否有字符=False	
+会	U+4F1A	主编码=0x98F0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF06B(private区)
+传	U+4F20	主编码=0x9942(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF06C(private区)
+伤	U+4F24	主编码=0x8F9D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF06D(private区)
+伴	U+4F34	主编码=0x94BA(SJIS区)	歌词charmap中是否有字符=False	
+伸	U+4F38	主编码=0x904C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF06E(private区)
+似	U+4F3C	主编码=0x8E97(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF06F(private区)
+但	U+4F46	主编码=0x9241(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF070(private区)
+位	U+4F4D	主编码=0x88CA(SJIS区)	歌词charmap中是否有字符=False	
+低	U+4F4E	主编码=0x92E1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF071(private区)
+住	U+4F4F	主编码=0x8F5A(SJIS区)	歌词charmap中是否有字符=False	
+佐	U+4F50	主编码=0x8DB2(SJIS区)	歌词charmap中是否有字符=False	
+体	U+4F53	主编码=0xE993(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF072(private区)
+何	U+4F55	主编码=0x89BD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF073(private区)
+佛	U+4F5B	主编码=0x9C69(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF074(private区)
+作	U+4F5C	主编码=0x8DEC(SJIS区)	歌词charmap中是否有字符=False	
+你	U+4F60	主编码=0xEA95(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF075(private区)
+佩	U+4F69	主编码=0x98CE(SJIS区)	歌词charmap中是否有字符=False	
+佳	U+4F73	主编码=0x89C0(SJIS区)	歌词charmap中是否有字符=False	
+使	U+4F7F	主编码=0x8E67(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF076(private区)
+例	U+4F8B	主编码=0x97E1(SJIS区)	歌词charmap中是否有字符=False	
+依	U+4F9D	主编码=0x88CB(SJIS区)	歌词charmap中是否有字符=False	
+侣	U+4FA3	主编码=0x97B5(SJIS区)	歌词charmap中是否有字符=False	
+侧	U+4FA7	主编码=0x91A4(SJIS区)	歌词charmap中是否有字符=False	
+侵	U+4FB5	主编码=0x904E(SJIS区)	歌词charmap中是否有字符=False	
+便	U+4FBF	主编码=0x95D6(SJIS区)	歌词charmap中是否有字符=False	
+促	U+4FC3	主编码=0x91A3(SJIS区)	歌词charmap中是否有字符=False	
+俏	U+4FCF	主编码=0xEA6B(SJIS区)	歌词charmap中是否有字符=False	
+保	U+4FDD	主编码=0x95DB(SJIS区)	歌词charmap中是否有字符=False	
+信	U+4FE1	主编码=0x904D(SJIS区)	歌词charmap中是否有字符=False	
+修	U+4FEE	主编码=0x8F43(SJIS区)	歌词charmap中是否有字符=False	
+俱	U+4FF1	主编码=0xE99D(SJIS区)	歌词charmap中是否有字符=False	
+倍	U+500D	主编码=0x947B(SJIS区)	歌词charmap中是否有字符=False	
+倒	U+5012	主编码=0x937C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF077(private区)
+倔	U+5014	主编码=0x98E1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF078(private区)
+候	U+5019	主编码=0x8CF3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF079(private区)
+借	U+501F	主编码=0x8ED8(SJIS区)	歌词charmap中是否有字符=False	
+倦	U+5026	主编码=0x8C91(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF07A(private区)
+值	U+503C	主编码=0xE9B3(SJIS区)	歌词charmap中是否有字符=False	
+假	U+5047	主编码=0x98EF(SJIS区)	歌词charmap中是否有字符=False	
+偏	U+504F	主编码=0x95CE(SJIS区)	歌词charmap中是否有字符=False	
+做	U+505A	主编码=0x98F4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF07B(private区)
+停	U+505C	主编码=0x92E2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF07C(private区)
+偶	U+5076	主编码=0x8BF4(SJIS区)	歌词charmap中是否有字符=False	
+偷	U+5077	主编码=0xE992(SJIS区)	歌词charmap中是否有字符=False	
+催	U+50AC	主编码=0x8DC3(SJIS区)	歌词charmap中是否有字符=False	
+傲	U+50B2	主编码=0x98FC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF07D(private区)
+傻	U+50BB	主编码=0xE9D5(SJIS区)	歌词charmap中是否有字符=False	
+像	U+50CF	主编码=0x919C(SJIS区)	歌词charmap中是否有字符=False	
+儿	U+513F	主编码=0x995A(SJIS区)	歌词charmap中是否有字符=False	
+允	U+5141	主编码=0x88F2(SJIS区)	歌词charmap中是否有字符=False	
+元	U+5143	主编码=0x8CB3(SJIS区)	歌词charmap中是否有字符=False	
+充	U+5145	主编码=0x8F5B(SJIS区)	歌词charmap中是否有字符=False	
+先	U+5148	主编码=0x90E6(SJIS区)	歌词charmap中是否有字符=False	
+光	U+5149	主编码=0x8CF5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF07E(private区)
+免	U+514D	主编码=0x96C6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF080(private区)
+兔	U+5154	主编码=0x995C(SJIS区)	歌词charmap中是否有字符=False	
+入	U+5165	主编码=0x93FC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF081(private区)
+全	U+5168	主编码=0x9153(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF082(private区)
+八	U+516B	主编码=0x94AA(SJIS区)	歌词charmap中是否有字符=False	
+公	U+516C	主编码=0x8CF6(SJIS区)	歌词charmap中是否有字符=False	
+共	U+5171	主编码=0x8BA4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF083(private区)
+关	U+5173	主编码=0xE890(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF084(private区)
+兴	U+5174	主编码=0x8BBB(SJIS区)	歌词charmap中是否有字符=False	
+兵	U+5175	主编码=0x95BA(SJIS区)	歌词charmap中是否有字符=False	
+其	U+5176	主编码=0x91B4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF085(private区)
+具	U+5177	主编码=0x8BEF(SJIS区)	歌词charmap中是否有字符=False	
+养	U+517B	主编码=0x977B(SJIS区)	歌词charmap中是否有字符=False	
+冀	U+5180	主编码=0x9962(SJIS区)	歌词charmap中是否有字符=False	
+内	U+5185	主编码=0x93E0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF086(private区)
+冈	U+5188	主编码=0x89AA(SJIS区)	歌词charmap中是否有字符=False	
+册	U+518C	主编码=0x9965(SJIS区)	歌词charmap中是否有字符=False	
+再	U+518D	主编码=0x8DC4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF087(private区)
+写	U+5199	主编码=0x9B8D(SJIS区)	歌词charmap中是否有字符=False	
+军	U+519B	主编码=0x8C52(SJIS区)	歌词charmap中是否有字符=False	
+冲	U+51B2	主编码=0x9974(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF088(private区)
+决	U+51B3	主编码=0x9972(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF089(private区)
+况	U+51B5	主编码=0x9976(SJIS区)	歌词charmap中是否有字符=False	
+冷	U+51B7	主编码=0x97E2(SJIS区)	歌词charmap中是否有字符=False	
+准	U+51C6	主编码=0x8F79(SJIS区)	歌词charmap中是否有字符=False	
+凉	U+51C9	主编码=0x9979(SJIS区)	歌词charmap中是否有字符=False	
+减	U+51CF	主编码=0x8CB8(SJIS区)	歌词charmap中是否有字符=False	
+凑	U+51D1	主编码=0x96A9(SJIS区)	歌词charmap中是否有字符=False	
+几	U+51E0	主编码=0x997B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF08A(private区)
+凡	U+51E1	主编码=0x967D(SJIS区)	歌词charmap中是否有字符=False	
+凭	U+51ED	主编码=0x997E(SJIS区)	歌词charmap中是否有字符=False	
+出	U+51FA	主编码=0xEA91(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF08B(private区)
+击	U+51FB	主编码=0x8C82(SJIS区)	歌词charmap中是否有字符=False	
+函	U+51FD	主编码=0x949F(SJIS区)	歌词charmap中是否有字符=False	
+刁	U+5201	主编码=0xE988(SJIS区)	歌词charmap中是否有字符=False	
+分	U+5206	主编码=0x95AA(SJIS区)	歌词charmap中是否有字符=False	
+切	U+5207	主编码=0x90D8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF08C(private区)
+划	U+5212	主编码=0x8A63(SJIS区)	歌词charmap中是否有字符=False	
+列	U+5217	主编码=0x97F1(SJIS区)	歌词charmap中是否有字符=False	
+则	U+5219	主编码=0x91A5(SJIS区)	歌词charmap中是否有字符=False	
+刚	U+521A	主编码=0x8D84(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF08D(private区)
+创	U+521B	主编码=0x916E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF08E(private区)
+初	U+521D	主编码=0x8F89(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF08F(private区)
+利	U+5229	主编码=0x9798(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF090(private区)
+别	U+522B	主编码=0x95CA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF091(private区)
+到	U+5230	主编码=0x939E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF092(private区)
+制	U+5236	主编码=0x90BB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF093(private区)
+刺	U+523A	主编码=0x8E68(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF094(private区)
+刻	U+523B	主编码=0x8D8F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF095(private区)
+剂	U+5242	主编码=0x999D(SJIS区)	歌词charmap中是否有字符=False	
+前	U+524D	主编码=0x914F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF096(private区)
+剧	U+5267	主编码=0x8C80(SJIS区)	歌词charmap中是否有字符=False	
+力	U+529B	主编码=0x97CD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF097(private区)
+办	U+529E	主编码=0xE9F2(SJIS区)	歌词charmap中是否有字符=False	
+功	U+529F	主编码=0x8CF7(SJIS区)	歌词charmap中是否有字符=False	
+加	U+52A0	主编码=0x89C1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF098(private区)
+务	U+52A1	主编码=0x96B1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF099(private区)
+动	U+52A8	主编码=0x93AE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF09A(private区)
+助	U+52A9	主编码=0x8F95(SJIS区)	歌词charmap中是否有字符=False	
+努	U+52AA	主编码=0x9377(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF09B(private区)
+励	U+52B1	主编码=0x99AD(SJIS区)	歌词charmap中是否有字符=False	
+劲	U+52B2	主编码=0x99A4(SJIS区)	歌词charmap中是否有字符=False	
+劳	U+52B3	主编码=0x984A(SJIS区)	歌词charmap中是否有字符=False	
+势	U+52BF	主编码=0x90A8(SJIS区)	歌词charmap中是否有字符=False	
+勇	U+52C7	主编码=0x9745(SJIS区)	歌词charmap中是否有字符=False	
+勉	U+52C9	主编码=0x95D7(SJIS区)	歌词charmap中是否有字符=False	
+勤	U+52E4	主编码=0x8BCE(SJIS区)	歌词charmap中是否有字符=False	
+包	U+5305	主编码=0x95EF(SJIS区)	歌词charmap中是否有字符=False	
+化	U+5316	主编码=0x89BB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF09C(private区)
+北	U+5317	主编码=0x966B(SJIS区)	歌词charmap中是否有字符=False	
+区	U+533A	主编码=0x99BD(SJIS区)	歌词charmap中是否有字符=False	
+医	U+533B	主编码=0xE7CE(SJIS区)	歌词charmap中是否有字符=False	
+十	U+5341	主编码=0x8F5C(SJIS区)	歌词charmap中是否有字符=False	
+千	U+5343	主编码=0xE8E6(SJIS区)	歌词charmap中是否有字符=False	
+升	U+5347	主编码=0xE89E(SJIS区)	歌词charmap中是否有字符=False	
+午	U+5348	主编码=0x8CDF(SJIS区)	歌词charmap中是否有字符=False	
+卉	U+5349	主编码=0x99C1(SJIS区)	歌词charmap中是否有字符=False	
+半	U+534A	主编码=0x94BC(SJIS区)	歌词charmap中是否有字符=False	
+华	U+534E	主编码=0x89D8(SJIS区)	歌词charmap中是否有字符=False	
+协	U+534F	主编码=0x8BA6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF09D(private区)
+单	U+5355	主编码=0x9A64(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF09E(private区)
+卖	U+5356	主编码=0xE6CC(SJIS区)	歌词charmap中是否有字符=False	
+南	U+5357	主编码=0x93EC(SJIS区)	歌词charmap中是否有字符=False	
+博	U+535A	主编码=0x948E(SJIS区)	歌词charmap中是否有字符=False	
+卜	U+535C	主编码=0x966D(SJIS区)	歌词charmap中是否有字符=False	
+占	U+5360	主编码=0x90E8(SJIS区)	歌词charmap中是否有字符=False	
+卫	U+536B	主编码=0x8971(SJIS区)	歌词charmap中是否有字符=False	
+印	U+5370	主编码=0x88F3(SJIS区)	歌词charmap中是否有字符=False	
+即	U+5373	主编码=0x91A6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF09F(private区)
+却	U+5374	主编码=0x8B70(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A0(private区)
+厅	U+5385	主编码=0x9C4B(SJIS区)	歌词charmap中是否有字符=False	
+历	U+5386	主编码=0x97F0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A1(private区)
+厉	U+5389	主编码=0xEA58(SJIS区)	歌词charmap中是否有字符=False	
+压	U+538B	主编码=0x9AD8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A2(private区)
+厌	U+538C	主编码=0x897D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A3(private区)
+厕	U+5395	主编码=0x9BF8(SJIS区)	歌词charmap中是否有字符=False	
+原	U+539F	主编码=0x8CB4(SJIS区)	歌词charmap中是否有字符=False	
+厨	U+53A8	主编码=0x9C43(SJIS区)	歌词charmap中是否有字符=False	
+去	U+53BB	主编码=0x8B8E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A4(private区)
+县	U+53BF	主编码=0xE370(SJIS区)	歌词charmap中是否有字符=False	
+参	U+53C2	主编码=0x8E51(SJIS区)	歌词charmap中是否有字符=False	
+又	U+53C8	主编码=0x9694(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A5(private区)
+叉	U+53C9	主编码=0x8DB3(SJIS区)	歌词charmap中是否有字符=False	
+友	U+53CB	主编码=0x9746(SJIS区)	歌词charmap中是否有字符=False	
+双	U+53CC	主编码=0x916F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A6(private区)
+反	U+53CD	主编码=0x94BD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A7(private区)
+发	U+53D1	主编码=0xE99B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A8(private区)
+叔	U+53D4	主编码=0x8F66(SJIS区)	歌词charmap中是否有字符=False	
+取	U+53D6	主编码=0x8EE6(SJIS区)	歌词charmap中是否有字符=False	
+受	U+53D7	主编码=0x8EF3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0A9(private区)
+变	U+53D8	主编码=0x9DCC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0AA(private区)
+叙	U+53D9	主编码=0x9DC5(SJIS区)	歌词charmap中是否有字符=False	
+口	U+53E3	主编码=0x8CFB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0AB(private区)
+句	U+53E5	主编码=0x8BE5(SJIS区)	歌词charmap中是否有字符=False	
+另	U+53E6	主编码=0xE9FC(SJIS区)	歌词charmap中是否有字符=False	
+只	U+53EA	主编码=0x91FC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0AC(private区)
+叫	U+53EB	主编码=0x8BA9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0AD(private区)
+叮	U+53EE	主编码=0x99D8(SJIS区)	歌词charmap中是否有字符=False	
+可	U+53EF	主编码=0x89C2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0AE(private区)
+台	U+53F0	主编码=0xE945(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0AF(private区)
+史	U+53F2	主编码=0x8E6A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B0(private区)
+右	U+53F3	主编码=0x8945(SJIS区)	歌词charmap中是否有字符=False	
+叶	U+53F6	主编码=0x9774(SJIS区)	歌词charmap中是否有字符=False	
+号	U+53F7	主编码=0xE56A(SJIS区)	歌词charmap中是否有字符=False	
+司	U+53F8	主编码=0x8E69(SJIS区)	歌词charmap中是否有字符=False	
+吃	U+5403	主编码=0x8B69(SJIS区)	歌词charmap中是否有字符=False	
+各	U+5404	主编码=0x8A65(SJIS区)	歌词charmap中是否有字符=False	
+合	U+5408	主编码=0x8D7D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B1(private区)
+同	U+540C	主编码=0x93AF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B2(private区)
+名	U+540D	主编码=0x96BC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B3(private区)
+后	U+540E	主编码=0x8D40(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B4(private区)
+向	U+5411	主编码=0x9A8C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B5(private区)
+吓	U+5413	主编码=0x8A64(SJIS区)	歌词charmap中是否有字符=False	
+吗	U+5417	主编码=0xE975(SJIS区)	歌词charmap中是否有字符=False	
+君	U+541B	主编码=0x8C4E(SJIS区)	歌词charmap中是否有字符=False	
+否	U+5426	主编码=0x94DB(SJIS区)	歌词charmap中是否有字符=False	
+吧	U+5427	主编码=0xE9D1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B6(private区)
+含	U+542B	主编码=0x8ADC(SJIS区)	歌词charmap中是否有字符=False	
+听	U+542C	主编码=0xE3E3(SJIS区)	歌词charmap中是否有字符=False	
+启	U+542F	主编码=0x8C5B(SJIS区)	歌词charmap中是否有字符=False	
+吵	U+5435	主编码=0xEA5C(SJIS区)	歌词charmap中是否有字符=False	
+吻	U+543B	主编码=0x95AB(SJIS区)	歌词charmap中是否有字符=False	
+呀	U+5440	主编码=0x99DE(SJIS区)	歌词charmap中是否有字符=False	
+告	U+544A	主编码=0x8D90(SJIS区)	歌词charmap中是否有字符=False	
+呐	U+5450	主编码=0x99E3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B7(private区)
+员	U+5458	主编码=0x88F5(SJIS区)	歌词charmap中是否有字符=False	
+呢	U+5462	主编码=0xE9C5(SJIS区)	歌词charmap中是否有字符=False	
+周	U+5468	主编码=0x8F54(SJIS区)	歌词charmap中是否有字符=False	
+味	U+5473	主编码=0x96A1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B8(private区)
+呼	U+547C	主编码=0x8CC4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0B9(private区)
+命	U+547D	主编码=0x96BD(SJIS区)	歌词charmap中是否有字符=False	
+和	U+548C	主编码=0x9861(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0BA(private区)
+咒	U+5492	主编码=0x99EE(SJIS区)	歌词charmap中是否有字符=False	
+咔	U+5494	主编码=0xEA7A(SJIS区)	歌词charmap中是否有字符=False	
+咖	U+5496	主编码=0xE9DF(SJIS区)	歌词charmap中是否有字符=False	
+咙	U+5499	主编码=0xE98D(SJIS区)	歌词charmap中是否有字符=False	
+咦	U+54A6	主编码=0xEA9B(SJIS区)	歌词charmap中是否有字符=False	
+咪	U+54AA	主编码=0xE9E4(SJIS区)	歌词charmap中是否有字符=False	
+咯	U+54AF	主编码=0x9A5D(SJIS区)	歌词charmap中是否有字符=False	
+咱	U+54B1	主编码=0xEA5E(SJIS区)	歌词charmap中是否有字符=False	
+咻	U+54BB	主编码=0xE9A3(SJIS区)	歌词charmap中是否有字符=False	
+咿	U+54BF	主编码=0xE9AF(SJIS区)	歌词charmap中是否有字符=False	
+品	U+54C1	主编码=0x9569(SJIS区)	歌词charmap中是否有字符=False	
+哇	U+54C7	主编码=0x99F5(SJIS区)	歌词charmap中是否有字符=False	
+哈	U+54C8	主编码=0x99FB(SJIS区)	歌词charmap中是否有字符=False	
+响	U+54CD	主编码=0x8BBF(SJIS区)	歌词charmap中是否有字符=False	
+哎	U+54CE	主编码=0xE989(SJIS区)	歌词charmap中是否有字符=False	
+哒	U+54D2	主编码=0xEA80(SJIS区)	歌词charmap中是否有字符=False	
+哗	U+54D7	主编码=0xE696(SJIS区)	歌词charmap中是否有字符=False	
+哟	U+54DF	主编码=0xEA81(SJIS区)	歌词charmap中是否有字符=False	
+哥	U+54E5	主编码=0x9A46(SJIS区)	歌词charmap中是否有字符=False	
+哦	U+54E6	主编码=0x9A47(SJIS区)	歌词charmap中是否有字符=False	
+哪	U+54EA	主编码=0xE99F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0BD(private区)
+哭	U+54ED	主编码=0x9A4C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0BE(private区)
+哲	U+54F2	主编码=0x934E(SJIS区)	歌词charmap中是否有字符=False	
+哼	U+54FC	主编码=0xE979(SJIS区)	歌词charmap中是否有字符=False	
+唐	U+5510	主编码=0x9382(SJIS区)	歌词charmap中是否有字符=False	
+唤	U+5524	主编码=0x8AAB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0BF(private区)
+唯	U+552F	主编码=0x9742(SJIS区)	歌词charmap中是否有字符=False	
+唱	U+5531	主编码=0x8FA5(SJIS区)	歌词charmap中是否有字符=False	
+唷	U+5537	主编码=0xE9B7(SJIS区)	歌词charmap中是否有字符=False	
+商	U+5546	主编码=0x8FA4(SJIS区)	歌词charmap中是否有字符=False	
+啊	U+554A	主编码=0xE977(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C0(private区)
+啡	U+5561	主编码=0xE98C(SJIS区)	歌词charmap中是否有字符=False	
+啥	U+5565	主编码=0xEA41(SJIS区)	歌词charmap中是否有字符=False	
+啦	U+5566	主编码=0xEA62(SJIS区)	歌词charmap中是否有字符=False	
+啪	U+556A	主编码=0xEA6E(SJIS区)	歌词charmap中是否有字符=False	
+啰	U+5570	主编码=0xE9CC(SJIS区)	歌词charmap中是否有字符=False	
+喂	U+5582	主编码=0xE98B(SJIS区)	歌词charmap中是否有字符=False	
+善	U+5584	主编码=0x9150(SJIS区)	歌词charmap中是否有字符=False	
+喉	U+5589	主编码=0x8D41(SJIS区)	歌词charmap中是否有字符=False	
+喊	U+558A	主编码=0x9A5E(SJIS区)	歌词charmap中是否有字符=False	
+喔	U+5594	主编码=0xE9B0(SJIS区)	歌词charmap中是否有字符=False	
+喙	U+5599	主编码=0x9A5B(SJIS区)	歌词charmap中是否有字符=False	
+喜	U+559C	主编码=0x8AEC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C1(private区)
+喱	U+55B1	主编码=0xEA86(SJIS区)	歌词charmap中是否有字符=False	
+喵	U+55B5	主编码=0xE9C1(SJIS区)	歌词charmap中是否有字符=False	
+喷	U+55B7	主编码=0x95AC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C2(private区)
+嗒	U+55D2	主编码=0xEAA2(SJIS区)	歌词charmap中是否有字符=False	
+嗨	U+55E8	主编码=0xE9DE(SJIS区)	歌词charmap中是否有字符=False	
+嗯	U+55EF	主编码=0xEA84(SJIS区)	歌词charmap中是否有字符=False	
+嗷	U+55F7	主编码=0x9A72(SJIS区)	歌词charmap中是否有字符=False	
+嘎	U+560E	主编码=0xEA4A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C3(private区)
+嘛	U+561B	主编码=0x9A76(SJIS区)	歌词charmap中是否有字符=False	
+嘴	U+5634	主编码=0x9A7B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C4(private区)
+嘶	U+5636	主编码=0x9A7C(SJIS区)	歌词charmap中是否有字符=False	
+嘿	U+563F	主编码=0xE9B2(SJIS区)	歌词charmap中是否有字符=False	
+噗	U+5657	主编码=0xE9B9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C5(private区)
+噢	U+5662	主编码=0xE9F8(SJIS区)	歌词charmap中是否有字符=False	
+器	U+5668	主编码=0x8AED(SJIS区)	歌词charmap中是否有字符=False	
+囚	U+56DA	主编码=0x8EFA(SJIS区)	歌词charmap中是否有字符=False	
+四	U+56DB	主编码=0x8E6C(SJIS区)	歌词charmap中是否有字符=False	
+回	U+56DE	主编码=0xE78F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C6(private区)
+因	U+56E0	主编码=0x88F6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C7(private区)
+团	U+56E2	主编码=0x9263(SJIS区)	歌词charmap中是否有字符=False	
+园	U+56ED	主编码=0x8980(SJIS区)	歌词charmap中是否有字符=False	
+困	U+56F0	主编码=0x8DA2(SJIS区)	歌词charmap中是否有字符=False	
+围	U+56F4	主编码=0x9AA1(SJIS区)	歌词charmap中是否有字符=False	
+固	U+56FA	主编码=0x8CC5(SJIS区)	歌词charmap中是否有字符=False	
+国	U+56FD	主编码=0x9AA0(SJIS区)	歌词charmap中是否有字符=False	
+图	U+56FE	主编码=0x907D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C8(private区)
+圆	U+5706	主编码=0x897E(SJIS区)	歌词charmap中是否有字符=False	
+圈	U+5708	主编码=0x9A9F(SJIS区)	歌词charmap中是否有字符=False	
+圣	U+5723	主编码=0x90B9(SJIS区)	歌词charmap中是否有字符=False	
+在	U+5728	主编码=0x8DDD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0C9(private区)
+地	U+5730	主编码=0x926E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0CA(private区)
+场	U+573A	主编码=0x8FEA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0CB(private区)
+址	U+5740	主编码=0x9AAC(SJIS区)	歌词charmap中是否有字符=False	
+坂	U+5742	主编码=0x8DE2(SJIS区)	歌词charmap中是否有字符=False	
+坏	U+574F	主编码=0x9AD3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0CC(private区)
+坐	U+5750	主编码=0x8DBF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0CD(private区)
+坚	U+575A	主编码=0x8C98(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0CE(private区)
+坡	U+5761	主编码=0x9AB1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0CF(private区)
+坦	U+5766	主编码=0x9252(SJIS区)	歌词charmap中是否有字符=False	
+型	U+578B	主编码=0x8C5E(SJIS区)	歌词charmap中是否有字符=False	
+埋	U+57CB	主编码=0x9684(SJIS区)	歌词charmap中是否有字符=False	
+城	U+57CE	主编码=0x8FE9(SJIS区)	歌词charmap中是否有字符=False	
+基	U+57FA	主编码=0x8AEE(SJIS区)	歌词charmap中是否有字符=False	
+埼	U+57FC	主编码=0x8DEA(SJIS区)	歌词charmap中是否有字符=False	
+堂	U+5802	主编码=0x93B0(SJIS区)	歌词charmap中是否有字符=False	
+堕	U+5815	主编码=0x9AD6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D0(private区)
+堪	U+582A	主编码=0x8AAC(SJIS区)	歌词charmap中是否有字符=False	
+塔	U+5854	主编码=0x9383(SJIS区)	歌词charmap中是否有字符=False	
+塞	U+585E	主编码=0x8DC7(SJIS区)	歌词charmap中是否有字符=False	
+填	U+586B	主编码=0x9355(SJIS区)	歌词charmap中是否有字符=False	
+境	U+5883	主编码=0x8BAB(SJIS区)	歌词charmap中是否有字符=False	
+增	U+589E	主编码=0x919D(SJIS区)	歌词charmap中是否有字符=False	
+士	U+58EB	主编码=0x8E6D(SJIS区)	歌词charmap中是否有字符=False	
+声	U+58F0	主编码=0xE3DF(SJIS区)	歌词charmap中是否有字符=False	
+处	U+5904	主编码=0x997C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D1(private区)
+备	U+5907	主编码=0x94F5(SJIS区)	歌词charmap中是否有字符=False	
+复	U+590D	主编码=0x95A1(SJIS区)	歌词charmap中是否有字符=False	
+外	U+5916	主编码=0x8A4F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D2(private区)
+多	U+591A	主编码=0x91BD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D3(private区)
+夜	U+591C	主编码=0x96E9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D4(private区)
+够	U+591F	主编码=0xE995(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D5(private区)
+大	U+5927	主编码=0x91E5(SJIS区)	歌词charmap中是否有字符=False	
+天	U+5929	主编码=0x9356(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D6(private区)
+太	U+592A	主编码=0x91BE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D7(private区)
+夫	U+592B	主编码=0x9576(SJIS区)	歌词charmap中是否有字符=False	
+失	U+5931	主编码=0x8EB8(SJIS区)	歌词charmap中是否有字符=False	
+头	U+5934	主编码=0x93AA(SJIS区)	歌词charmap中是否有字符=False	
+夷	U+5937	主编码=0x88CE(SJIS区)	歌词charmap中是否有字符=False	
+夸	U+5938	主编码=0x9AF0(SJIS区)	歌词charmap中是否有字符=False	
+夺	U+593A	主编码=0x9244(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D8(private区)
+奇	U+5947	主编码=0x8AEF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0D9(private区)
+奈	U+5948	主编码=0x93DE(SJIS区)	歌词charmap中是否有字符=False	
+奋	U+594B	主编码=0x95B1(SJIS区)	歌词charmap中是否有字符=False	
+奏	U+594F	主编码=0x9174(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0DA(private区)
+契	U+5951	主编码=0x8C5F(SJIS区)	歌词charmap中是否有字符=False	
+奖	U+5956	主编码=0xE0D0(SJIS区)	歌词charmap中是否有字符=False	
+套	U+5957	主编码=0x9385(SJIS区)	歌词charmap中是否有字符=False	
+女	U+5973	主编码=0x8F97(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0DB(private区)
+奶	U+5976	主编码=0xE97E(SJIS区)	歌词charmap中是否有字符=False	
+她	U+5979	主编码=0xE9F5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0DC(private区)
+好	U+597D	主编码=0x8D44(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0DD(private区)
+如	U+5982	主编码=0x9440(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0DE(private区)
+妆	U+5986	主编码=0x9B42(SJIS区)	歌词charmap中是否有字符=False	
+妈	U+5988	主编码=0x9B5F(SJIS区)	歌词charmap中是否有字符=False	
+妙	U+5999	主编码=0x96AD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0DF(private区)
+妥	U+59A5	主编码=0x91C3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E0(private区)
+妨	U+59A8	主编码=0x9657(SJIS区)	歌词charmap中是否有字符=False	
+妹	U+59B9	主编码=0x9685(SJIS区)	歌词charmap中是否有字符=False	
+姆	U+59C6	主编码=0x9B47(SJIS区)	歌词charmap中是否有字符=False	
+始	U+59CB	主编码=0x8E6E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E1(private区)
+姐	U+59D0	主编码=0x88B7(SJIS区)	歌词charmap中是否有字符=False	
+姑	U+59D1	主编码=0x8CC6(SJIS区)	歌词charmap中是否有字符=False	
+委	U+59D4	主编码=0x88CF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E2(private区)
+姥	U+59E5	主编码=0x8957(SJIS区)	歌词charmap中是否有字符=False	
+姿	U+59FF	主编码=0x8E70(SJIS区)	歌词charmap中是否有字符=False	
+娇	U+5A07	主编码=0x9B67(SJIS区)	歌词charmap中是否有字符=False	
+娘	U+5A18	主编码=0x9B6F(SJIS区)	歌词charmap中是否有字符=False	
+娱	U+5A31	主编码=0xEA5F(SJIS区)	歌词charmap中是否有字符=False	
+娶	U+5A36	主编码=0x9B57(SJIS区)	歌词charmap中是否有字符=False	
+婆	U+5A46	主编码=0x946B(SJIS区)	歌词charmap中是否有字符=False	
+婉	U+5A49	主编码=0x9B55(SJIS区)	歌词charmap中是否有字符=False	
+婚	U+5A5A	主编码=0x8DA5(SJIS区)	歌词charmap中是否有字符=False	
+媒	U+5A92	主编码=0x947D(SJIS区)	歌词charmap中是否有字符=False	
+媛	U+5A9B	主编码=0x9551(SJIS区)	歌词charmap中是否有字符=False	
+嫩	U+5AE9	主编码=0x9B63(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E3(private区)
+子	U+5B50	主编码=0x8E71(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E4(private区)
+孔	U+5B54	主编码=0x8D45(SJIS区)	歌词charmap中是否有字符=False	
+字	U+5B57	主编码=0x8E9A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E5(private区)
+存	U+5B58	主编码=0x91B6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E6(private区)
+孤	U+5B64	主编码=0x8CC7(SJIS区)	歌词charmap中是否有字符=False	
+学	U+5B66	主编码=0x9B7B(SJIS区)	歌词charmap中是否有字符=False	
+孩	U+5B69	主编码=0x9B77(SJIS区)	歌词charmap中是否有字符=False	
+孽	U+5B7D	主编码=0xE971(SJIS区)	歌词charmap中是否有字符=False	
+它	U+5B83	主编码=0x9B80(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E7(private区)
+宅	U+5B85	主编码=0x91EE(SJIS区)	歌词charmap中是否有字符=False	
+宇	U+5B87	主编码=0x8946(SJIS区)	歌词charmap中是否有字符=False	
+守	U+5B88	主编码=0x8EE7(SJIS区)	歌词charmap中是否有字符=False	
+安	U+5B89	主编码=0x88C0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E8(private区)
+完	U+5B8C	主编码=0x8AAE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0E9(private区)
+宏	U+5B8F	主编码=0x8D47(SJIS区)	歌词charmap中是否有字符=False	
+官	U+5B98	主编码=0x8AAF(SJIS区)	歌词charmap中是否有字符=False	
+宙	U+5B99	主编码=0x9288(SJIS区)	歌词charmap中是否有字符=False	
+定	U+5B9A	主编码=0x92E8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0EA(private区)
+宜	U+5B9C	主编码=0x8B58(SJIS区)	歌词charmap中是否有字符=False	
+宝	U+5B9D	主编码=0x9B8F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0EB(private区)
+实	U+5B9E	主编码=0x9B89(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0EC(private区)
+宠	U+5BA0	主编码=0x929E(SJIS区)	歌词charmap中是否有字符=False	
+审	U+5BA1	主编码=0x9052(SJIS区)	歌词charmap中是否有字符=False	
+客	U+5BA2	主编码=0x8B71(SJIS区)	歌词charmap中是否有字符=False	
+宣	U+5BA3	主编码=0x90E9(SJIS区)	歌词charmap中是否有字符=False	
+室	U+5BA4	主编码=0x8EBA(SJIS区)	歌词charmap中是否有字符=False	
+宫	U+5BAB	主编码=0x8B7B(SJIS区)	歌词charmap中是否有字符=False	
+害	U+5BB3	主编码=0x8A51(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0ED(private区)
+家	U+5BB6	主编码=0x89C6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0EE(private区)
+容	U+5BB9	主编码=0x9765(SJIS区)	歌词charmap中是否有字符=False	
+寂	U+5BC2	主编码=0x8EE2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0EF(private区)
+寄	U+5BC4	主编码=0x8AF1(SJIS区)	歌词charmap中是否有字符=False	
+密	U+5BC6	主编码=0x96A7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F0(private区)
+富	U+5BCC	主编码=0x9578(SJIS区)	歌词charmap中是否有字符=False	
+寞	U+5BDE	主编码=0x9B8B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F1(private区)
+察	U+5BDF	主编码=0x8E40(SJIS区)	歌词charmap中是否有字符=False	
+对	U+5BF9	主编码=0x9B94(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F2(private区)
+寻	U+5BFB	主编码=0x9071(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F3(private区)
+导	U+5BFC	主编码=0x93B1(SJIS区)	歌词charmap中是否有字符=False	
+封	U+5C01	主编码=0x9595(SJIS区)	歌词charmap中是否有字符=False	
+将	U+5C06	主编码=0x9B92(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F4(private区)
+小	U+5C0F	主编码=0x8FAC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F5(private区)
+少	U+5C11	主编码=0x8FAD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F6(private区)
+尔	U+5C14	主编码=0x8EA2(SJIS区)	歌词charmap中是否有字符=False	
+尖	U+5C16	主编码=0x90EB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F7(private区)
+尘	U+5C18	主编码=0x906F(SJIS区)	歌词charmap中是否有字符=False	
+尝	U+5C1D	主编码=0x8FA6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F8(private区)
+就	U+5C31	主编码=0x8F41(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0F9(private区)
+尼	U+5C3C	主编码=0x93F2(SJIS区)	歌词charmap中是否有字符=False	
+尽	U+5C3D	主编码=0x9073(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0FA(private区)
+尾	U+5C3E	主编码=0x94F6(SJIS区)	歌词charmap中是否有字符=False	
+局	U+5C40	主编码=0x8BC7(SJIS区)	歌词charmap中是否有字符=False	
+屁	U+5C41	主编码=0x9B9B(SJIS区)	歌词charmap中是否有字符=False	
+层	U+5C42	主编码=0x9177(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0FB(private区)
+居	U+5C45	主编码=0x8B8F(SJIS区)	歌词charmap中是否有字符=False	
+屈	U+5C48	主编码=0x8BFC(SJIS区)	歌词charmap中是否有字符=False	
+届	U+5C4A	主编码=0x9B9C(SJIS区)	歌词charmap中是否有字符=False	
+展	U+5C55	主编码=0x9357(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF0FC(private区)
+属	U+5C5E	主编码=0x9BA2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF140(private区)
+山	U+5C71	主编码=0x8E52(SJIS区)	歌词charmap中是否有字符=False	
+屿	U+5C7F	主编码=0x9BD7(SJIS区)	歌词charmap中是否有字符=False	
+岁	U+5C81	主编码=0x8DCE(SJIS区)	歌词charmap中是否有字符=False	
+岐	U+5C90	主编码=0x8AF2(SJIS区)	歌词charmap中是否有字符=False	
+岚	U+5C9A	主编码=0x9792(SJIS区)	歌词charmap中是否有字符=False	
+岛	U+5C9B	主编码=0x9387(SJIS区)	歌词charmap中是否有字符=False	
+岩	U+5CA9	主编码=0x9BDC(SJIS区)	歌词charmap中是否有字符=False	
+岸	U+5CB8	主编码=0x8ADD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF141(private区)
+峦	U+5CE6	主编码=0x9BDB(SJIS区)	歌词charmap中是否有字符=False	
+崎	U+5D0E	主编码=0x8DE8(SJIS区)	歌词charmap中是否有字符=False	
+崭	U+5D2D	主编码=0x9BCE(SJIS区)	歌词charmap中是否有字符=False	
+川	U+5DDD	主编码=0x90EC(SJIS区)	歌词charmap中是否有字符=False	
+巡	U+5DE1	主编码=0x8F84(SJIS区)	歌词charmap中是否有字符=False	
+工	U+5DE5	主编码=0x8D48(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF142(private区)
+左	U+5DE6	主编码=0x8DB6(SJIS区)	歌词charmap中是否有字符=False	
+巧	U+5DE7	主编码=0x8D49(SJIS区)	歌词charmap中是否有字符=False	
+巨	U+5DE8	主编码=0xE7E8(SJIS区)	歌词charmap中是否有字符=False	
+差	U+5DEE	主编码=0x8DB7(SJIS区)	歌词charmap中是否有字符=False	
+己	U+5DF1	主编码=0x8CC8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF143(private区)
+已	U+5DF2	主编码=0x9BDF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF144(private区)
+巴	U+5DF4	主编码=0x9462(SJIS区)	歌词charmap中是否有字符=False	
+市	U+5E02	主编码=0x8E73(SJIS区)	歌词charmap中是否有字符=False	
+布	U+5E03	主编码=0x957A(SJIS区)	歌词charmap中是否有字符=False	
+帅	U+5E05	主编码=0x9083(SJIS区)	歌词charmap中是否有字符=False	
+师	U+5E08	主编码=0x8E74(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF145(private区)
+希	U+5E0C	主编码=0x8AF3(SJIS区)	歌词charmap中是否有字符=False	
+帐	U+5E10	主编码=0x92A0(SJIS区)	歌词charmap中是否有字符=False	
+带	U+5E26	主编码=0x9BE6(SJIS区)	歌词charmap中是否有字符=False	
+席	U+5E2D	主编码=0xE4EC(SJIS区)	歌词charmap中是否有字符=False	
+帮	U+5E2E	主编码=0xEA44(SJIS区)	歌词charmap中是否有字符=False	
+常	U+5E38	主编码=0x8FED(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF146(private区)
+帽	U+5E3D	主编码=0x9658(SJIS区)	歌词charmap中是否有字符=False	
+幅	U+5E45	主编码=0x959D(SJIS区)	歌词charmap中是否有字符=False	
+干	U+5E72	主编码=0x8AB2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF147(private区)
+平	U+5E73	主编码=0x95BD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF148(private区)
+年	U+5E74	主编码=0x944E(SJIS区)	歌词charmap中是否有字符=False	
+并	U+5E76	主编码=0x9BF3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF149(private区)
+幸	U+5E78	主编码=0x8D4B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF14A(private区)
+幻	U+5E7B	主编码=0x8CB6(SJIS区)	歌词charmap中是否有字符=False	
+幽	U+5E7D	主编码=0x9748(SJIS区)	歌词charmap中是否有字符=False	
+广	U+5E7F	主编码=0x9C41(SJIS区)	歌词charmap中是否有字符=False	
+库	U+5E93	主编码=0x8CC9(SJIS区)	歌词charmap中是否有字符=False	
+应	U+5E94	主编码=0x9CE4(SJIS区)	歌词charmap中是否有字符=False	
+底	U+5E95	主编码=0x92EA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF14B(private区)
+店	U+5E97	主编码=0x9358(SJIS区)	歌词charmap中是否有字符=False	
+府	U+5E9C	主编码=0x957B(SJIS区)	歌词charmap中是否有字符=False	
+度	U+5EA6	主编码=0x9378(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF14C(private区)
+座	U+5EA7	主编码=0x8DC0(SJIS区)	歌词charmap中是否有字符=False	
+庭	U+5EAD	主编码=0x92EB(SJIS区)	歌词charmap中是否有字符=False	
+延	U+5EF6	主编码=0x8984(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF14D(private区)
+建	U+5EFA	主编码=0x8C9A(SJIS区)	歌词charmap中是否有字符=False	
+开	U+5F00	主编码=0x8A4A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF14E(private区)
+弃	U+5F03	主编码=0x9C50(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF14F(private区)
+弄	U+5F04	主编码=0x984D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF150(private区)
+式	U+5F0F	主编码=0x8EAE(SJIS区)	歌词charmap中是否有字符=False	
+引	U+5F15	主编码=0x88F8(SJIS区)	歌词charmap中是否有字符=False	
+弗	U+5F17	主编码=0x95A4(SJIS区)	歌词charmap中是否有字符=False	
+张	U+5F20	主编码=0x92A3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF151(private区)
+弥	U+5F25	主编码=0xE06F(SJIS区)	歌词charmap中是否有字符=False	
+强	U+5F3A	主编码=0x8BAD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF152(private区)
+归	U+5F52	主编码=0x9F64(SJIS区)	歌词charmap中是否有字符=False	
+当	U+5F53	主编码=0xE163(SJIS区)	歌词charmap中是否有字符=False	
+录	U+5F55	主编码=0x985E(SJIS区)	歌词charmap中是否有字符=False	
+彗	U+5F57	主编码=0x9C61(SJIS区)	歌词charmap中是否有字符=False	
+彡	U+5F61	主编码=0x9C63(SJIS区)	歌词charmap中是否有字符=False	
+形	U+5F62	主编码=0x8C60(SJIS区)	歌词charmap中是否有字符=False	
+彩	U+5F69	主编码=0xE35C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF153(private区)
+彬	U+5F6C	主编码=0x956A(SJIS区)	歌词charmap中是否有字符=False	
+彰	U+5F70	主编码=0x8FB2(SJIS区)	歌词charmap中是否有字符=False	
+影	U+5F71	主编码=0x8965(SJIS区)	歌词charmap中是否有字符=False	
+彼	U+5F7C	主编码=0x94DE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF154(private区)
+往	U+5F80	主编码=0x899D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF155(private区)
+待	U+5F85	主编码=0x91D2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF156(private区)
+很	U+5F88	主编码=0x9C6B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF157(private区)
+律	U+5F8B	主编码=0x97A5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF158(private区)
+徒	U+5F92	主编码=0x936B(SJIS区)	歌词charmap中是否有字符=False	
+得	U+5F97	主编码=0x93BE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF159(private区)
+循	U+5FAA	主编码=0x8F7A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF15A(private区)
+微	U+5FAE	主编码=0x94F7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF15B(private区)
+德	U+5FB7	主编码=0x93BF(SJIS区)	歌词charmap中是否有字符=False	
+心	U+5FC3	主编码=0x9053(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF15C(private区)
+必	U+5FC5	主编码=0x954B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF15D(private区)
+忆	U+5FC6	主编码=0x89AF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF15E(private区)
+忌	U+5FCC	主编码=0x8AF5(SJIS区)	歌词charmap中是否有字符=False	
+忍	U+5FCD	主编码=0x9445(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF15F(private区)
+志	U+5FD7	主编码=0x8E75(SJIS区)	歌词charmap中是否有字符=False	
+忘	U+5FD8	主编码=0x9659(SJIS区)	歌词charmap中是否有字符=False	
+忙	U+5FD9	主编码=0x965A(SJIS区)	歌词charmap中是否有字符=False	
+忠	U+5FE0	主编码=0x9289(SJIS区)	歌词charmap中是否有字符=False	
+快	U+5FEB	主编码=0x89F5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF160(private区)
+念	U+5FF5	主编码=0x9A58(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF161(private区)
+怀	U+6000	主编码=0x9CE5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF162(private区)
+态	U+6001	主编码=0x91D4(SJIS区)	歌词charmap中是否有字符=False	
+怎	U+600E	主编码=0x9C83(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF163(private区)
+怒	U+6012	主编码=0x937B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF164(private区)
+怕	U+6015	主编码=0x9C86(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF165(private区)
+怜	U+601C	主编码=0x97F7(SJIS区)	歌词charmap中是否有字符=False	
+思	U+601D	主编码=0x8E76(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF166(private区)
+急	U+6025	主编码=0x8B7D(SJIS区)	歌词charmap中是否有字符=False	
+性	U+6027	主编码=0x90AB(SJIS区)	歌词charmap中是否有字符=False	
+怪	U+602A	主编码=0x89F6(SJIS区)	歌词charmap中是否有字符=False	
+总	U+603B	主编码=0xE360(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF167(private区)
+恋	U+604B	主编码=0x9CF6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF168(private区)
+恒	U+6052	主编码=0x8D50(SJIS区)	歌词charmap中是否有字符=False	
+恤	U+6064	主编码=0x9C95(SJIS区)	歌词charmap中是否有字符=False	
+恩	U+6069	主编码=0x89B6(SJIS区)	歌词charmap中是否有字符=False	
+恭	U+606D	主编码=0x8BB1(SJIS区)	歌词charmap中是否有字符=False	
+息	U+606F	主编码=0x91A7(SJIS区)	歌词charmap中是否有字符=False	
+恶	U+6076	主编码=0x9CA6(SJIS区)	歌词charmap中是否有字符=False	
+恼	U+607C	主编码=0x9459(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF169(private区)
+悄	U+6084	主编码=0x9C9F(SJIS区)	歌词charmap中是否有字符=False	
+悔	U+6094	主编码=0x89F7(SJIS区)	歌词charmap中是否有字符=False	
+悟	U+609F	主编码=0x8CE5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF16A(private区)
+悦	U+60A6	主编码=0x8978(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF16B(private区)
+您	U+60A8	主编码=0xE9E9(SJIS区)	歌词charmap中是否有字符=False	
+悲	U+60B2	主编码=0x94DF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF16C(private区)
+情	U+60C5	主编码=0x8FEE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF16D(private区)
+惊	U+60CA	主编码=0x8BC1(SJIS区)	歌词charmap中是否有字符=False	
+惑	U+60D1	主编码=0x9866(SJIS区)	歌词charmap中是否有字符=False	
+惜	U+60DC	主编码=0x90C9(SJIS区)	歌词charmap中是否有字符=False	
+惠	U+60E0	主编码=0x8C62(SJIS区)	歌词charmap中是否有字符=False	
+惨	U+60E8	主编码=0x8E53(SJIS区)	歌词charmap中是否有字符=False	
+惬	U+60EC	主编码=0xE9AD(SJIS区)	歌词charmap中是否有字符=False	
+想	U+60F3	主编码=0x917A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF16E(private区)
+愁	U+6101	主编码=0x8F44(SJIS区)	歌词charmap中是否有字符=False	
+愈	U+6108	主编码=0x96FC(SJIS区)	歌词charmap中是否有字符=False	
+愉	U+6109	主编码=0x96F9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF16F(private区)
+意	U+610F	主编码=0x88D3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF170(private区)
+愛	U+611B	主编码=0xE97D(SJIS区)	歌词charmap中是否有字符=False	
+感	U+611F	主编码=0x8AB4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF171(private区)
+愤	U+6124	主编码=0x95AE(SJIS区)	歌词charmap中是否有字符=False	
+愧	U+6127	主编码=0x9CC1(SJIS区)	歌词charmap中是否有字符=False	
+愿	U+613F	主编码=0x9CC3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF172(private区)
+慈	U+6148	主编码=0x8E9C(SJIS区)	歌词charmap中是否有字符=False	
+慌	U+614C	主编码=0x8D51(SJIS区)	歌词charmap中是否有字符=False	
+慎	U+614E	主编码=0x9054(SJIS区)	歌词charmap中是否有字符=False	
+慕	U+6155	主编码=0x95E7(SJIS区)	歌词charmap中是否有字符=False	
+慢	U+6162	主编码=0x969D(SJIS区)	歌词charmap中是否有字符=False	
+慰	U+6170	主编码=0x88D4(SJIS区)	歌词charmap中是否有字符=False	
+憧	U+61A7	主编码=0x93B2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF173(private区)
+憬	U+61AC	主编码=0x9CDB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF174(private区)
+憾	U+61BE	主编码=0x8AB6(SJIS区)	歌词charmap中是否有字符=False	
+懂	U+61C2	主编码=0xE9CF(SJIS区)	歌词charmap中是否有字符=False	
+懈	U+61C8	主编码=0x9CE6(SJIS区)	歌词charmap中是否有字符=False	
+懊	U+61CA	主编码=0x9CE3(SJIS区)	歌词charmap中是否有字符=False	
+戏	U+620F	主编码=0x9D45(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF175(private区)
+成	U+6210	主编码=0x90AC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF176(private区)
+我	U+6211	主编码=0x89E4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF177(private区)
+或	U+6216	主编码=0x88BD(SJIS区)	歌词charmap中是否有字符=False	
+战	U+6218	主编码=0x9D44(SJIS区)	歌词charmap中是否有字符=False	
+戳	U+6233	主编码=0x9D46(SJIS区)	歌词charmap中是否有字符=False	
+戴	U+6234	主编码=0x91D5(SJIS区)	歌词charmap中是否有字符=False	
+户	U+6237	主编码=0x8CCB(SJIS区)	歌词charmap中是否有字符=False	
+房	U+623F	主编码=0x965B(SJIS区)	歌词charmap中是否有字符=False	
+所	U+6240	主编码=0x8F8A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF178(private区)
+扇	U+6247	主编码=0x90EE(SJIS区)	歌词charmap中是否有字符=False	
+扉	U+6249	主编码=0x94E0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF179(private区)
+手	U+624B	主编码=0x8EE8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF17A(private区)
+才	U+624D	主编码=0xE398(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF17B(private区)
+扑	U+6251	主编码=0x966F(SJIS区)	歌词charmap中是否有字符=False	
+打	U+6253	主编码=0x91C5(SJIS区)	歌词charmap中是否有字符=False	
+托	U+6258	主编码=0x91F5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF17C(private区)
+扩	U+6269	主编码=0x8A67(SJIS区)	歌词charmap中是否有字符=False	
+扫	U+626B	主编码=0x917C(SJIS区)	歌词charmap中是否有字符=False	
+扭	U+626D	主编码=0xE9AA(SJIS区)	歌词charmap中是否有字符=False	
+扮	U+626E	主编码=0x95AF(SJIS区)	歌词charmap中是否有字符=False	
+扰	U+6270	主编码=0x8FEF(SJIS区)	歌词charmap中是否有字符=False	
+找	U+627E	主编码=0x9D51(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF17D(private区)
+承	U+627F	主编码=0x8FB3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF17E(private区)
+技	U+6280	主编码=0x8B5A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF180(private区)
+把	U+628A	主编码=0x9463(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF181(private区)
+抓	U+6293	主编码=0x9D53(SJIS区)	歌词charmap中是否有字符=False	
+投	U+6295	主编码=0x938A(SJIS区)	歌词charmap中是否有字符=False	
+折	U+6298	主编码=0x90DC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF182(private区)
+抚	U+629A	主编码=0x958F(SJIS区)	歌词charmap中是否有字符=False	
+护	U+62A4	主编码=0x8CEC(SJIS区)	歌词charmap中是否有字符=False	
+报	U+62A5	主编码=0x95F1(SJIS区)	歌词charmap中是否有字符=False	
+抱	U+62B1	主编码=0x95F8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF183(private区)
+抽	U+62BD	主编码=0x928A(SJIS区)	歌词charmap中是否有字符=False	
+担	U+62C5	主编码=0x9D5E(SJIS区)	歌词charmap中是否有字符=False	
+拉	U+62C9	主编码=0x9D66(SJIS区)	歌词charmap中是否有字符=False	
+拍	U+62CD	主编码=0x948F(SJIS区)	歌词charmap中是否有字符=False	
+拒	U+62D2	主编码=0x8B91(SJIS区)	歌词charmap中是否有字符=False	
+拓	U+62D3	主编码=0x91F1(SJIS区)	歌词charmap中是否有字符=False	
+拔	U+62D4	主编码=0x9D55(SJIS区)	歌词charmap中是否有字符=False	
+招	U+62DB	主编码=0x8FB5(SJIS区)	歌词charmap中是否有字符=False	
+拜	U+62DC	主编码=0x9D60(SJIS区)	歌词charmap中是否有字符=False	
+拥	U+62E5	主编码=0x9769(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF184(private区)
+择	U+62E9	主编码=0x9DA2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF185(private区)
+拳	U+62F3	主编码=0x8C9D(SJIS区)	歌词charmap中是否有字符=False	
+拼	U+62FC	主编码=0xE9A9(SJIS区)	歌词charmap中是否有字符=False	
+拿	U+62FF	主编码=0x9D5C(SJIS区)	歌词charmap中是否有字符=False	
+持	U+6301	主编码=0x8E9D(SJIS区)	歌词charmap中是否有字符=False	
+指	U+6307	主编码=0x8E77(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF186(private区)
+按	U+6309	主编码=0x88C2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF187(private区)
+挑	U+6311	主编码=0x92A7(SJIS区)	歌词charmap中是否有字符=False	
+挥	U+6325	主编码=0x8AF6(SJIS区)	歌词charmap中是否有字符=False	
+挫	U+632B	主编码=0x8DC1(SJIS区)	歌词charmap中是否有字符=False	
+振	U+632F	主编码=0x9055(SJIS区)	歌词charmap中是否有字符=False	
+挺	U+633A	主编码=0x92F0(SJIS区)	歌词charmap中是否有字符=False	
+换	U+6362	主编码=0x8AB7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF188(private区)
+据	U+636E	主编码=0x9D9F(SJIS区)	歌词charmap中是否有字符=False	
+授	U+6388	主编码=0x8EF6(SJIS区)	歌词charmap中是否有字符=False	
+掉	U+6389	主编码=0x9D7B(SJIS区)	歌词charmap中是否有字符=False	
+掌	U+638C	主编码=0x8FB6(SJIS区)	歌词charmap中是否有字符=False	
+排	U+6392	主编码=0x9472(SJIS区)	歌词charmap中是否有字符=False	
+探	U+63A2	主编码=0x9254(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF189(private区)
+接	U+63A5	主编码=0x90DA(SJIS区)	歌词charmap中是否有字符=False	
+描	U+63CF	主编码=0x9560(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF18A(private区)
+提	U+63D0	主编码=0x92F1(SJIS区)	歌词charmap中是否有字符=False	
+握	U+63E1	主编码=0x88AC(SJIS区)	歌词charmap中是否有字符=False	
+援	U+63F4	主编码=0x8987(SJIS区)	歌词charmap中是否有字符=False	
+搅	U+6405	主编码=0x8A68(SJIS区)	歌词charmap中是否有字符=False	
+搏	U+640F	主编码=0x9D93(SJIS区)	歌词charmap中是否有字符=False	
+搜	U+641C	主编码=0x9D72(SJIS区)	歌词charmap中是否有字符=False	
+搞	U+641E	主编码=0xEA97(SJIS区)	歌词charmap中是否有字符=False	
+搭	U+642D	主编码=0x938B(SJIS区)	歌词charmap中是否有字符=False	
+摁	U+6441	主编码=0xE96C(SJIS区)	歌词charmap中是否有字符=False	
+摄	U+6444	主编码=0x9D90(SJIS区)	歌词charmap中是否有字符=False	
+摆	U+6446	主编码=0x9DB2(SJIS区)	歌词charmap中是否有字符=False	
+摇	U+6447	主编码=0x9768(SJIS区)	歌词charmap中是否有字符=False	
+摔	U+6454	主编码=0xE9E5(SJIS区)	歌词charmap中是否有字符=False	
+摸	U+6478	主编码=0x96CC(SJIS区)	歌词charmap中是否有字符=False	
+撒	U+6492	主编码=0x8E54(SJIS区)	歌词charmap中是否有字符=False	
+播	U+64AD	主编码=0x9464(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF18B(private区)
+擅	U+64C5	主编码=0x9DA1(SJIS区)	歌词charmap中是否有字符=False	
+操	U+64CD	主编码=0x9180(SJIS区)	歌词charmap中是否有字符=False	
+攒	U+6512	主编码=0xE9E3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF18C(private区)
+支	U+652F	主编码=0x8E78(SJIS区)	歌词charmap中是否有字符=False	
+收	U+6536	主编码=0x9DBE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF18D(private区)
+改	U+6539	主编码=0x89FC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF18E(private区)
+放	U+653E	主编码=0x95FA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF18F(private区)
+故	U+6545	主编码=0x8CCC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF190(private区)
+效	U+6548	主编码=0x9DC1(SJIS区)	歌词charmap中是否有字符=False	
+敌	U+654C	主编码=0x9347(SJIS区)	歌词charmap中是否有字符=False	
+救	U+6551	主编码=0x8B7E(SJIS区)	歌词charmap中是否有字符=False	
+教	U+6559	主编码=0x8BB3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF191(private区)
+敞	U+655E	主编码=0x9DC6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF192(private区)
+散	U+6563	主编码=0x8E55(SJIS区)	歌词charmap中是否有字符=False	
+敬	U+656C	主编码=0x8C68(SJIS区)	歌词charmap中是否有字符=False	
+数	U+6570	主编码=0x9DC9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF193(private区)
+整	U+6574	主编码=0x90AE(SJIS区)	歌词charmap中是否有字符=False	
+文	U+6587	主编码=0x95B6(SJIS区)	歌词charmap中是否有字符=False	
+料	U+6599	主编码=0x97BF(SJIS区)	歌词charmap中是否有字符=False	
+断	U+65AD	主编码=0x9266(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF194(private区)
+斯	U+65AF	主编码=0x8E7A(SJIS区)	歌词charmap中是否有字符=False	
+新	U+65B0	主编码=0x9056(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF195(private区)
+方	U+65B9	主编码=0x95FB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF196(private区)
+旁	U+65C1	主编码=0x9DD3(SJIS区)	歌词charmap中是否有字符=False	
+旅	U+65C5	主编码=0x97B7(SJIS区)	歌词charmap中是否有字符=False	
+旋	U+65CB	主编码=0x90F9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF197(private区)
+族	U+65CF	主编码=0x91B0(SJIS区)	歌词charmap中是否有字符=False	
+无	U+65E0	主编码=0x9DD9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF198(private区)
+既	U+65E2	主编码=0x8AF9(SJIS区)	歌词charmap中是否有字符=False	
+日	U+65E5	主编码=0x93FA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF199(private区)
+旦	U+65E6	主编码=0x9255(SJIS区)	歌词charmap中是否有字符=False	
+早	U+65E9	主编码=0x9181(SJIS区)	歌词charmap中是否有字符=False	
+时	U+65F6	主编码=0x8E9E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF19A(private区)
+昂	U+6602	主编码=0x8D56(SJIS区)	歌词charmap中是否有字符=False	
+明	U+660E	主编码=0x96BE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF19B(private区)
+易	U+6613	主编码=0x88D5(SJIS区)	歌词charmap中是否有字符=False	
+昔	U+6614	主编码=0x90CC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF19C(private区)
+星	U+661F	主编码=0x90AF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF19D(private区)
+映	U+6620	主编码=0x8966(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF19E(private区)
+春	U+6625	主编码=0x8F74(SJIS区)	歌词charmap中是否有字符=False	
+昨	U+6628	主编码=0x8DF0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF19F(private区)
+是	U+662F	主编码=0x90A5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A0(private区)
+晓	U+6653	主编码=0x9DFA(SJIS区)	歌词charmap中是否有字符=False	
+晚	U+665A	主编码=0x94D3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A1(private区)
+晨	U+6668	主编码=0x9DED(SJIS区)	歌词charmap中是否有字符=False	
+普	U+666E	主编码=0x9581(SJIS区)	歌词charmap中是否有字符=False	
+景	U+666F	主编码=0x8C69(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A2(private区)
+晰	U+6670	主编码=0x9DF0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A3(private区)
+晴	U+6674	主编码=0x90B0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A4(private区)
+暂	U+6682	主编码=0x8E62(SJIS区)	歌词charmap中是否有字符=False	
+暖	U+6696	主编码=0x9267(SJIS区)	歌词charmap中是否有字符=False	
+暗	U+6697	主编码=0x88C5(SJIS区)	歌词charmap中是否有字符=False	
+暴	U+66B4	主编码=0x965C(SJIS区)	歌词charmap中是否有字符=False	
+曲	U+66F2	主编码=0x8D8D(SJIS区)	歌词charmap中是否有字符=False	
+更	U+66F4	主编码=0x8D58(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A5(private区)
+最	U+6700	主编码=0x8DC5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A6(private区)
+月	U+6708	主编码=0x8C8E(SJIS区)	歌词charmap中是否有字符=False	
+有	U+6709	主编码=0x974C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A7(private区)
+朋	U+670B	主编码=0x95FC(SJIS区)	歌词charmap中是否有字符=False	
+服	U+670D	主编码=0x959E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A8(private区)
+朗	U+6717	主编码=0x984E(SJIS区)	歌词charmap中是否有字符=False	
+望	U+671B	主编码=0x965D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1A9(private区)
+朝	U+671D	主编码=0x92A9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1AA(private区)
+期	U+671F	主编码=0x8AFA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1AB(private区)
+木	U+6728	主编码=0x96D8(SJIS区)	歌词charmap中是否有字符=False	
+未	U+672A	主编码=0x96A2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1AC(private区)
+本	U+672C	主编码=0x967B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1AD(private区)
+术	U+672F	主编码=0x9E51(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1AE(private区)
+朴	U+6734	主编码=0x9670(SJIS区)	歌词charmap中是否有字符=False	
+朵	U+6735	主编码=0xE9DA(SJIS区)	歌词charmap中是否有字符=False	
+机	U+673A	主编码=0x8B40(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1AF(private区)
+杂	U+6742	主编码=0x8E47(SJIS区)	歌词charmap中是否有字符=False	
+杉	U+6749	主编码=0x9099(SJIS区)	歌词charmap中是否有字符=False	
+材	U+6750	主编码=0x8DDE(SJIS区)	歌词charmap中是否有字符=False	
+村	U+6751	主编码=0x91BA(SJIS区)	歌词charmap中是否有字符=False	
+杜	U+675C	主编码=0x936D(SJIS区)	歌词charmap中是否有字符=False	
+束	U+675F	主编码=0x91A9(SJIS区)	歌词charmap中是否有字符=False	
+条	U+6761	主编码=0x9E8A(SJIS区)	歌词charmap中是否有字符=False	
+来	U+6765	主编码=0x98D2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B0(private区)
+杯	U+676F	主编码=0x9475(SJIS区)	歌词charmap中是否有字符=False	
+松	U+677E	主编码=0xE9A0(SJIS区)	歌词charmap中是否有字符=False	
+板	U+677F	主编码=0x94C2(SJIS区)	歌词charmap中是否有字符=False	
+极	U+6781	主编码=0x8BC9(SJIS区)	歌词charmap中是否有字符=False	
+林	U+6797	主编码=0x97D1(SJIS区)	歌词charmap中是否有字符=False	
+果	U+679C	主编码=0x89CA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B1(private区)
+枝	U+679D	主编码=0x8E7D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B2(private区)
+枪	U+67AA	主编码=0x9184(SJIS区)	歌词charmap中是否有字符=False	
+枫	U+67AB	主编码=0x9596(SJIS区)	歌词charmap中是否有字符=False	
+柄	U+67C4	主编码=0x95BF(SJIS区)	歌词charmap中是否有字符=False	
+某	U+67D0	主编码=0x965E(SJIS区)	歌词charmap中是否有字符=False	
+柑	U+67D1	主编码=0x8AB9(SJIS区)	歌词charmap中是否有字符=False	
+染	U+67D3	主编码=0x90F5(SJIS区)	歌词charmap中是否有字符=False	
+柔	U+67D4	主编码=0x8F5F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B3(private区)
+查	U+67E5	主编码=0x8DB8(SJIS区)	歌词charmap中是否有字符=False	
+栃	U+6803	主编码=0x93C8(SJIS区)	歌词charmap中是否有字符=False	
+标	U+6807	主编码=0x9557(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B4(private区)
+树	U+6811	主编码=0x8EF7(SJIS区)	歌词charmap中是否有字符=False	
+校	U+6821	主编码=0x8D5A(SJIS区)	歌词charmap中是否有字符=False	
+样	U+6837	主编码=0x976C(SJIS区)	歌词charmap中是否有字符=False	
+根	U+6839	主编码=0x8DAA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B5(private区)
+格	U+683C	主编码=0x8A69(SJIS区)	歌词charmap中是否有字符=False	
+桃	U+6843	主编码=0x938D(SJIS区)	歌词charmap中是否有字符=False	
+案	U+6848	主编码=0x88C4(SJIS区)	歌词charmap中是否有字符=False	
+桑	U+6851	主编码=0x8C4B(SJIS区)	歌词charmap中是否有字符=False	
+桥	U+6865	主编码=0x8BB4(SJIS区)	歌词charmap中是否有字符=False	
+桧	U+6867	主编码=0x9E77(SJIS区)	歌词charmap中是否有字符=False	
+梅	U+6885	主编码=0x947E(SJIS区)	歌词charmap中是否有字符=False	
+梓	U+6893	主编码=0x88B2(SJIS区)	歌词charmap中是否有字符=False	
+梦	U+68A6	主编码=0x9AEB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B6(private区)
+梨	U+68A8	主编码=0x979C(SJIS区)	歌词charmap中是否有字符=False	
+梭	U+68AD	主编码=0x9E88(SJIS区)	歌词charmap中是否有字符=False	
+检	U+68C0	主编码=0x9EFB(SJIS区)	歌词charmap中是否有字符=False	
+棉	U+68C9	主编码=0x96C7(SJIS区)	歌词charmap中是否有字符=False	
+棒	U+68D2	主编码=0x965F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B7(private区)
+森	U+68EE	主编码=0x9058(SJIS区)	歌词charmap中是否有字符=False	
+棱	U+68F1	主编码=0x97C5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B8(private区)
+椎	U+690E	主编码=0x92C5(SJIS区)	歌词charmap中是否有字符=False	
+楚	U+695A	主编码=0x915E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1B9(private区)
+楠	U+6960	主编码=0x93ED(SJIS区)	歌词charmap中是否有字符=False	
+概	U+6982	主编码=0x8A54(SJIS区)	歌词charmap中是否有字符=False	
+榄	U+6984	主编码=0x9F53(SJIS区)	歌词charmap中是否有字符=False	
+榜	U+699C	主编码=0x9ED4(SJIS区)	歌词charmap中是否有字符=False	
+槻	U+69FB	主编码=0x92CE(SJIS区)	歌词charmap中是否有字符=False	
+槿	U+69FF	主编码=0x9EDB(SJIS区)	歌词charmap中是否有字符=False	
+樟	U+6A1F	主编码=0x8FBE(SJIS区)	歌词charmap中是否有字符=False	
+模	U+6A21	主编码=0x96CD(SJIS区)	歌词charmap中是否有字符=False	
+樫	U+6A2B	主编码=0xE987(SJIS区)	歌词charmap中是否有字符=False	
+樱	U+6A31	主编码=0x9F4E(SJIS区)	歌词charmap中是否有字符=False	
+橄	U+6A44	主编码=0x9EEB(SJIS区)	歌词charmap中是否有字符=False	
+橘	U+6A58	主编码=0x8B6B(SJIS区)	歌词charmap中是否有字符=False	
+次	U+6B21	主编码=0x8E9F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1BA(private区)
+欢	U+6B22	主编码=0x9F63(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1BB(private区)
+欲	U+6B32	主编码=0x977E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1BC(private区)
+欺	U+6B3A	主编码=0x8B5C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1BD(private区)
+款	U+6B3E	主编码=0x8ABC(SJIS区)	歌词charmap中是否有字符=False	
+歉	U+6B49	主编码=0x9F5D(SJIS区)	歌词charmap中是否有字符=False	
+歌	U+6B4C	主编码=0x89CC(SJIS区)	歌词charmap中是否有字符=False	
+止	U+6B62	主编码=0x8E7E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1BE(private区)
+正	U+6B63	主编码=0x90B3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1BF(private区)
+此	U+6B64	主编码=0x8D9F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C0(private区)
+步	U+6B65	主编码=0x95E0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C1(private区)
+武	U+6B66	主编码=0x9590(SJIS区)	歌词charmap中是否有字符=False	
+死	U+6B7B	主编码=0x8E80(SJIS区)	歌词charmap中是否有字符=False	
+段	U+6BB5	主编码=0x9269(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C2(private区)
+毁	U+6BC1	主编码=0xE09B(SJIS区)	歌词charmap中是否有字符=False	
+母	U+6BCD	主编码=0x95EA(SJIS区)	歌词charmap中是否有字符=False	
+每	U+6BCF	主编码=0x9688(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C3(private区)
+毒	U+6BD2	主编码=0x93C5(SJIS区)	歌词charmap中是否有字符=False	
+比	U+6BD4	主编码=0x94E4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C4(private区)
+毕	U+6BD5	主编码=0x954C(SJIS区)	歌词charmap中是否有字符=False	
+毛	U+6BDB	主编码=0x96D1(SJIS区)	歌词charmap中是否有字符=False	
+毫	U+6BEB	主编码=0x9F7C(SJIS区)	歌词charmap中是否有字符=False	
+民	U+6C11	主编码=0x96AF(SJIS区)	歌词charmap中是否有字符=False	
+气	U+6C14	主编码=0x8B43(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C5(private区)
+氛	U+6C1B	主编码=0x9F84(SJIS区)	歌词charmap中是否有字符=False	
+水	U+6C34	主编码=0x9085(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C6(private区)
+永	U+6C38	主编码=0x8969(SJIS区)	歌词charmap中是否有字符=False	
+求	U+6C42	主编码=0x8B81(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C7(private区)
+汇	U+6C47	主编码=0x9C62(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C8(private区)
+池	U+6C60	主编码=0x9272(SJIS区)	歌词charmap中是否有字符=False	
+沉	U+6C89	主编码=0xEA45(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1C9(private区)
+沐	U+6C90	主编码=0x9F94(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1CA(private区)
+沙	U+6C99	主编码=0x8DB9(SJIS区)	歌词charmap中是否有字符=False	
+沟	U+6C9F	主编码=0x8D61(SJIS区)	歌词charmap中是否有字符=False	
+没	U+6CA1	主编码=0x9676(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1CB(private区)
+河	U+6CB3	主编码=0x89CD(SJIS区)	歌词charmap中是否有字符=False	
+沸	U+6CB8	主编码=0x95A6(SJIS区)	歌词charmap中是否有字符=False	
+油	U+6CB9	主编码=0x96FB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1CC(private区)
+治	U+6CBB	主编码=0x8EA1(SJIS区)	歌词charmap中是否有字符=False	
+沿	U+6CBF	主编码=0x8988(SJIS区)	歌词charmap中是否有字符=False	
+泉	U+6CC9	主编码=0x90F2(SJIS区)	歌词charmap中是否有字符=False	
+法	U+6CD5	主编码=0x9640(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1CD(private区)
+泡	U+6CE1	主编码=0x9641(SJIS区)	歌词charmap中是否有字符=False	
+波	U+6CE2	主编码=0x9467(SJIS区)	歌词charmap中是否有字符=False	
+泣	U+6CE3	主编码=0x8B83(SJIS区)	歌词charmap中是否有字符=False	
+注	U+6CE8	主编码=0x9290(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1CE(private区)
+泪	U+6CEA	主编码=0x9FA3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1CF(private区)
+泳	U+6CF3	主编码=0x896A(SJIS区)	歌词charmap中是否有字符=False	
+洁	U+6D01	主编码=0x8C89(SJIS区)	歌词charmap中是否有字符=False	
+洋	U+6D0B	主编码=0x976D(SJIS区)	歌词charmap中是否有字符=False	
+洒	U+6D12	主编码=0xE072(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D0(private区)
+活	U+6D3B	主编码=0x8A88(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D1(private区)
+派	U+6D3E	主编码=0x9468(SJIS区)	歌词charmap中是否有字符=False	
+流	U+6D41	主编码=0x97AC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D2(private区)
+测	U+6D4B	主编码=0x91AA(SJIS区)	歌词charmap中是否有字符=False	
+浦	U+6D66	主编码=0x8959(SJIS区)	歌词charmap中是否有字符=False	
+浩	U+6D69	主编码=0x8D5F(SJIS区)	歌词charmap中是否有字符=False	
+浮	U+6D6E	主编码=0x9582(SJIS区)	歌词charmap中是否有字符=False	
+浴	U+6D74	主编码=0x9781(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D3(private区)
+海	U+6D77	主编码=0x8A43(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D4(private区)
+消	U+6D88	主编码=0x8FC1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D5(private区)
+涟	U+6D9F	主编码=0x97F8(SJIS区)	歌词charmap中是否有字符=False	
+涡	U+6DA1	主编码=0x8951(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D6(private区)
+润	U+6DA6	主编码=0x8F81(SJIS区)	歌词charmap中是否有字符=False	
+涨	U+6DA8	主编码=0x9FFB(SJIS区)	歌词charmap中是否有字符=False	
+涩	U+6DA9	主编码=0xE047(SJIS区)	歌词charmap中是否有字符=False	
+淌	U+6DCC	主编码=0x9FC3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D7(private区)
+淑	U+6DD1	主编码=0x8F69(SJIS区)	歌词charmap中是否有字符=False	
+淡	U+6DE1	主编码=0x9257(SJIS区)	歌词charmap中是否有字符=False	
+深	U+6DF1	主编码=0x905B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D8(private区)
+混	U+6DF7	主编码=0x8DAC(SJIS区)	歌词charmap中是否有字符=False	
+添	U+6DFB	主编码=0x9359(SJIS区)	歌词charmap中是否有字符=False	
+清	U+6E05	主编码=0x90B4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1D9(private区)
+渍	U+6E0D	主编码=0x92D0(SJIS区)	歌词charmap中是否有字符=False	
+渐	U+6E10	主编码=0x9151(SJIS区)	歌词charmap中是否有字符=False	
+渗	U+6E17	主编码=0x9FF8(SJIS区)	歌词charmap中是否有字符=False	
+渡	U+6E21	主编码=0x936E(SJIS区)	歌词charmap中是否有字符=False	
+温	U+6E29	主编码=0x89B7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1DA(private区)
+港	U+6E2F	主编码=0x8D60(SJIS区)	歌词charmap中是否有字符=False	
+渴	U+6E34	主编码=0x8A89(SJIS区)	歌词charmap中是否有字符=False	
+游	U+6E38	主编码=0x9756(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1DB(private区)
+溢	U+6EA2	主编码=0x88EC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1DC(private区)
+溺	U+6EBA	主编码=0x934D(SJIS区)	歌词charmap中是否有字符=False	
+滋	U+6ECB	主编码=0x8EA0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1DD(private区)
+滑	U+6ED1	主编码=0x8A8A(SJIS区)	歌词charmap中是否有字符=False	
+滚	U+6EDA	主编码=0x9FF6(SJIS区)	歌词charmap中是否有字符=False	
+滞	U+6EDE	主编码=0x9FFA(SJIS区)	歌词charmap中是否有字符=False	
+满	U+6EE1	主编码=0x9FDE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1DE(private区)
+滨	U+6EE8	主编码=0xE05F(SJIS区)	歌词charmap中是否有字符=False	
+滩	U+6EE9	主编码=0x93E5(SJIS区)	歌词charmap中是否有字符=False	
+漂	U+6F02	主编码=0x9559(SJIS区)	歌词charmap中是否有字符=False	
+演	U+6F14	主编码=0x8989(SJIS区)	歌词charmap中是否有字符=False	
+漩	U+6F29	主编码=0xEA9A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1DF(private区)
+漪	U+6F2A	主编码=0xE9DC(SJIS区)	歌词charmap中是否有字符=False	
+漫	U+6F2B	主编码=0x969F(SJIS区)	歌词charmap中是否有字符=False	
+潜	U+6F5C	主编码=0xE049(SJIS区)	歌词charmap中是否有字符=False	
+潟	U+6F5F	主编码=0x8A83(SJIS区)	歌词charmap中是否有字符=False	
+潮	U+6F6E	主编码=0x92AA(SJIS区)	歌词charmap中是否有字符=False	
+澈	U+6F88	主编码=0xE9C4(SJIS区)	歌词charmap中是否有字符=False	
+激	U+6FC0	主编码=0x8C83(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E0(private区)
+濑	U+6FD1	主编码=0x90A3(SJIS区)	歌词charmap中是否有字符=False	
+火	U+706B	主编码=0x89CE(SJIS区)	歌词charmap中是否有字符=False	
+灭	U+706D	主编码=0x96C5(SJIS区)	歌词charmap中是否有字符=False	
+灯	U+706F	主编码=0x9395(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E1(private区)
+灰	U+7070	主编码=0x8A44(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E2(private区)
+灵	U+7075	主编码=0xE8CB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E3(private区)
+灿	U+707F	主编码=0x8E57(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E4(private区)
+炫	U+70AB	主编码=0xE9E2(SJIS区)	歌词charmap中是否有字符=False	
+点	U+70B9	主编码=0xEA79(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E5(private区)
+炼	U+70BC	主编码=0x9842(SJIS区)	歌词charmap中是否有字符=False	
+烁	U+70C1	主编码=0xE0A1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E6(private区)
+烂	U+70C2	主编码=0xE0A3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E7(private区)
+烈	U+70C8	主编码=0x97F3(SJIS区)	歌词charmap中是否有字符=False	
+烟	U+70DF	主编码=0xE07C(SJIS区)	歌词charmap中是否有字符=False	
+烤	U+70E4	主编码=0xE991(SJIS区)	歌词charmap中是否有字符=False	
+烦	U+70E6	主编码=0x94CF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E8(private区)
+烧	U+70E7	主编码=0xE096(SJIS区)	歌词charmap中是否有字符=False	
+热	U+70ED	主编码=0x944D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1E9(private区)
+烹	U+70F9	主编码=0x9642(SJIS区)	歌词charmap中是否有字符=False	
+焕	U+7115	主编码=0xE085(SJIS区)	歌词charmap中是否有字符=False	
+焦	U+7126	主编码=0x8FC5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1EA(private区)
+焰	U+7130	主编码=0x898B(SJIS区)	歌词charmap中是否有字符=False	
+然	U+7136	主编码=0x9152(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1EB(private区)
+煌	U+714C	主编码=0xE08A(SJIS区)	歌词charmap中是否有字符=False	
+照	U+7167	主编码=0x8FC6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1EC(private区)
+熊	U+718A	主编码=0x8C46(SJIS区)	歌词charmap中是否有字符=False	
+熟	U+719F	主编码=0x8F6E(SJIS区)	歌词charmap中是否有字符=False	
+燃	U+71C3	主编码=0x9452(SJIS区)	歌词charmap中是否有字符=False	
+燕	U+71D5	主编码=0x898D(SJIS区)	歌词charmap中是否有字符=False	
+爆	U+7206	主编码=0x949A(SJIS区)	歌词charmap中是否有字符=False	
+爪	U+722A	主编码=0x92DC(SJIS区)	歌词charmap中是否有字符=False	
+爬	U+722C	主编码=0xE0A6(SJIS区)	歌词charmap中是否有字符=False	
+爱	U+7231	主编码=0x88A4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1ED(private区)
+爵	U+7235	主编码=0x8EDD(SJIS区)	歌词charmap中是否有字符=False	
+爷	U+7237	主编码=0x96EA(SJIS区)	歌词charmap中是否有字符=False	
+爽	U+723D	主编码=0x9175(SJIS区)	歌词charmap中是否有字符=False	
+片	U+7247	主编码=0x95D0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1EE(private区)
+牌	U+724C	主编码=0x9476(SJIS区)	歌词charmap中是否有字符=False	
+牛	U+725B	主编码=0x8B8D(SJIS区)	歌词charmap中是否有字符=False	
+物	U+7269	主编码=0x95A8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1EF(private区)
+牵	U+7275	主编码=0x8CA1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F0(private区)
+特	U+7279	主编码=0x93C1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F1(private区)
+犀	U+7280	主编码=0x8DD2(SJIS区)	歌词charmap中是否有字符=False	
+犬	U+72AC	主编码=0x8CA2(SJIS区)	歌词charmap中是否有字符=False	
+状	U+72B6	主编码=0x8FF3(SJIS区)	歌词charmap中是否有字符=False	
+狂	U+72C2	主编码=0x8BB6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F2(private区)
+狗	U+72D7	主编码=0x8BE7(SJIS区)	歌词charmap中是否有字符=False	
+独	U+72EC	主编码=0xE0D5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F3(private区)
+猛	U+731B	主编码=0x96D2(SJIS区)	歌词charmap中是否有字符=False	
+猫	U+732B	主编码=0x944C(SJIS区)	歌词charmap中是否有字符=False	
+献	U+732E	主编码=0xE0D9(SJIS区)	歌词charmap中是否有字符=False	
+猴	U+7334	主编码=0xE0CB(SJIS区)	歌词charmap中是否有字符=False	
+率	U+7387	主编码=0x97A6(SJIS区)	歌词charmap中是否有字符=False	
+玉	U+7389	主编码=0x8BCA(SJIS区)	歌词charmap中是否有字符=False	
+王	U+738B	主编码=0x89A4(SJIS区)	歌词charmap中是否有字符=False	
+玩	U+73A9	主编码=0x8AE3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F4(private区)
+玫	U+73AB	主编码=0xE982(SJIS区)	歌词charmap中是否有字符=False	
+环	U+73AF	主编码=0x8AC2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F5(private区)
+现	U+73B0	主编码=0x8CBB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F6(private区)
+玲	U+73B2	主编码=0x97E6(SJIS区)	歌词charmap中是否有字符=False	
+玻	U+73BB	主编码=0xE0DE(SJIS区)	歌词charmap中是否有字符=False	
+珍	U+73CD	主编码=0x92BF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F7(private区)
+珑	U+73D1	主编码=0xE0FA(SJIS区)	歌词charmap中是否有字符=False	
+珠	U+73E0	主编码=0x8EEC(SJIS区)	歌词charmap中是否有字符=False	
+班	U+73ED	主编码=0x94C7(SJIS区)	歌词charmap中是否有字符=False	
+球	U+7403	主编码=0x8B85(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F8(private区)
+理	U+7406	主编码=0x979D(SJIS区)	歌词charmap中是否有字符=False	
+琉	U+7409	主编码=0x97AE(SJIS区)	歌词charmap中是否有字符=False	
+琐	U+7410	主编码=0xE0F2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1F9(private区)
+瑰	U+7470	主编码=0xE0F1(SJIS区)	歌词charmap中是否有字符=False	
+璀	U+7480	主编码=0xEA9E(SJIS区)	歌词charmap中是否有字符=False	
+璃	U+7483	主编码=0x979E(SJIS区)	歌词charmap中是否有字符=False	
+璨	U+74A8	主编码=0xE9D9(SJIS区)	歌词charmap中是否有字符=False	
+瓜	U+74DC	主编码=0x895A(SJIS区)	歌词charmap中是否有字符=False	
+瓶	U+74F6	主编码=0x9572(SJIS区)	歌词charmap中是否有字符=False	
+甜	U+751C	主编码=0x935B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1FA(private区)
+生	U+751F	主编码=0x90B6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1FB(private区)
+用	U+7528	主编码=0x9770(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF1FC(private区)
+田	U+7530	主编码=0x9363(SJIS区)	歌词charmap中是否有字符=False	
+由	U+7531	主编码=0x9752(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF240(private区)
+申	U+7533	主编码=0x905C(SJIS区)	歌词charmap中是否有字符=False	
+电	U+7535	主编码=0x9364(SJIS区)	歌词charmap中是否有字符=False	
+男	U+7537	主编码=0x926A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF241(private区)
+画	U+753B	主编码=0xE160(SJIS区)	歌词charmap中是否有字符=False	
+畅	U+7545	主编码=0x92A8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF242(private区)
+界	U+754C	主编码=0x8A45(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF243(private区)
+留	U+7559	主编码=0x97AF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF244(private区)
+略	U+7565	主编码=0x97AA(SJIS区)	歌词charmap中是否有字符=False	
+番	U+756A	主编码=0x94D4(SJIS区)	歌词charmap中是否有字符=False	
+疲	U+75B2	主编码=0x94E6(SJIS区)	歌词charmap中是否有字符=False	
+疼	U+75BC	主编码=0xE175(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF245(private区)
+病	U+75C5	主编码=0x9561(SJIS区)	歌词charmap中是否有字符=False	
+症	U+75C7	主编码=0x8FC7(SJIS区)	歌词charmap中是否有字符=False	
+痛	U+75DB	主编码=0x92C9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF246(private区)
+登	U+767B	主编码=0x936F(SJIS区)	歌词charmap中是否有字符=False	
+白	U+767D	主编码=0x9492(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF247(private区)
+的	U+7684	主编码=0x9349(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF248(private区)
+皮	U+76AE	主编码=0x94E7(SJIS区)	歌词charmap中是否有字符=False	
+盈	U+76C8	主编码=0x896D(SJIS区)	歌词charmap中是否有字符=False	
+监	U+76D1	主编码=0x8AC4(SJIS区)	歌词charmap中是否有字符=False	
+盗	U+76D7	主编码=0x9F58(SJIS区)	歌词charmap中是否有字符=False	
+盘	U+76D8	主编码=0x94D5(SJIS区)	歌词charmap中是否有字符=False	
+目	U+76EE	主编码=0x96DA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF249(private区)
+直	U+76F4	主编码=0x92BC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF24A(private区)
+相	U+76F8	主编码=0x918A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF24B(private区)
+省	U+7701	主编码=0x8FC8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF24C(private区)
+眉	U+7709	主编码=0x94FB(SJIS区)	歌词charmap中是否有字符=False	
+看	U+770B	主编码=0x8AC5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF24D(private区)
+真	U+771F	主编码=0x905E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF24E(private区)
+眨	U+7728	主编码=0xE9EC(SJIS区)	歌词charmap中是否有字符=False	
+眩	U+7729	主编码=0xE1BF(SJIS区)	歌词charmap中是否有字符=False	
+眯	U+772F	主编码=0xEA69(SJIS区)	歌词charmap中是否有字符=False	
+眼	U+773C	主编码=0x8AE1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF24F(private区)
+着	U+7740	主编码=0x9285(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF250(private区)
+睡	U+7761	主编码=0x9087(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF251(private区)
+督	U+7763	主编码=0x93C2(SJIS区)	歌词charmap中是否有字符=False	
+瞎	U+778E	主编码=0xE1D0(SJIS区)	歌词charmap中是否有字符=False	
+瞬	U+77AC	主编码=0x8F75(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF252(private区)
+瞳	U+77B3	主编码=0x93B5(SJIS区)	歌词charmap中是否有字符=False	
+知	U+77E5	主编码=0x926D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF253(private区)
+短	U+77ED	主编码=0x925A(SJIS区)	歌词charmap中是否有字符=False	
+石	U+77F3	主编码=0x90CE(SJIS区)	歌词charmap中是否有字符=False	
+研	U+7814	主编码=0x8CA4(SJIS区)	歌词charmap中是否有字符=False	
+砰	U+7830	主编码=0xEA56(SJIS区)	歌词charmap中是否有字符=False	
+破	U+7834	主编码=0x946A(SJIS区)	歌词charmap中是否有字符=False	
+础	U+7840	主编码=0x9162(SJIS区)	歌词charmap中是否有字符=False	
+硬	U+786C	主编码=0x8D64(SJIS区)	歌词charmap中是否有字符=False	
+确	U+786E	主编码=0x8A6D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF254(private区)
+碌	U+788C	主编码=0xE1EF(SJIS区)	歌词charmap中是否有字符=False	
+碍	U+788D	主编码=0xE247(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF255(private区)
+碎	U+788E	主编码=0xE1EA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF256(private区)
+碗	U+7897	主编码=0x9871(SJIS区)	歌词charmap中是否有字符=False	
+碰	U+78B0	主编码=0xEA66(SJIS区)	歌词charmap中是否有字符=False	
+磨	U+78E8	主编码=0x9681(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF257(private区)
+示	U+793A	主编码=0x8EA6(SJIS区)	歌词charmap中是否有字符=False	
+礼	U+793C	主编码=0xE258(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF258(private区)
+社	U+793E	主编码=0x8ED0(SJIS区)	歌词charmap中是否有字符=False	
+神	U+795E	主编码=0x905F(SJIS区)	歌词charmap中是否有字符=False	
+票	U+7968	主编码=0x955B(SJIS区)	歌词charmap中是否有字符=False	
+祭	U+796D	主编码=0x8DD5(SJIS区)	歌词charmap中是否有字符=False	
+禁	U+7981	主编码=0x8BD6(SJIS区)	歌词charmap中是否有字符=False	
+福	U+798F	主编码=0x959F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF259(private区)
+离	U+79BB	主编码=0x97A3(SJIS区)	歌词charmap中是否有字符=False	
+秀	U+79C0	主编码=0x8F47(SJIS区)	歌词charmap中是否有字符=False	
+私	U+79C1	主编码=0x8E84(SJIS区)	歌词charmap中是否有字符=False	
+秋	U+79CB	主编码=0x8F48(SJIS区)	歌词charmap中是否有字符=False	
+种	U+79CD	主编码=0x8EED(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF25A(private区)
+科	U+79D1	主编码=0x89C8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF25B(private区)
+秒	U+79D2	主编码=0x9562(SJIS区)	歌词charmap中是否有字符=False	
+秘	U+79D8	主编码=0xE24F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF25C(private区)
+积	U+79EF	主编码=0x90CF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF25D(private区)
+称	U+79F0	主编码=0xE269(SJIS区)	歌词charmap中是否有字符=False	
+移	U+79FB	主编码=0x88DA(SJIS区)	歌词charmap中是否有字符=False	
+程	U+7A0B	主编码=0x92F6(SJIS区)	歌词charmap中是否有字符=False	
+稍	U+7A0D	主编码=0xE263(SJIS区)	歌词charmap中是否有字符=False	
+稽	U+7A3D	主编码=0x8C6D(SJIS区)	歌词charmap中是否有字符=False	
+究	U+7A76	主编码=0x8B86(SJIS区)	歌词charmap中是否有字符=False	
+空	U+7A7A	主编码=0x8BF3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF25E(private区)
+穿	U+7A7F	主编码=0x90FA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF25F(private区)
+突	U+7A81	主编码=0x93CB(SJIS区)	歌词charmap中是否有字符=False	
+立	U+7ACB	主编码=0x97A7(SJIS区)	歌词charmap中是否有字符=False	
+站	U+7AD9	主编码=0xE28B(SJIS区)	歌词charmap中是否有字符=False	
+竟	U+7ADF	主编码=0xE8ED(SJIS区)	歌词charmap中是否有字符=False	
+童	U+7AE5	主编码=0x93B6(SJIS区)	歌词charmap中是否有字符=False	
+端	U+7AEF	主编码=0x925B(SJIS区)	歌词charmap中是否有字符=False	
+竹	U+7AF9	主编码=0x927C(SJIS区)	歌词charmap中是否有字符=False	
+笑	U+7B11	主编码=0x8FCE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF260(private区)
+笔	U+7B14	主编码=0x954D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF261(private区)
+符	U+7B26	主编码=0x9584(SJIS区)	歌词charmap中是否有字符=False	
+笨	U+7B28	主编码=0xE29C(SJIS区)	歌词charmap中是否有字符=False	
+第	U+7B2C	主编码=0x91E6(SJIS区)	歌词charmap中是否有字符=False	
+等	U+7B49	主编码=0x9399(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF262(private区)
+答	U+7B54	主编码=0x939A(SJIS区)	歌词charmap中是否有字符=False	
+策	U+7B56	主编码=0x8DF4(SJIS区)	歌词charmap中是否有字符=False	
+签	U+7B7E	主编码=0xE2DC(SJIS区)	歌词charmap中是否有字符=False	
+简	U+7B80	主编码=0x8AC8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF263(private区)
+箍	U+7B8D	主编码=0xE2B0(SJIS区)	歌词charmap中是否有字符=False	
+算	U+7B97	主编码=0x8E5A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF264(private区)
+管	U+7BA1	主编码=0x8AC7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF265(private区)
+箱	U+7BB1	主编码=0x94A0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF266(private区)
+篇	U+7BC7	主编码=0x95D1(SJIS区)	歌词charmap中是否有字符=False	
+篷	U+7BF7	主编码=0xE2C9(SJIS区)	歌词charmap中是否有字符=False	
+米	U+7C73	主编码=0x95C4(SJIS区)	歌词charmap中是否有字符=False	
+类	U+7C7B	主编码=0x97DE(SJIS区)	歌词charmap中是否有字符=False	
+粉	U+7C89	主编码=0x95B2(SJIS区)	歌词charmap中是否有字符=False	
+粗	U+7C97	主编码=0x9165(SJIS区)	歌词charmap中是否有字符=False	
+粹	U+7CB9	主编码=0xE2ED(SJIS区)	歌词charmap中是否有字符=False	
+精	U+7CBE	主编码=0x90B8(SJIS区)	歌词charmap中是否有字符=False	
+糖	U+7CD6	主编码=0x939C(SJIS区)	歌词charmap中是否有字符=False	
+糙	U+7CD9	主编码=0xE9DD(SJIS区)	歌词charmap中是否有字符=False	
+糟	U+7CDF	主编码=0x918C(SJIS区)	歌词charmap中是否有字符=False	
+系	U+7CFB	主编码=0x8C71(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF267(private区)
+素	U+7D20	主编码=0x9166(SJIS区)	歌词charmap中是否有字符=False	
+索	U+7D22	主编码=0x8DF5(SJIS区)	歌词charmap中是否有字符=False	
+紧	U+7D27	主编码=0x8BD9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF268(private区)
+累	U+7D2F	主编码=0x97DD(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF269(private区)
+繁	U+7E41	主编码=0x94C9(SJIS区)	歌词charmap中是否有字符=False	
+红	U+7EA2	主编码=0x8D67(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF26A(private区)
+约	U+7EA6	主编码=0x96F1(SJIS区)	歌词charmap中是否有字符=False	
+级	U+7EA7	主编码=0x8B89(SJIS区)	歌词charmap中是否有字符=False	
+纪	U+7EAA	主编码=0x8B49(SJIS区)	歌词charmap中是否有字符=False	
+纯	U+7EAF	主编码=0x8F83(SJIS区)	歌词charmap中是否有字符=False	
+纱	U+7EB1	主编码=0x8ED1(SJIS区)	歌词charmap中是否有字符=False	
+纳	U+7EB3	主编码=0x945B(SJIS区)	歌词charmap中是否有字符=False	
+纹	U+7EB9	主编码=0x96E4(SJIS区)	歌词charmap中是否有字符=False	
+纺	U+7EBA	主编码=0x9661(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF26B(private区)
+线	U+7EBF	主编码=0xE35F(SJIS区)	歌词charmap中是否有字符=False	
+练	U+7EC3	主编码=0x97FB(SJIS区)	歌词charmap中是否有字符=False	
+组	U+7EC4	主编码=0x9167(SJIS区)	歌词charmap中是否有字符=False	
+绅	U+7EC5	主编码=0x9061(SJIS区)	歌词charmap中是否有字符=False	
+细	U+7EC6	主编码=0x8DD7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF26C(private区)
+织	U+7EC7	主编码=0x9044(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF26D(private区)
+终	U+7EC8	主编码=0x8F49(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF26E(private区)
+经	U+7ECF	主编码=0xE353(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF26F(private区)
+绒	U+7ED2	主编码=0xE34F(SJIS区)	歌词charmap中是否有字符=False	
+结	U+7ED3	主编码=0x8C8B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF270(private区)
+绕	U+7ED5	主编码=0xE385(SJIS区)	歌词charmap中是否有字符=False	
+绘	U+7ED8	主编码=0x8A47(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF271(private区)
+给	U+7ED9	主编码=0x8B8B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF272(private区)
+绚	U+7EDA	主编码=0x88BA(SJIS区)	歌词charmap中是否有字符=False	
+络	U+7EDC	主编码=0x978D(SJIS区)	歌词charmap中是否有字符=False	
+绝	U+7EDD	主编码=0x90E2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF273(private区)
+继	U+7EE7	主编码=0x8C70(SJIS区)	歌词charmap中是否有字符=False	
+绪	U+7EEA	主编码=0xEA48(SJIS区)	歌词charmap中是否有字符=False	
+续	U+7EED	主编码=0xE394(SJIS区)	歌词charmap中是否有字符=False	
+绳	U+7EF3	主编码=0xE38A(SJIS区)	歌词charmap中是否有字符=False	
+维	U+7EF4	主编码=0x88DB(SJIS区)	歌词charmap中是否有字符=False	
+绵	U+7EF5	主编码=0x96C8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF274(private区)
+绷	U+7EF7	主编码=0xE37D(SJIS区)	歌词charmap中是否有字符=False	
+综	U+7EFC	主编码=0x918E(SJIS区)	歌词charmap中是否有字符=False	
+绽	U+7EFD	主编码=0x925D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF275(private区)
+绿	U+7EFF	主编码=0x97CE(SJIS区)	歌词charmap中是否有字符=False	
+缎	U+7F0E	主编码=0xE36A(SJIS区)	歌词charmap中是否有字符=False	
+编	U+7F16	主编码=0x95D2(SJIS区)	歌词charmap中是否有字符=False	
+缩	U+7F29	主编码=0x8F6B(SJIS区)	歌词charmap中是否有字符=False	
+网	U+7F51	主编码=0xE3A4(SJIS区)	歌词charmap中是否有字符=False	
+罗	U+7F57	主编码=0x9785(SJIS区)	歌词charmap中是否有字符=False	
+罢	U+7F62	主编码=0x94EB(SJIS区)	歌词charmap中是否有字符=False	
+罩	U+7F69	主编码=0xE3AB(SJIS区)	歌词charmap中是否有字符=False	
+罪	U+7F6A	主编码=0x8DDF(SJIS区)	歌词charmap中是否有字符=False	
+置	U+7F6E	主编码=0x9275(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF276(private区)
+美	U+7F8E	主编码=0x94FC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF277(private区)
+羞	U+7F9E	主编码=0xE3B5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF278(private区)
+羡	U+7FA1	主编码=0x9141(SJIS区)	歌词charmap中是否有字符=False	
+群	U+7FA4	主编码=0x8C51(SJIS区)	歌词charmap中是否有字符=False	
+羽	U+7FBD	主编码=0x8948(SJIS区)	歌词charmap中是否有字符=False	
+翅	U+7FC5	主编码=0xE3C0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF279(private区)
+翼	U+7FFC	主编码=0x9783(SJIS区)	歌词charmap中是否有字符=False	
+耀	U+8000	主编码=0x9773(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF27C(private区)
+老	U+8001	主编码=0x9856(SJIS区)	歌词charmap中是否有字符=False	
+考	U+8003	主编码=0x8D6C(SJIS区)	歌词charmap中是否有字符=False	
+者	U+8005	主编码=0x8ED2(SJIS区)	歌词charmap中是否有字符=False	
+而	U+800C	主编码=0x8EA7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF27D(private区)
+耐	U+8010	主编码=0x91CF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF27E(private区)
+耳	U+8033	主编码=0x8EA8(SJIS区)	歌词charmap中是否有字符=False	
+耶	U+8036	主编码=0x96EB(SJIS区)	歌词charmap中是否有字符=False	
+耻	U+803B	主编码=0x9270(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF280(private区)
+聊	U+804A	主编码=0xE3D6(SJIS区)	歌词charmap中是否有字符=False	
+职	U+804C	主编码=0x9045(SJIS区)	歌词charmap中是否有字符=False	
+联	U+8054	主编码=0x9841(SJIS区)	歌词charmap中是否有字符=False	
+聚	U+805A	主编码=0xE3DA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF281(private区)
+肉	U+8089	主编码=0x93F7(SJIS区)	歌词charmap中是否有字符=False	
+股	U+80A1	主编码=0x8CD2(SJIS区)	歌词charmap中是否有字符=False	
+肩	U+80A9	主编码=0x8CA8(SJIS区)	歌词charmap中是否有字符=False	
+肯	U+80AF	主编码=0x8D6D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF282(private区)
+育	U+80B2	主编码=0x88E7(SJIS区)	歌词charmap中是否有字符=False	
+胆	U+80C6	主编码=0xE45B(SJIS区)	歌词charmap中是否有字符=False	
+背	U+80CC	主编码=0x9477(SJIS区)	歌词charmap中是否有字符=False	
+胜	U+80DC	主编码=0x8F9F(SJIS区)	歌词charmap中是否有字符=False	
+胸	U+80F8	主编码=0x8BB9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF283(private区)
+能	U+80FD	主编码=0x945C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF284(private区)
+脆	U+8106	主编码=0x90C6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF285(private区)
+脑	U+8111	主编码=0xE449(SJIS区)	歌词charmap中是否有字符=False	
+脚	U+811A	主编码=0x8B72(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF286(private区)
+脱	U+8131	主编码=0x9245(SJIS区)	歌词charmap中是否有字符=False	
+脸	U+8138	主编码=0xE45F(SJIS区)	歌词charmap中是否有字符=False	
+腕	U+8155	主编码=0x9872(SJIS区)	歌词charmap中是否有字符=False	
+腾	U+817E	主编码=0x93AB(SJIS区)	歌词charmap中是否有字符=False	
+臂	U+81C2	主编码=0xE45D(SJIS区)	歌词charmap中是否有字符=False	
+自	U+81EA	主编码=0x8EA9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF287(private区)
+至	U+81F3	主编码=0x8E8A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF288(private区)
+舍	U+820D	主编码=0xE471(SJIS区)	歌词charmap中是否有字符=False	
+舞	U+821E	主编码=0x9591(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF289(private区)
+般	U+822C	主编码=0x94CA(SJIS区)	歌词charmap中是否有字符=False	
+船	U+8239	主编码=0x9144(SJIS区)	歌词charmap中是否有字符=False	
+艇	U+8247	主编码=0x92F8(SJIS区)	歌词charmap中是否有字符=False	
+良	U+826F	主编码=0x97C7(SJIS区)	歌词charmap中是否有字符=False	
+艰	U+8270	主编码=0xE485(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF28A(private区)
+色	U+8272	主编码=0x9046(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF28B(private区)
+艺	U+827A	主编码=0xE559(SJIS区)	歌词charmap中是否有字符=False	
+节	U+8282	主编码=0x90DF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF28C(private区)
+芒	U+8292	主编码=0xE48A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF28D(private区)
+花	U+82B1	主编码=0x89D4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF28E(private区)
+芳	U+82B3	主编码=0x9646(SJIS区)	歌词charmap中是否有字符=False	
+芽	U+82BD	主编码=0x89E8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF28F(private区)
+苍	U+82CD	主编码=0x9193(SJIS区)	歌词charmap中是否有字符=False	
+苗	U+82D7	主编码=0x9563(SJIS区)	歌词charmap中是否有字符=False	
+若	U+82E5	主编码=0x8EE1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF290(private区)
+苦	U+82E6	主编码=0x8BEA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF291(private区)
+英	U+82F1	主编码=0x8970(SJIS区)	歌词charmap中是否有字符=False	
+范	U+8303	主编码=0xE497(SJIS区)	歌词charmap中是否有字符=False	
+茨	U+8328	主编码=0x88EF(SJIS区)	歌词charmap中是否有字符=False	
+茫	U+832B	主编码=0xE4A9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF292(private区)
+茶	U+8336	主编码=0x9283(SJIS区)	歌词charmap中是否有字符=False	
+草	U+8349	主编码=0x9190(SJIS区)	歌词charmap中是否有字符=False	
+荒	U+8352	主编码=0x8D72(SJIS区)	歌词charmap中是否有字符=False	
+荷	U+8377	主编码=0x89D7(SJIS区)	歌词charmap中是否有字符=False	
+莉	U+8389	主编码=0xE4BB(SJIS区)	歌词charmap中是否有字符=False	
+莓	U+8393	主编码=0xE496(SJIS区)	歌词charmap中是否有字符=False	
+莫	U+83AB	主编码=0x949C(SJIS区)	歌词charmap中是否有字符=False	
+莲	U+83B2	主编码=0x9840(SJIS区)	歌词charmap中是否有字符=False	
+获	U+83B7	主编码=0x8A6E(SJIS区)	歌词charmap中是否有字符=False	
+菊	U+83CA	主编码=0x8B65(SJIS区)	歌词charmap中是否有字符=False	
+菜	U+83DC	主编码=0x8DD8(SJIS区)	歌词charmap中是否有字符=False	
+菲	U+83F2	主编码=0xE4C9(SJIS区)	歌词charmap中是否有字符=False	
+萌	U+840C	主编码=0x9647(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF293(private区)
+营	U+8425	主编码=0x9A7A(SJIS区)	歌词charmap中是否有字符=False	
+萩	U+8429	主编码=0x948B(SJIS区)	歌词charmap中是否有字符=False	
+落	U+843D	主编码=0x978E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF294(private区)
+葵	U+8475	主编码=0x88A8(SJIS区)	歌词charmap中是否有字符=False	
+蒼	U+84BC	主编码=0xE986(SJIS区)	歌词charmap中是否有字符=False	
+蓄	U+84C4	主编码=0x927E(SJIS区)	歌词charmap中是否有字符=False	
+蓝	U+84DD	主编码=0x9795(SJIS区)	歌词charmap中是否有字符=False	
+蓬	U+84EC	主编码=0x9648(SJIS区)	歌词charmap中是否有字符=False	
+蕾	U+857E	主编码=0xE551(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF295(private区)
+藏	U+85CF	主编码=0xE555(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF296(private区)
+藤	U+85E4	主编码=0x93A1(SJIS区)	歌词charmap中是否有字符=False	
+虑	U+8651	主编码=0x97B6(SJIS区)	歌词charmap中是否有字符=False	
+虹	U+8679	主编码=0x93F8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF297(private区)
+虽	U+867D	主编码=0xE5AB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF298(private区)
+虾	U+867E	主编码=0x89DA(SJIS区)	歌词charmap中是否有字符=False	
+蛋	U+86CB	主编码=0x9260(SJIS区)	歌词charmap中是否有字符=False	
+蜕	U+8715	主编码=0xE588(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF299(private区)
+蜜	U+871C	主编码=0x96A8(SJIS区)	歌词charmap中是否有字符=False	
+蝎	U+874E	主编码=0xE5B6(SJIS区)	歌词charmap中是否有字符=False	
+蝴	U+8774	主编码=0xE59A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF29A(private区)
+蝶	U+8776	主编码=0x92B1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF29B(private区)
+融	U+878D	主编码=0x975A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF29C(private区)
+血	U+8840	主编码=0x8C8C(SJIS区)	歌词charmap中是否有字符=False	
+行	U+884C	主编码=0x8D73(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF29D(private区)
+街	U+8857	主编码=0x8A58(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF29E(private区)
+衡	U+8861	主编码=0x8D74(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF29F(private区)
+衣	U+8863	主编码=0x88DF(SJIS区)	歌词charmap中是否有字符=False	
+补	U+8865	主编码=0x95E2(SJIS区)	歌词charmap中是否有字符=False	
+表	U+8868	主编码=0x955C(SJIS区)	歌词charmap中是否有字符=False	
+衫	U+886B	主编码=0xE5CC(SJIS区)	歌词charmap中是否有字符=False	
+衷	U+8877	主编码=0x928F(SJIS区)	歌词charmap中是否有字符=False	
+袋	U+888B	主编码=0x91DC(SJIS区)	歌词charmap中是否有字符=False	
+被	U+88AB	主编码=0x94ED(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A0(private区)
+装	U+88C5	主编码=0xE5E4(SJIS区)	歌词charmap中是否有字符=False	
+裹	U+88F9	主编码=0xE5E5(SJIS区)	歌词charmap中是否有字符=False	
+褒	U+8912	主编码=0x964A(SJIS区)	歌词charmap中是否有字符=False	
+西	U+897F	主编码=0x90BC(SJIS区)	歌词charmap中是否有字符=False	
+要	U+8981	主编码=0x9776(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A1(private区)
+见	U+89C1	主编码=0x8CA9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A2(private区)
+观	U+89C2	主编码=0xE656(SJIS区)	歌词charmap中是否有字符=False	
+规	U+89C4	主编码=0x8B4B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A3(private区)
+视	U+89C6	主编码=0x8E8B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A4(private区)
+觉	U+89C9	主编码=0xE653(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A5(private区)
+角	U+89D2	主编码=0x8A70(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A6(private区)
+解	U+89E3	主编码=0x89F0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A7(private区)
+触	U+89E6	主编码=0xE65C(SJIS区)	歌词charmap中是否有字符=False	
+言	U+8A00	主编码=0x8CBE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A8(private区)
+誓	U+8A93	主编码=0x90BE(SJIS区)	歌词charmap中是否有字符=False	
+警	U+8B66	主编码=0x8C78(SJIS区)	歌词charmap中是否有字符=False	
+计	U+8BA1	主编码=0x8C76(SJIS区)	歌词charmap中是否有字符=False	
+订	U+8BA2	主编码=0x92F9(SJIS区)	歌词charmap中是否有字符=False	
+认	U+8BA4	主编码=0x9446(SJIS区)	歌词charmap中是否有字符=False	
+讨	U+8BA8	主编码=0x93A2(SJIS区)	歌词charmap中是否有字符=False	
+让	U+8BA9	主编码=0xE6A8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2A9(private区)
+训	U+8BAD	主编码=0x8C50(SJIS区)	歌词charmap中是否有字符=False	
+议	U+8BAE	主编码=0x8B63(SJIS区)	歌词charmap中是否有字符=False	
+讯	U+8BAF	主编码=0x9075(SJIS区)	歌词charmap中是否有字符=False	
+记	U+8BB0	主编码=0x8B4C(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2AA(private区)
+讲	U+8BB2	主编码=0x8D75(SJIS区)	歌词charmap中是否有字符=False	
+讶	U+8BB6	主编码=0xE662(SJIS区)	歌词charmap中是否有字符=False	
+许	U+8BB8	主编码=0x8B96(SJIS区)	歌词charmap中是否有字符=False	
+论	U+8BBA	主编码=0x985F(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2AB(private区)
+设	U+8BBE	主编码=0x90DD(SJIS区)	歌词charmap中是否有字符=False	
+访	U+8BBF	主编码=0x964B(SJIS区)	歌词charmap中是否有字符=False	
+证	U+8BC1	主编码=0xE69A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2AC(private区)
+评	U+8BC4	主编码=0x955D(SJIS区)	歌词charmap中是否有字符=False	
+诅	U+8BC5	主编码=0xE666(SJIS区)	歌词charmap中是否有字符=False	
+识	U+8BC6	主编码=0x8EAF(SJIS区)	歌词charmap中是否有字符=False	
+诈	U+8BC8	主编码=0x8DBC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2AD(private区)
+诉	U+8BC9	主编码=0x9169(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2AE(private区)
+词	U+8BCD	主编码=0x8E8C(SJIS区)	歌词charmap中是否有字符=False	
+试	U+8BD5	主编码=0x8E8E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2AF(private区)
+诗	U+8BD7	主编码=0x8E8D(SJIS区)	歌词charmap中是否有字符=False	
+话	U+8BDD	主编码=0x9862(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B0(private区)
+诞	U+8BDE	主编码=0x9261(SJIS区)	歌词charmap中是否有字符=False	
+该	U+8BE5	主编码=0x8A59(SJIS区)	歌词charmap中是否有字符=False	
+详	U+8BE6	主编码=0x8FDA(SJIS区)	歌词charmap中是否有字符=False	
+语	U+8BED	主编码=0x8CEA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B1(private区)
+误	U+8BEF	主编码=0x8CEB(SJIS区)	歌词charmap中是否有字符=False	
+说	U+8BF4	主编码=0x90E0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B2(private区)
+诶	U+8BF6	主编码=0xE9F3(SJIS区)	歌词charmap中是否有字符=False	
+请	U+8BF7	主编码=0x90BF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B3(private区)
+诸	U+8BF8	主编码=0x8F94(SJIS区)	歌词charmap中是否有字符=False	
+读	U+8BFB	主编码=0xE6A4(SJIS区)	歌词charmap中是否有字符=False	
+课	U+8BFE	主编码=0x89DB(SJIS区)	歌词charmap中是否有字符=False	
+谁	U+8C01	主编码=0x924E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B4(private区)
+调	U+8C03	主编码=0x92B2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B5(private区)
+谅	U+8C05	主编码=0x97C8(SJIS区)	歌词charmap中是否有字符=False	
+谈	U+8C08	主编码=0x926B(SJIS区)	歌词charmap中是否有字符=False	
+谓	U+8C13	主编码=0x88E0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B6(private区)
+谢	U+8C22	主编码=0x8ED3(SJIS区)	歌词charmap中是否有字符=False	
+谣	U+8C23	主编码=0x9777(SJIS区)	歌词charmap中是否有字符=False	
+谨	U+8C28	主编码=0x8BDE(SJIS区)	歌词charmap中是否有字符=False	
+谷	U+8C37	主编码=0x924A(SJIS区)	歌词charmap中是否有字符=False	
+象	U+8C61	主编码=0x8FDB(SJIS区)	歌词charmap中是否有字符=False	
+豪	U+8C6A	主编码=0x8D8B(SJIS区)	歌词charmap中是否有字符=False	
+貌	U+8C8C	主编码=0x9665(SJIS区)	歌词charmap中是否有字符=False	
+负	U+8D1F	主编码=0x9589(SJIS区)	歌词charmap中是否有字符=False	
+责	U+8D23	主编码=0x90D3(SJIS区)	歌词charmap中是否有字符=False	
+败	U+8D25	主编码=0x9473(SJIS区)	歌词charmap中是否有字符=False	
+质	U+8D28	主编码=0x8EBF(SJIS区)	歌词charmap中是否有字符=False	
+贩	U+8D29	主编码=0x94CC(SJIS区)	歌词charmap中是否有字符=False	
+购	U+8D2D	主编码=0x8D77(SJIS区)	歌词charmap中是否有字符=False	
+贯	U+8D2F	主编码=0x8AD1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B7(private区)
+贴	U+8D34	主编码=0x935C(SJIS区)	歌词charmap中是否有字符=False	
+贵	U+8D35	主编码=0x8B4D(SJIS区)	歌词charmap中是否有字符=False	
+费	U+8D39	主编码=0x94EF(SJIS区)	歌词charmap中是否有字符=False	
+贺	U+8D3A	主编码=0x89EA(SJIS区)	歌词charmap中是否有字符=False	
+贼	U+8D3C	主编码=0x91AF(SJIS区)	歌词charmap中是否有字符=False	
+赌	U+8D4C	主编码=0x9371(SJIS区)	歌词charmap中是否有字符=False	
+赏	U+8D4F	主编码=0x8FDC(SJIS区)	歌词charmap中是否有字符=False	
+赖	U+8D56	主编码=0x978A(SJIS区)	歌词charmap中是否有字符=False	
+赛	U+8D5B	主编码=0xE6CE(SJIS区)	歌词charmap中是否有字符=False	
+赞	U+8D5E	主编码=0x8E5E(SJIS区)	歌词charmap中是否有字符=False	
+赤	U+8D64	主编码=0x90D4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B8(private区)
+走	U+8D70	主编码=0x9196(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2B9(private区)
+赴	U+8D74	主编码=0x958B(SJIS区)	歌词charmap中是否有字符=False	
+赶	U+8D76	主编码=0xE9C2(SJIS区)	歌词charmap中是否有字符=False	
+起	U+8D77	主编码=0x8B4E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2BA(private区)
+超	U+8D85	主编码=0x92B4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2BB(private区)
+越	U+8D8A	主编码=0x897A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2BC(private区)
+趋	U+8D8B	主编码=0x9096(SJIS区)	歌词charmap中是否有字符=False	
+趟	U+8D9F	主编码=0xEA9D(SJIS区)	歌词charmap中是否有字符=False	
+趣	U+8DA3	主编码=0x8EEF(SJIS区)	歌词charmap中是否有字符=False	
+足	U+8DB3	主编码=0x91AB(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2BD(private区)
+跃	U+8DC3	主编码=0x96F4(SJIS区)	歌词charmap中是否有字符=False	
+跌	U+8DCC	主编码=0xE6E9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2BE(private区)
+跑	U+8DD1	主编码=0xE970(SJIS区)	歌词charmap中是否有字符=False	
+距	U+8DDD	主编码=0x8B97(SJIS区)	歌词charmap中是否有字符=False	
+跟	U+8DDF	主编码=0xE6EE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2BF(private区)
+跤	U+8DE4	主编码=0xE9D6(SJIS区)	歌词charmap中是否有字符=False	
+跨	U+8DE8	主编码=0x8CD7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C0(private区)
+跪	U+8DEA	主编码=0xE6EC(SJIS区)	歌词charmap中是否有字符=False	
+路	U+8DEF	主编码=0x9848(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C1(private区)
+跳	U+8DF3	主编码=0x92B5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C2(private区)
+践	U+8DF5	主编码=0x9148(SJIS区)	歌词charmap中是否有字符=False	
+踏	U+8E0F	主编码=0x93A5(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C3(private区)
+踪	U+8E2A	主编码=0xE748(SJIS区)	歌词charmap中是否有字符=False	
+蹈	U+8E48	主编码=0xE744(SJIS区)	歌词charmap中是否有字符=False	
+蹦	U+8E66	主编码=0xE9BA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C4(private区)
+躁	U+8E81	主编码=0xE74E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C5(private区)
+身	U+8EAB	主编码=0x9067(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C6(private区)
+车	U+8F66	主编码=0x8ED4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C7(private区)
+转	U+8F6C	主编码=0xE77A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C8(private区)
+轮	U+8F6E	主编码=0x97D6(SJIS区)	歌词charmap中是否有字符=False	
+软	U+8F6F	主编码=0x93EE(SJIS区)	歌词charmap中是否有字符=False	
+轻	U+8F7B	主编码=0xE76A(SJIS区)	歌词charmap中是否有字符=False	
+载	U+8F7D	主编码=0x8DDA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2C9(private区)
+较	U+8F83	主编码=0x8A72(SJIS区)	歌词charmap中是否有字符=False	
+辈	U+8F88	主编码=0x9479(SJIS区)	歌词charmap中是否有字符=False	
+辉	U+8F89	主编码=0x8B50(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2CA(private区)
+辑	U+8F91	主编码=0x8F53(SJIS区)	歌词charmap中是否有字符=False	
+输	U+8F93	主编码=0x9741(SJIS区)	歌词charmap中是否有字符=False	
+辛	U+8F9B	主编码=0x9068(SJIS区)	歌词charmap中是否有字符=False	
+辜	U+8F9C	主编码=0xE783(SJIS区)	歌词charmap中是否有字符=False	
+辞	U+8F9E	主编码=0xE786(SJIS区)	歌词charmap中是否有字符=False	
+辰	U+8FB0	主编码=0x9243(SJIS区)	歌词charmap中是否有字符=False	
+边	U+8FB9	主编码=0xE7B2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2CB(private区)
+达	U+8FBE	主编码=0x9242(SJIS区)	歌词charmap中是否有字符=False	
+过	U+8FC7	主编码=0x89DF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2CC(private区)
+迈	U+8FC8	主编码=0xE7B0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2CD(private区)
+迎	U+8FCE	主编码=0x8C7D(SJIS区)	歌词charmap中是否有字符=False	
+运	U+8FD0	主编码=0x895E(SJIS区)	歌词charmap中是否有字符=False	
+近	U+8FD1	主编码=0x8BDF(SJIS区)	歌词charmap中是否有字符=False	
+还	U+8FD8	主编码=0x8AD2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2CE(private区)
+这	U+8FD9	主编码=0x9487(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2CF(private区)
+进	U+8FDB	主编码=0x9069(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D0(private区)
+远	U+8FDC	主编码=0x8993(SJIS区)	歌词charmap中是否有字符=False	
+连	U+8FDE	主编码=0xEA8B(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D1(private区)
+迟	U+8FDF	主编码=0x9278(SJIS区)	歌词charmap中是否有字符=False	
+迪	U+8FEA	主编码=0xE78C(SJIS区)	歌词charmap中是否有字符=False	
+迷	U+8FF7	主编码=0x96C0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D2(private区)
+迹	U+8FF9	主编码=0xE791(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D3(private区)
+追	U+8FFD	主编码=0x92C7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D4(private区)
+退	U+9000	主编码=0x91DE(SJIS区)	歌词charmap中是否有字符=False	
+送	U+9001	主编码=0x9197(SJIS区)	歌词charmap中是否有字符=False	
+适	U+9002	主编码=0x934B(SJIS区)	歌词charmap中是否有字符=False	
+逆	U+9006	主编码=0x8B74(SJIS区)	歌词charmap中是否有字符=False	
+选	U+9009	主编码=0x9149(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D5(private区)
+透	U+900F	主编码=0x93A7(SJIS区)	歌词charmap中是否有字符=False	
+通	U+901A	主编码=0x92CA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D6(private区)
+逝	U+901D	主编码=0x90C0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D7(private区)
+速	U+901F	主编码=0x91AC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D8(private区)
+造	U+9020	主编码=0x91A2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2D9(private区)
+逢	U+9022	主编码=0x88A7(SJIS区)	歌词charmap中是否有字符=False	
+逻	U+903B	主编码=0xE7B4(SJIS区)	歌词charmap中是否有字符=False	
+逼	U+903C	主编码=0x954E(SJIS区)	歌词charmap中是否有字符=False	
+遇	U+9047	主编码=0x8BF6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2DA(private区)
+道	U+9053	主编码=0x93B9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2DB(private区)
+遗	U+9057	主编码=0x88E2(SJIS区)	歌词charmap中是否有字符=False	
+遛	U+905B	主编码=0xEA4C(SJIS区)	歌词charmap中是否有字符=False	
+避	U+907F	主编码=0x94F0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2DC(private区)
+邀	U+9080	主编码=0xE7B1(SJIS区)	歌词charmap中是否有字符=False	
+那	U+90A3	主编码=0x93DF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2DD(private区)
+邪	U+90AA	主编码=0x8ED7(SJIS区)	歌词charmap中是否有字符=False	
+邮	U+90AE	主编码=0x9758(SJIS区)	歌词charmap中是否有字符=False	
+邸	U+90B8	主编码=0x9340(SJIS区)	歌词charmap中是否有字符=False	
+郊	U+90CA	主编码=0x8D78(SJIS区)	歌词charmap中是否有字符=False	
+部	U+90E8	主编码=0x9594(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2DE(private区)
+都	U+90FD	主编码=0x9373(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2DF(private区)
+配	U+914D	主编码=0x947A(SJIS区)	歌词charmap中是否有字符=False	
+酱	U+9171	主编码=0x8FDD(SJIS区)	歌词charmap中是否有字符=False	
+酷	U+9177	主编码=0x8D93(SJIS区)	歌词charmap中是否有字符=False	
+醉	U+9189	主编码=0xE7CB(SJIS区)	歌词charmap中是否有字符=False	
+醋	U+918B	主编码=0xE9B5(SJIS区)	歌词charmap中是否有字符=False	
+醒	U+9192	主编码=0x90C1(SJIS区)	歌词charmap中是否有字符=False	
+采	U+91C7	主编码=0x8DD1(SJIS区)	歌词charmap中是否有字符=False	
+里	U+91CC	主编码=0x97A2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E0(private区)
+重	U+91CD	主编码=0x8F64(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E1(private区)
+野	U+91CE	主编码=0x96EC(SJIS区)	歌词charmap中是否有字符=False	
+量	U+91CF	主编码=0x97CA(SJIS区)	歌词charmap中是否有字符=False	
+金	U+91D1	主编码=0x8BE0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E2(private区)
+鉴	U+9274	主编码=0xE867(SJIS区)	歌词charmap中是否有字符=False	
+针	U+9488	主编码=0xE849(SJIS区)	歌词charmap中是否有字符=False	
+钟	U+949F	主编码=0x8FE0(SJIS区)	歌词charmap中是否有字符=False	
+钱	U+94B1	主编码=0xE841(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E3(private区)
+钻	U+94BB	主编码=0xE872(SJIS区)	歌词charmap中是否有字符=False	
+铁	U+94C1	主编码=0xE863(SJIS区)	歌词charmap中是否有字符=False	
+铃	U+94C3	主编码=0x97E9(SJIS区)	歌词charmap中是否有字符=False	
+铛	U+94DB	主编码=0xE865(SJIS区)	歌词charmap中是否有字符=False	
+销	U+9500	主编码=0xE7F7(SJIS区)	歌词charmap中是否有字符=False	
+锅	U+9505	主编码=0x93E7(SJIS区)	歌词charmap中是否有字符=False	
+错	U+9519	主编码=0x8DF6(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E4(private区)
+锭	U+952D	主编码=0x8FF9(SJIS区)	歌词charmap中是否有字符=False	
+键	U+952E	主编码=0x8CAE(SJIS区)	歌词charmap中是否有字符=False	
+锻	U+953B	主编码=0x9262(SJIS区)	歌词charmap中是否有字符=False	
+镇	U+9547	主编码=0xE84E(SJIS区)	歌词charmap中是否有字符=False	
+镖	U+9556	主编码=0xE9FB(SJIS区)	歌词charmap中是否有字符=False	
+镜	U+955C	主编码=0x8BBE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E5(private区)
+长	U+957F	主编码=0x92B7(SJIS区)	歌词charmap中是否有字符=False	
+门	U+95E8	主编码=0x96E5(SJIS区)	歌词charmap中是否有字符=False	
+闪	U+95EA	主编码=0x914D(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E6(private区)
+闭	U+95ED	主编码=0x95C2(SJIS区)	歌词charmap中是否有字符=False	
+问	U+95EE	主编码=0x96E2(SJIS区)	歌词charmap中是否有字符=False	
+间	U+95F4	主编码=0x8AD4(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E7(private区)
+闷	U+95F7	主编码=0x96E3(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E8(private区)
+闹	U+95F9	主编码=0xE9A7(SJIS区)	歌词charmap中是否有字符=False	
+闻	U+95FB	主编码=0x95B7(SJIS区)	歌词charmap中是否有字符=False	
+阜	U+961C	主编码=0x958C(SJIS区)	歌词charmap中是否有字符=False	
+阪	U+962A	主编码=0x8DE3(SJIS区)	歌词charmap中是否有字符=False	
+防	U+9632	主编码=0x9668(SJIS区)	歌词charmap中是否有字符=False	
+阳	U+9633	主编码=0x977A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2E9(private区)
+阵	U+9635	主编码=0x9077(SJIS区)	歌词charmap中是否有字符=False	
+阶	U+9636	主编码=0x8A4B(SJIS区)	歌词charmap中是否有字符=False	
+阻	U+963B	主编码=0x916A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2EA(private区)
+阿	U+963F	主编码=0x88A2(SJIS区)	歌词charmap中是否有字符=False	
+附	U+9644	主编码=0x958D(SJIS区)	歌词charmap中是否有字符=False	
+际	U+9645	主编码=0x8DDB(SJIS区)	歌词charmap中是否有字符=False	
+陆	U+9646	主编码=0x97A4(SJIS区)	歌词charmap中是否有字符=False	
+限	U+9650	主编码=0x8CC0(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2EB(private区)
+院	U+9662	主编码=0x8940(SJIS区)	歌词charmap中是否有字符=False	
+除	U+9664	主编码=0x8F9C(SJIS区)	歌词charmap中是否有字符=False	
+险	U+9669	主编码=0xE8A8(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2EC(private区)
+陪	U+966A	主编码=0x9486(SJIS区)	歌词charmap中是否有字符=False	
+陷	U+9677	主编码=0xE89C(SJIS区)	歌词charmap中是否有字符=False	
+陽	U+967D	主编码=0xE9F9(SJIS区)	歌词charmap中是否有字符=False	
+随	U+968F	主编码=0xE7AC(SJIS区)	歌词charmap中是否有字符=False	
+隐	U+9690	主编码=0x8942(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2ED(private区)
+难	U+96BE	主编码=0x93EF(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2EE(private区)
+雀	U+96C0	主编码=0x909D(SJIS区)	歌词charmap中是否有字符=False	
+雄	U+96C4	主编码=0x9759(SJIS区)	歌词charmap中是否有字符=False	
+雅	U+96C5	主编码=0x89EB(SJIS区)	歌词charmap中是否有字符=False	
+集	U+96C6	主编码=0x8F57(SJIS区)	歌词charmap中是否有字符=False	
+雇	U+96C7	主编码=0x8CD9(SJIS区)	歌词charmap中是否有字符=False	
+雏	U+96CF	主编码=0x9097(SJIS区)	歌词charmap中是否有字符=False	
+雕	U+96D5	主编码=0xE8B8(SJIS区)	歌词charmap中是否有字符=False	
+雨	U+96E8	主编码=0x894A(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2EF(private区)
+雪	U+96EA	主编码=0x90E1(SJIS区)	歌词charmap中是否有字符=False	
+需	U+9700	主编码=0x8EF9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F0(private区)
+露	U+9732	主编码=0x9849(SJIS区)	歌词charmap中是否有字符=False	
+青	U+9752	主编码=0x90C2(SJIS区)	歌词charmap中是否有字符=False	
+静	U+9759	主编码=0xE8CE(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F1(private区)
+靛	U+975B	主编码=0xE9EF(SJIS区)	歌词charmap中是否有字符=False	
+非	U+975E	主编码=0x94F1(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F2(private区)
+靠	U+9760	主编码=0xE8CF(SJIS区)	歌词charmap中是否有字符=False	
+面	U+9762	主编码=0xEA70(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F3(private区)
+韧	U+97E7	主编码=0xE9ED(SJIS区)	歌词charmap中是否有字符=False	
+音	U+97F3	主编码=0x89B9(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F4(private区)
+页	U+9875	主编码=0x95C5(SJIS区)	歌词charmap中是否有字符=False	
+顶	U+9876	主编码=0x92B8(SJIS区)	歌词charmap中是否有字符=False	
+项	U+9879	主编码=0x8D80(SJIS区)	歌词charmap中是否有字符=False	
+顺	U+987A	主编码=0x8F87(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F5(private区)
+须	U+987B	主编码=0x907B(SJIS区)	歌词charmap中是否有字符=False	
+顾	U+987E	主编码=0x8CDA(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F6(private区)
+顿	U+987F	主编码=0x93DA(SJIS区)	歌词charmap中是否有字符=False	
+预	U+9884	主编码=0x9761(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F7(private区)
+领	U+9886	主编码=0x97CC(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F8(private区)
+颈	U+9888	主编码=0xE8F2(SJIS区)	歌词charmap中是否有字符=False	
+颊	U+988A	主编码=0xE973(SJIS区)	歌词charmap中是否有字符=False	
+频	U+9891	主编码=0x9570(SJIS区)	歌词charmap中是否有字符=False	
+颗	U+9897	主编码=0xE8F7(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2F9(private区)
+题	U+9898	主编码=0x91E8(SJIS区)	歌词charmap中是否有字符=False	
+颜	U+989C	主编码=0xE8F8(SJIS区)	歌词charmap中是否有字符=False	
+额	U+989D	主编码=0x8A7A(SJIS区)	歌词charmap中是否有字符=False	
+颠	U+98A0	主编码=0x935E(SJIS区)	歌词charmap中是否有字符=False	
+风	U+98CE	主编码=0x9597(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2FA(private区)
+飘	U+98D8	主编码=0xE947(SJIS区)	歌词charmap中是否有字符=False	
+飞	U+98DE	主编码=0x94F2(SJIS区)	歌词charmap中是否有字符=False	
+食	U+98DF	主编码=0x9048(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2FB(private区)
+飯	U+98EF	主编码=0xEA83(SJIS区)	歌词charmap中是否有字符=False	
+餐	U+9910	主编码=0x8E60(SJIS区)	歌词charmap中是否有字符=False	
+饪	U+996A	主编码=0xEA4E(SJIS区)	歌词charmap中是否有字符=False	
+饭	U+996D	主编码=0x94D1(SJIS区)	歌词charmap中是否有字符=False	
+饰	U+9970	主编码=0x8FFC(SJIS区)	歌词charmap中是否有字符=False	
+饱	U+9971	主编码=0x964F(SJIS区)	歌词charmap中是否有字符=False	
+馆	U+9986	主编码=0x8ADA(SJIS区)	歌词charmap中是否有字符=False	
+首	U+9996	主编码=0x8EF1(SJIS区)	歌词charmap中是否有字符=False	
+香	U+9999	主编码=0x8D81(SJIS区)	歌词charmap中是否有字符=False	
+马	U+9A6C	主编码=0x946E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF2FC(private区)
+驱	U+9A71	主编码=0xE97B(SJIS区)	歌词charmap中是否有字符=False	
+骂	U+9A82	主编码=0x946C(SJIS区)	歌词charmap中是否有字符=False	
+骄	U+9A84	主编码=0xE981(SJIS区)	歌词charmap中是否有字符=False	
+验	U+9A8C	主编码=0xE984(SJIS区)	歌词charmap中是否有字符=False	
+骑	U+9A91	主编码=0x8B52(SJIS区)	歌词charmap中是否有字符=False	
+骚	U+9A9A	主编码=0xE97A(SJIS区)	歌词charmap中是否有字符=False	
+高	U+9AD8	主编码=0x8D82(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF340(private区)
+髦	U+9AE6	主编码=0xE998(SJIS区)	歌词charmap中是否有字符=False	
+鬘	U+9B18	主编码=0xE9A1(SJIS区)	歌词charmap中是否有字符=False	
+魂	U+9B42	主编码=0x8DB0(SJIS区)	歌词charmap中是否有字符=False	
+魅	U+9B45	主编码=0x96A3(SJIS区)	歌词charmap中是否有字符=False	
+魔	U+9B54	主编码=0x9682(SJIS区)	歌词charmap中是否有字符=False	
+鱼	U+9C7C	主编码=0x8B9B(SJIS区)	歌词charmap中是否有字符=False	
+鲁	U+9C81	主编码=0x9844(SJIS区)	歌词charmap中是否有字符=False	
+鲜	U+9C9C	主编码=0x914E(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF341(private区)
+鲤	U+9CA4	主编码=0x8CEF(SJIS区)	歌词charmap中是否有字符=False	
+鲨	U+9CA8	主编码=0xE9C0(SJIS区)	歌词charmap中是否有字符=False	
+鲷	U+9CB7	主编码=0x91E2(SJIS区)	歌词charmap中是否有字符=False	
+鲸	U+9CB8	主编码=0x8C7E(SJIS区)	歌词charmap中是否有字符=False	
+鳗	U+9CD7	主编码=0x8956(SJIS区)	歌词charmap中是否有字符=False	
+鳥	U+9CE5	主编码=0xE9B6(SJIS区)	歌词charmap中是否有字符=False	
+鸟	U+9E1F	主编码=0x92B9(SJIS区)	歌词charmap中是否有字符=False	
+鹃	U+9E43	主编码=0xEA43(SJIS区)	歌词charmap中是否有字符=False	
+鹊	U+9E4A	主编码=0xEA46(SJIS区)	歌词charmap中是否有字符=False	
+鹤	U+9E64	主编码=0x92DF(SJIS区)	歌词charmap中是否有字符=False	
+鹫	U+9E6B	主编码=0x9868(SJIS区)	歌词charmap中是否有字符=False	
+鹭	U+9E6D	主编码=0x8DEB(SJIS区)	歌词charmap中是否有字符=False	
+鹰	U+9E70	主编码=0x91E9(SJIS区)	歌词charmap中是否有字符=False	
+鹳	U+9E73	主编码=0xEA60(SJIS区)	歌词charmap中是否有字符=False	
+鹿	U+9E7F	主编码=0x8EAD(SJIS区)	歌词charmap中是否有字符=False	
+麝	U+9E9D	主编码=0xEA6C(SJIS区)	歌词charmap中是否有字符=False	
+麻	U+9EBB	主编码=0x9683(SJIS区)	歌词charmap中是否有字符=False	
+黄	U+9EC4	主编码=0x89A9(SJIS区)	歌词charmap中是否有字符=False	
+黑	U+9ED1	主编码=0x8D95(SJIS区)	歌词charmap中是否有字符=False	
+默	U+9ED8	主编码=0xE0D2(SJIS区)	歌词charmap中是否有字符=True	歌词charmap中的编码=0xF342(private区)
+鼓	U+9F13	主编码=0x8CDB(SJIS区)	歌词charmap中是否有字符=False	
+鼻	U+9F3B	主编码=0x9540(SJIS区)	歌词charmap中是否有字符=False	
+齐	U+9F50	主编码=0xEA8E(SJIS区)	歌词charmap中是否有字符=False	
+龙	U+9F99	主编码=0x97B4(SJIS区)	歌词charmap中是否有字符=False	

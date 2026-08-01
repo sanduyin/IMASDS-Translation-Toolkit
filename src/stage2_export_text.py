@@ -162,6 +162,10 @@ def export_bbq_directory(input_folder: Path, output_excel: Path,
     for root, _, files in os.walk(input_folder):
         for file in files:
             if file.lower().endswith(('.bbq', '.bin')):
+                # 跳过歌词课 BBQ：歌词课翻译表独立导出（见 stage3_5_lyric.py /
+                # lesvoice.export_lyric_translation_xlsx），不进入 TBL_Translation.xlsx
+                if "LESVOICETABLE" in file.upper():
+                    continue
                 all_files.append(os.path.join(root, file))
 
     # 按文件名前缀的数字序号严格排序
@@ -277,6 +281,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="SCN/TBL 文本导出")
     parser.add_argument("--format", choices=["xlsx", "csv"], default="xlsx",
                         help="输出格式：xlsx（默认，9列带条件格式）或 csv（faraplay 兼容窄列）")
+    parser.add_argument("--skip-lyric", action="store_true",
+                        help="跳过歌词课翻译表导出（默认会一并导出 TBL_LyricVoice_Translation.xlsx）")
     args = parser.parse_args()
 
     fmt = args.format
@@ -288,9 +294,24 @@ def main() -> None:
     export_bbq_directory(scn_dir, scn_output, is_scn=True, fmt=fmt)
 
     # 2. 导出 TBL 系统文本 (开启 is_scn=False, 忽略角色名，Speaker 全填 ×)
+    #    LESVOICETABLE 文件已在 export_bbq_directory 中跳过，由独立流程导出
     tbl_dir = EXTRACT_DIR / "TBL"
     tbl_output = CSV_TBL_DIR if fmt == "csv" else EXCEL_TBL
     export_bbq_directory(tbl_dir, tbl_output, is_scn=False, fmt=fmt)
+
+    # 3. 导出歌词课翻译表（独立 xlsx，与 TBL 普通文本分离）
+    #    仅 xlsx 模式导出（歌词课强制使用 xlsx，因为含汉字需要 9 列布局）
+    if not args.skip_lyric and fmt == "xlsx":
+        print("\n" + "=" * 50)
+        print(" 导出歌词课翻译表 (LESVOICETABLE → 独立 xlsx)")
+        print("=" * 50)
+        try:
+            from config import EXCEL_LYRIC
+            from src.utils import lesvoice
+            lesvoice.export_lyric_translation_xlsx(EXCEL_LYRIC)
+        except Exception as e:
+            print(f"  ⚠️ 歌词课翻译表导出失败: {e}")
+            print(f"     可后续手动执行: python -m src.stage3_5_lyric export-translation")
 
     print("✅ SCN/TBL 文本导出流程执行完毕。")
 

@@ -23,7 +23,7 @@ GLD → PNG sprite 级别导出工具。
   · Deleted sprite（bit15=1）跳过不导出
   · AGL sheet 模式按 sprite 编号 0~N 顺序排列（从左到右、从上到下）
 
-参考实现：reference/dearlystars_tool/dearlystars/src/gld.rs
+参考实现：dearlystars_tool (Rust) gld.rs
 """
 
 from __future__ import annotations

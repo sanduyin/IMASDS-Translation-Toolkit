@@ -43,6 +43,20 @@ EXCEL_TBL = WORKSPACE_DIR / "TBL_Translation.xlsx"
 EXCEL_ARM9 = WORKSPACE_DIR / "ARM9_Overlays_Translation.xlsx"
 MAPPING_FILE = WORKSPACE_DIR / "font_mapping.json"
 
+# ================= 歌词课汉化配置 (Stage 3.5) =================
+# 独立翻译表：歌词课 LESVOICETABLE 文本不进 TBL_Translation.xlsx
+EXCEL_LYRIC = WORKSPACE_DIR / "TBL_LyricVoice_Translation.xlsx"
+# 歌词课补丁构建目录（charmap/AGL/GLD/ARM9/y9 中间产物）
+LYRIC_BUILD_DIR = BASE_DIR / "build" / "lesvoice_patch"
+LYRIC_BUILD_DIR.mkdir(parents=True, exist_ok=True)
+# 歌词课字形美工 PSD 输出目录（直接覆盖 AGL 导出目录，美工在原位修正字型）
+LYRIC_GLYPH_DIR = EXTRACT_DIR.parent / "1_Extracted_Images" / "AGL"
+LYRIC_GLYPH_DIR.mkdir(parents=True, exist_ok=True)
+# 歌词课独立 font_mapping（私有码位 0xF040-0xF9FC）
+LYRIC_FONT_MAPPING = LYRIC_BUILD_DIR / "font_mapping_lesvoice.json"
+# 歌词课 SSOT 字符表（glyph_id ↔ char ↔ key 对照）
+LYRIC_SSOT_CSV = LYRIC_BUILD_DIR / "ssot_chars.csv"
+
 # ================= CSV 翻译表配置 (P1-4, faraplay 兼容窄列) =================
 # 每个 sheet → 一个 CSV 文件，保持多人协作分工边界
 CSV_DIR = WORKSPACE_DIR / "csv"
@@ -62,5 +76,5 @@ ORIGINAL_LC12 = EXTRACT_DIR / "TBL" / "0001_LC12.NFTR"
 PATCHED_LC10 = PATCHED_DIR / "TBL_CHS_PATCHED" / "0000_LC10.NFTR"
 PATCHED_LC12 = PATCHED_DIR / "TBL_CHS_PATCHED" / "0001_LC12.NFTR"
 
-TARGET_PACKS =["SCN", "TBL", "G3D", "BG", "TEX", "AGL"]
+TARGET_PACKS =["SCN", "TBL", "BG", "TEX", "AGL"]
 EMPTY_MARKERS = ['{EMPTY}', '{empty}', ' ', '　']

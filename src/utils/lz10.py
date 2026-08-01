@@ -2,7 +2,7 @@
 """
 LZ10 (NDS LZ77) 压缩/解压算法。
 
-参考实现：reference/dearlystars_tool/dearlystars/src/lz10.rs
+参考实现：dearlystars_tool (Rust) lz10.rs
 
 LZ10 是 NDS 通用 LZ77 变体，用于压缩游戏数据文件（F_*.BIN 等）：
     - 头部 4 字节：0x10 magic + 3 字节 decompressed_size (LE)

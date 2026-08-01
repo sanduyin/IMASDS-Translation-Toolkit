@@ -2,7 +2,7 @@
 """
 EZT/EZP 头部与 entry 表的解析与生成。
 
-参考实现：reference/dearlystars_tool/dearlystars/src/ez.rs
+参考实现：dearlystars_tool (Rust) ez.rs
 
 数据结构（全部 little-endian）：
 

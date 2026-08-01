@@ -2,8 +2,8 @@
 """
 NDS ROM 加载、修改与重建。
 
-参考实现：reference/dearlystars_tool/ndstool/src/rom_source.rs (read_from_rom)
-        reference/dearlystars_tool/ndstool/src/write_rom.rs (write_arm9 / write_arm9_overlay)
+参考实现：dearlystars_tool (Rust) ndstool/rom_source.rs (read_from_rom)
+        dearlystars_tool (Rust) ndstool/write_rom.rs (write_arm9 / write_arm9_overlay)
 
 提供 RomImage 类，支持：
     - 从 .nds 文件加载完整 ROM（Header + FAT + FNT + ARM9 + ARM7 + Overlay + 文件系统）

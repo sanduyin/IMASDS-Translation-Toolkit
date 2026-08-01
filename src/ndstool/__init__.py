@@ -6,7 +6,7 @@ ndstool - 纯 Python 实现的 NDS/DSi ROM 构建内核。
 NDS Header / FNT / FAT / ARM9 / Overlay / DSi 扩展处理能力。
 
 子模块：
-    header      - NDS Header (0x200) 解析与生成
+    header      - NDS 基础 Header (0x180) 解析与生成
     fnt_fat     - FNT (文件名表) 与 FAT (文件分配表) 的解析与重建
     overlay     - ARM9 Overlay 表解析与重建
     rom_builder - ARM9/Overlay 解压/压缩与 ROM 重建
@@ -36,6 +36,10 @@ from .rom_builder import RomImage, OverlayState, load_rom, save_rom
 from .dsi_builder import (
     DsiExtraFields,
     DSI_EXTRA_FIELDS_SIZE,
+    DSI_EXTRA_FIELDS_OFFSET,
+    DsiBuildError,
+    DsiBuildReport,
+    OriginalDsiState,
     sha1_hmac,
     get_key_ivs,
     aes_ctr,
@@ -46,6 +50,9 @@ from .dsi_builder import (
     decrypt_secure_area,
     write_digests,
     write_hashes,
+    load_original_dsi_state,
+    rebuild_dsi_rom,
+    verify_dsi_integrity,
 )
 
 __all__ = [
@@ -79,6 +86,10 @@ __all__ = [
     # dsi builder (P0-5)
     "DsiExtraFields",
     "DSI_EXTRA_FIELDS_SIZE",
+    "DSI_EXTRA_FIELDS_OFFSET",
+    "DsiBuildError",
+    "DsiBuildReport",
+    "OriginalDsiState",
     "sha1_hmac",
     "get_key_ivs",
     "aes_ctr",
@@ -89,4 +100,7 @@ __all__ = [
     "decrypt_secure_area",
     "write_digests",
     "write_hashes",
+    "load_original_dsi_state",
+    "rebuild_dsi_rom",
+    "verify_dsi_integrity",
 ]
