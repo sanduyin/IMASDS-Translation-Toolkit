@@ -1,0 +1,129 @@
+# IMASDS Translation Toolkit - CI
+# 每次 PR / push 自动验证：类型检查、构建管线冒烟测试
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  # =====================================================================
+  # Job 1: mypy 静态类型检查
+  # =====================================================================
+  type-check:
+    name: mypy --strict
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install mypy types-Pillow
+
+      - name: Run mypy --strict
+        # type-arg（要求 dict 必须写 dict[str, Any] 等）为纯风格规则，
+        # 对 AI 生成代码无功能价值，故在此关闭；其余 --strict 规则全部保留。
+        run: python -m mypy --strict --disable-error-code type-arg src/ --ignore-missing-imports
+
+  # =====================================================================
+  # Job 2: ROM 构建管线冒烟测试
+  # （实际 ROM 构建需要 game_data/ 下的原版 ROM，CI 环境无版权数据，
+  #   故仅验证所有 Stage 模块可正常导入且关键函数存在）
+  # =====================================================================
+  build-smoke-test:
+    name: ROM build smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Smoke test - import all stage modules
+        run: |
+          python - <<'EOF'
+          """验证所有 Stage 模块可导入且关键函数存在。"""
+          import importlib
+          import sys
+
+          # 确保项目根在 sys.path
+          import os
+          sys.path.insert(0, os.getcwd())
+
+          stages = [
+              ("src.stage1_unpack", ["decompress_ring_lz"]),
+              ("src.stage2_export_arm9", ["get_base_address", "analyze_chars", "strict_filter"]),
+              ("src.stage2_export_text", ["extract_sort_key", "extract_group_name"]),
+              ("src.stage2_export_bg", []),
+              ("src.stage2_export_images", []),
+              ("src.stage3_build_font", []),
+              ("src.stage3_5_lyric", []),
+              ("src.stage4_import_bg", []),
+              ("src.stage4_import_images", []),
+              ("src.stage4_inject_text", []),
+              ("src.stage5_build_rom", ["build_nds_with_twl_rebuild"]),
+          ]
+
+          failures = []
+          for mod_name, required_funcs in stages:
+              try:
+                  mod = importlib.import_module(mod_name)
+                  for fn_name in required_funcs:
+                      if not hasattr(mod, fn_name):
+                          failures.append(f"{mod_name}.{fn_name} 不存在")
+                      else:
+                          print(f"  OK: {mod_name}.{fn_name}")
+              except Exception as e:
+                  failures.append(f"{mod_name} 导入失败: {e}")
+
+          # 验证关键 utils 模块
+          utils_mods = [
+              "src.utils.binary_io",
+              "src.utils.text_encoder",
+              "src.utils.lz10",
+              "src.utils.blz",
+              "src.utils.bbq_format",
+              "src.utils.bbq_yaml",
+              "src.utils.gld_format",
+              "src.utils.lesvoice",
+              "src.utils.mapping_backup",
+              "src.io.csv_handler",
+              "src.ndstool.crc",
+              "src.packez.ezt_parser",
+              "src.packez.ezp_pack",
+          ]
+          for mod_name in utils_mods:
+              try:
+                  importlib.import_module(mod_name)
+                  print(f"  OK: {mod_name}")
+              except Exception as e:
+                  failures.append(f"{mod_name} 导入失败: {e}")
+
+          if failures:
+            print("\nFAIL:")
+            for f in failures:
+                print(f"  - {f}")
+            sys.exit(1)
+          print("\nPASS: 所有 Stage 和 utils 模块导入成功，关键函数存在")
+          EOF

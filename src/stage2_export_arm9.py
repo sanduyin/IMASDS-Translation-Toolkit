@@ -1,28 +1,35 @@
 # src/stage2_export_arm9.py
+from __future__ import annotations
+
 import os
 import sys
 import struct
 import re
+import argparse
+from pathlib import Path
+from typing import Any
+
 import pandas as pd
 
 # 导入全局配置
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import EXTRACT_DIR, EXCEL_ARM9
+from config import EXTRACT_DIR, EXCEL_ARM9, CSV_ARM9_FILE
+from src.io.csv_handler import write_arm9_csv
 
 # ARM9 默认内存基址
 FALLBACK_ARM9_BASE = 0x02000000
 
-def read_arm9_base():
+def read_arm9_base() -> int:
     """从 header.bin 读取 ARM9 在内存中的加载基址"""
     header_path = EXTRACT_DIR / 'header.bin'
     if header_path.exists():
         with open(header_path, 'rb') as f:
             header_data = f.read(0x30)
             addr = struct.unpack_from('<I', header_data, 0x28)[0]
-            return addr
+            return int(addr)
     return FALLBACK_ARM9_BASE
 
-def read_overlay_bases():
+def read_overlay_bases() -> dict[int, int]:
     """从 y9.bin 读取所有 Overlay 在内存中的加载基址"""
     y9_path = EXTRACT_DIR / 'y9.bin'
     overlay_bases = {}
@@ -37,7 +44,7 @@ def read_overlay_bases():
             overlay_bases[ovl_id] = ram_addr
     return overlay_bases
 
-def get_base_address(filename, arm9_base, overlay_bases):
+def get_base_address(filename: str, arm9_base: int, overlay_bases: dict[int, int]) -> int | None:
     """根据文件名匹配其内存基址"""
     name_lower = filename.lower()
     if "arm9" in name_lower: return arm9_base
@@ -46,7 +53,7 @@ def get_base_address(filename, arm9_base, overlay_bases):
         if match: return overlay_bases.get(int(match.group(1)))
     return None
 
-def analyze_chars(text):
+def analyze_chars(text: str) -> dict[str, int]:
     """V7 智能字符分析器：统计各类字符数量，用于识别并过滤乱码"""
     clean = text.replace('\n', '').replace('\r', '')
     stats = {
@@ -72,7 +79,7 @@ def analyze_chars(text):
     stats['ascii_total'] = stats['ascii_letter'] + stats['ascii_digit'] + stats['ascii_symbol']
     return stats
 
-def strict_filter(text):
+def strict_filter(text: str) -> bool:
     """智能过滤器：过滤编译器路径、乱码碎片和非人类文本"""
     s = analyze_chars(text)
     length = s['length']
@@ -89,12 +96,12 @@ def strict_filter(text):
         
     return True
 
-def scan_prg_file(file_path, filename, base_addr):
+def scan_prg_file(file_path: Path, filename: str, base_addr: int) -> list[dict[str, Any]]:
     """扫描单个程序文件并提取 Shift-JIS 文本"""
     with open(file_path, 'rb') as f:
         data = f.read()
 
-    entries =[]
+    entries: list[dict[str, Any]] = []
     # 正则匹配：至少 2 个连续的 Shift-JIS 字符，以 0x00 结尾
     pattern = rb'(?:[\x20-\x7e\xa1-\xdf\x0a\x0d]|[\x81-\x9f\xe0-\xef][\x40-\xfc]){2,}\x00'
     
@@ -115,13 +122,22 @@ def scan_prg_file(file_path, filename, base_addr):
                 'Text_Offset': f"0x{start_offset:X}",
                 'RAM_Address': f"0x{(base_addr + start_offset):08X}",
                 'Pointer_Locs': "", # 程序段文本通常靠基址计算，这里留空以适应格式
-                'Max_Bytes': len(raw_bytes),
+                # Max_Bytes 契约：包含 NUL 终止符的整个可写槽位字节数。
+                # 旧导出器只写 len(raw_bytes)（不含 NUL），导致 stage4_inject_text
+                # 注入时若按槽位容量清空，会多清 1 字节破坏相邻结构数据。
+                'Max_Bytes': len(raw_bytes) + 1,
                 'Index': len(entries),
                 'Type': "程序硬编码"
             })
     return entries
 
-def main():
+def main() -> None:
+    parser = argparse.ArgumentParser(description="ARM9/Overlay 文本导出")
+    parser.add_argument("--format", choices=["xlsx", "csv"], default="xlsx",
+                        help="输出格式：xlsx（默认）或 csv（faraplay 兼容窄列）")
+    args = parser.parse_args()
+
+    fmt = args.format
     arm9_dir = EXTRACT_DIR / "ARM9"
     if not arm9_dir.exists():
         print("❌ 未找到 ARM9 提取目录。请先执行 Unpack 解包！")
@@ -130,13 +146,13 @@ def main():
     print("🔍 读取内存映射表...")
     arm9_base = read_arm9_base()
     overlay_bases = read_overlay_bases()
-    
+
     all_entries =[]
     for f in os.listdir(arm9_dir):
         if not f.endswith('.bin'): continue
         base = get_base_address(f, arm9_base, overlay_bases)
         if base is None: continue
-        
+
         print(f"  -> 扫描: {f} (Base: 0x{base:08X})")
         entries = scan_prg_file(arm9_dir / f, f, base)
         all_entries.extend(entries)
@@ -145,25 +161,28 @@ def main():
         print("⚠️ 未在 ARM9 中提取到任何有效文本。")
         return
 
-    print(f"✅ 提取完毕！共导出 {len(all_entries)} 条有效文本。正在生成 Excel...")
-    
-    df = pd.DataFrame(all_entries)
-    # 强制排序列顺序
-    cols =['Original_Text', 'Speaker', 'Translated_Text', 'File', 'Text_Offset', 'Pointer_Locs', 'Max_Bytes', 'Index', 'Type']
-    # 因为 ARM9 没有 Speaker，填充一下避免格式乱
-    if 'Speaker' not in df.columns: df['Speaker'] = "System/PRG"
-    df = df[cols]
-    
-    with pd.ExcelWriter(EXCEL_ARM9, engine='xlsxwriter') as writer:
-        df.to_excel(writer, sheet_name='ARM9_Text', index=False)
-        ws = writer.sheets['ARM9_Text']
-        fmt_text = writer.book.add_format({'text_wrap': True, 'valign': 'top'})
-        ws.set_column('A:A', 50, fmt_text)
-        ws.set_column('C:C', 50, fmt_text)
-        ws.set_column('D:G', 15)
-        ws.freeze_panes(1, 1)
+    print(f"✅ 提取完毕！共导出 {len(all_entries)} 条有效文本。正在生成 {fmt.upper()}...")
 
-    print(f"🎉 ARM9 文本已成功导出至: {EXCEL_ARM9.name}")
+    if fmt == "csv":
+        # faraplay 兼容窄列：Original_Text,Translated_Text,Filename,Text_Offset,Max_Bytes
+        count = write_arm9_csv(CSV_ARM9_FILE, all_entries)
+        print(f"🎉 ARM9 文本已成功导出至: {CSV_ARM9_FILE} ({count} 行)")
+    else:
+        df = pd.DataFrame(all_entries)
+        cols =['Original_Text', 'Speaker', 'Translated_Text', 'File', 'Text_Offset', 'Pointer_Locs', 'Max_Bytes', 'Index', 'Type']
+        if 'Speaker' not in df.columns: df['Speaker'] = "System/PRG"
+        df = df[cols]
+
+        with pd.ExcelWriter(EXCEL_ARM9, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='ARM9_Text', index=False)
+            ws = writer.sheets['ARM9_Text']
+            fmt_text = writer.book.add_format({'text_wrap': True, 'valign': 'top'})
+            ws.set_column('A:A', 50, fmt_text)
+            ws.set_column('C:C', 50, fmt_text)
+            ws.set_column('D:G', 15)
+            ws.freeze_panes(1, 1)
+
+        print(f"🎉 ARM9 文本已成功导出至: {EXCEL_ARM9.name}")
 
 if __name__ == "__main__":
     main()

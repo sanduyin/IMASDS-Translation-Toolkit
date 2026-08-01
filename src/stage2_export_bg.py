@@ -1,13 +1,17 @@
 # src/stage2_export_bg.py
+from __future__ import annotations
+
 import os
 import sys
 import struct
 from pathlib import Path
 
+from PIL import Image
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import EXTRACT_DIR
 
-def parse_nds_container(data):
+def parse_nds_container(data: bytes) -> dict[str, bytes]:
     if len(data) < 0x10: return {}
     header_size = struct.unpack_from('<H', data, 0x0C)[0]
     section_count = struct.unpack_from('<H', data, 0x0E)[0]
@@ -23,27 +27,38 @@ def parse_nds_container(data):
         offset += sec_size
     return sections
 
-def parse_nclr(nclr_data):
+def parse_nclr(nclr_data: bytes) -> list[tuple[int, int, int]]:
     sections = parse_nds_container(nclr_data)
     # 兼容 TTLP 或 PLTT
     sec_data = sections.get('TTLP') or sections.get('PLTT')
     if not sec_data: raise ValueError("未找到调色板 Section")
 
-    # 【核心修复】修正调色板的读取偏移量为 0x08 和 0x0C
-    pal_size = struct.unpack_from('<I', sec_data, 0x08)[0]
-    pal_offset = struct.unpack_from('<I', sec_data, 0x0C)[0]
-
-    # 兜底防错
-    if pal_offset + pal_size > len(sec_data):
-        pal_offset = 0x10
-
+    # TTLP/PLTT body 结构（GBATEK + 实测验证）：
+    #   0x00  4  hdr_size（实测值不可靠：0x3 或 0x4，不能用作偏移）
+    #   0x04  4  pal_data_size（实测全为 0，不可靠）
+    #   0x08  4  color_count（实测全为 512，不可靠）
+    #   0x0C  4  bit_depth（实测全为 0x10，不可靠）
+    #   0x10  -  palette data（RGB555，每色 2 字节，共 256 色 = 512 字节）
+    # 实测所有 NCLR body 长 528 字节 = 0x10 头 + 512 字节调色板数据。
+    # 旧代码误用 0x18 作为偏移，导致：
+    #   1) 8bpp 索引 252-255 越界补齐为黑色（原应为白色 0x7FFF）→ "白色变黑色"
+    #   2) 4bpp 子调色板边界错位 4 个颜色 → 调色板分配混乱
+    pal_offset = 0x10
+    pal_size = len(sec_data) - pal_offset
     raw = sec_data[pal_offset : pal_offset + pal_size]
     colors =[]
     for i in range(len(raw) // 2):
         col = struct.unpack_from('<H', raw, i * 2)[0]
-        r = (col & 0x1F) * 8
-        g = ((col >> 5) & 0x1F) * 8
-        b = ((col >> 10) & 0x1F) * 8
+        # RGB555 → RGB888：直接 <<3（NDS 硬件实际行为）
+        # NDS LCD 硬件就是直接 <<3 不做高位回填，所以 31→248（不是 255）。
+        # 旧代码用 (v<<3)|(v>>2) 高位回填，虽然数学上"精确"，但与硬件行为不一致，
+        # 导致导出的颜色与游戏实际显示不符。
+        r5 = col & 0x1F
+        g5 = (col >> 5) & 0x1F
+        b5 = (col >> 10) & 0x1F
+        r = r5 << 3
+        g = g5 << 3
+        b = b5 << 3
         colors.append((r, g, b))
 
     while len(colors) < 256:
@@ -51,16 +66,34 @@ def parse_nclr(nclr_data):
 
     return colors
 
-def parse_ncgr(ncgr_data):
+def parse_ncgr(ncgr_data: bytes) -> tuple[list[list[int]], int, int, int]:
     sections = parse_nds_container(ncgr_data)
     rahc = sections.get('RAHC') or sections.get('CHAR')
     if not rahc: raise ValueError("未找到图块 Section")
 
     tile_h_count, tile_w_count = struct.unpack_from('<H', rahc, 0x00)[0], struct.unpack_from('<H', rahc, 0x02)[0]
     bpp_flag = struct.unpack_from('<I', rahc, 0x04)[0]
-    tile_data_size, tile_data_offset = struct.unpack_from('<I', rahc, 0x0C)[0], struct.unpack_from('<I', rahc, 0x10)[0]
+
+    # RAHC header 字段（GBATEK + Tinke + ndspy 实测，与 NCLR 一样字段不可靠）：
+    #   0x08  u32  tile_count（0 = 自动计算）
+    #   0x0C  u32  保留/padding（实测全为 0，旧代码误当作 tile_data_size）
+    #   0x10  u32  tile_data_size（图块数据字节数，旧代码误当作 offset）
+    #   0x14  u32  header_size = data 起始偏移（通常 0x18，旧代码完全没读此字段）
+    # 旧代码把 0x0C 当 size(=0)、0x10 当 offset(=14336)，导致 raw_tiles 为空 →
+    # 所有 tile 像素为 0 → 渲染纯单色（color index 0）。
+    tile_data_size_field = struct.unpack_from('<I', rahc, 0x10)[0]
+    header_size_field = struct.unpack_from('<I', rahc, 0x14)[0]
 
     bpp = 4 if bpp_flag == 3 else 8
+
+    # tile data 起始偏移 = header_size（0x14 字段），通常 0x18；异常时回退 0x18
+    tile_data_offset = header_size_field if 0 < header_size_field < len(rahc) else 0x18
+    # tile data 大小 = 0x10 字段；若为 0 或越界则用剩余长度
+    if 0 < tile_data_size_field <= len(rahc) - tile_data_offset:
+        tile_data_size = tile_data_size_field
+    else:
+        tile_data_size = len(rahc) - tile_data_offset
+
     raw_tiles = rahc[tile_data_offset : tile_data_offset + tile_data_size]
 
     bytes_per_tile = 8 * 8 // (8 // bpp)
@@ -79,7 +112,7 @@ def parse_ncgr(ncgr_data):
         tiles.append(pixels)
     return tiles, bpp, tile_h_count, tile_w_count
 
-def parse_nscr(nscr_data):
+def parse_nscr(nscr_data: bytes) -> tuple[list[tuple[int, bool, bool, int]], int, int, int, int]:
     sections = parse_nds_container(nscr_data)
     nrcs = sections.get('NRCS') or sections.get('SCRN')
     if not nrcs: raise ValueError("未找到地图 Section")
@@ -98,7 +131,13 @@ def parse_nscr(nscr_data):
 
     return entries, map_w_tiles, map_h_tiles, map_w_px, map_h_px
 
-def compose_bg_image(tiles, bpp, palette_colors, map_entries, map_w_tiles, map_h_tiles):
+def compose_bg_image(tiles: list[list[int]], bpp: int, palette_colors: list[tuple[int, int, int]],
+                     map_entries: list[tuple[int, bool, bool, int]],
+                     map_w_tiles: int, map_h_tiles: int) -> tuple[bytes, list[tuple[int, int, int]]]:
+    """合成 BG 图像，返回 (8bpp 索引像素, RGB 调色板列表)。
+
+    像素数据每字节为调色板索引；调色板为 RGB888 列表（与 NDS 硬件 <<3 行为一致）。
+    """
     width, height = map_w_tiles * 8, map_h_tiles * 8
     pixels = bytearray(width * height)
 
@@ -123,42 +162,33 @@ def compose_bg_image(tiles, bpp, palette_colors, map_entries, map_w_tiles, map_h
                     dst_x, dst_y = col * 8 + px, row * 8 + py
                     pixels[dst_y * width + dst_x] = final_idx
 
-    bmp_palette = bytearray()
-    for (r, g, b) in palette_colors[:256]:
-        bmp_palette.extend(struct.pack('BBBB', b, g, r, 0))
-    while len(bmp_palette) < 1024:
-        bmp_palette.extend(b'\x00\x00\x00\x00')
+    return bytes(pixels), palette_colors[:256]
 
-    return bytes(pixels), bytes(bmp_palette)
+def write_png_rgb(filepath: Path, width: int, height: int,
+                  pixel_data: bytes, palette_colors: list[tuple[int, int, int]]) -> None:
+    """将 8bpp 索引像素 + RGB 调色板写成 RGB PNG。
 
-def write_bmp_8bpp(filepath, width, height, pixel_data, palette_data):
-    row_padding = (4 - (width % 4)) % 4
-    bmp_row_size = width + row_padding
-    image_data_size = bmp_row_size * height
-    total_size = 54 + 1024 + image_data_size
+    Args:
+        filepath: 输出 .png 路径
+        width, height: 图像尺寸
+        pixel_data: 8bpp 索引像素数据（每像素 1 字节 = 调色板索引）
+        palette_colors: RGB888 调色板列表（与 NDS 硬件 <<3 行为一致）
+    """
+    # 索引像素 → RGB 像素
+    rgb_data = bytearray(width * height * 3)
+    for i, idx in enumerate(pixel_data):
+        if idx < len(palette_colors):
+            r, g, b = palette_colors[idx]
+        else:
+            r, g, b = 0, 0, 0
+        rgb_data[i*3] = r
+        rgb_data[i*3+1] = g
+        rgb_data[i*3+2] = b
+    img = Image.frombytes('RGB', (width, height), bytes(rgb_data))
+    img.save(filepath, 'PNG')
 
-    with open(filepath, 'wb') as out:
-        out.write(b'BM')
-        out.write(struct.pack('<I', total_size))
-        out.write(b'\x00\x00\x00\x00')
-        out.write(struct.pack('<I', 54 + 1024))
-        out.write(struct.pack('<I', 40))
-        out.write(struct.pack('<i', width))
-        out.write(struct.pack('<i', height))
-        out.write(struct.pack('<H', 1))
-        out.write(struct.pack('<H', 8))
-        out.write(struct.pack('<I', 0))
-        out.write(struct.pack('<I', image_data_size))
-        out.write(struct.pack('<I', 0) * 4)
-        out.write(palette_data)
-        padding = b'\x00' * row_padding
-        for row in range(height - 1, -1, -1):
-            start = row * width
-            out.write(pixel_data[start:start + width])
-            out.write(padding)
-
-def find_bg_triplets(input_dir):
-    def strip_prefix(stem):
+def find_bg_triplets(input_dir: Path) -> list[tuple[Path, Path, Path, str, str]]:
+    def strip_prefix(stem: str) -> str:
         parts = stem.split('_', 1)
         return parts[1] if len(parts) == 2 and parts[0].isdigit() else stem
 
@@ -172,7 +202,7 @@ def find_bg_triplets(input_dir):
             triplets.append((ncgr_path, nclr_files[base], nscr_files[base], base, ncgr_path.stem))
     return triplets
 
-def main():
+def main() -> None:
     input_dir, output_dir = EXTRACT_DIR / "BG", EXTRACT_DIR.parent / "1_Extracted_Images" / "BG"
     output_dir.mkdir(parents=True, exist_ok=True)
     if not input_dir.exists(): return
@@ -185,8 +215,8 @@ def main():
             palette_colors = parse_nclr(nclr_data)
             tiles, bpp, _, _ = parse_ncgr(ncgr_data)
             entries, map_w, map_h, w_px, h_px = parse_nscr(nscr_data)
-            pixel_data, bmp_palette = compose_bg_image(tiles, bpp, palette_colors, entries, map_w, map_h)
-            write_bmp_8bpp(output_dir / f"{stem}.bmp", w_px, h_px, pixel_data, bmp_palette)
+            pixel_data, palette = compose_bg_image(tiles, bpp, palette_colors, entries, map_w, map_h)
+            write_png_rgb(output_dir / f"{stem}.png", w_px, h_px, pixel_data, palette)
         except Exception as e: print(f"   ❌ {stem}: {e}")
     print(f"   ✅ BG 导出完毕。")
 
