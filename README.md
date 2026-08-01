@@ -61,7 +61,6 @@ This project is for educational and technical research purposes only. The reposi
 *   [ndstool](https://github.com/Relys/ndstool) (DarkFader / Relys) 提供 NDS 文件系统基础工具。
 *   [ndspy](https://github.com/RoadrunnerWMC/ndspy) (RoadrunnerWMC) 提供完善的底层解压缩引擎。
 *   [OpenCC](https://github.com/BYVoid/OpenCC) (BYVoid) 提供完美的简繁日汉字映射技术。
-*   [dearlystars_tool](https://github.com/Relys/dearlystars_tool) (Rust) —— 参考实现，本项目从中学习了游戏专有格式的解析与重建方法。
 *   [NitroPaint](https://github.com/Garhoogin/NitroPaint) (Garhoogin) —— 优秀的 DS 图像编辑器，其源代码指导了我们的 NCER/OBJ 实现。
 *   [dearlystars_tool](https://github.com/faraplay/dearlystars_tool) —— 参考构建器，其 DSi 增强区重建流程（digest 摘要表、HMAC、modcrypt、TWL Header）使本汉化版在 DSi 实机上成功启动成为可能。本项目对其完整公开 DSi 密码学链路的文档深表感谢。
 
